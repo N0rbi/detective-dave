@@ -1,14 +1,15 @@
 using System.Collections.Generic;
 using System.Linq;
+using DetectiveDave.KeyboardInput;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-namespace DetectiveDave.KeyboardInput
+namespace DetectiveDave.KeyboardGrid
 {
     /// <summary>
     /// The view of the locked layout: one group of sprites per key inside a rectangle (the gizmo in the Scene view),
     /// tinted from each cell's Active state. Knows nothing about input. Needs an orthographic camera tagged MainCamera.
-    /// Stays empty when no layout is locked yet.
+    /// Stays empty when no layout is locked yet. Builds in Awake.
     /// </summary>
     public class KeyboardGridView : MonoBehaviour
     {
@@ -16,7 +17,7 @@ namespace DetectiveDave.KeyboardInput
         const int BackgroundSortingOrder = -1;
         const int CellSortingOrder = 0;
 
-        [SerializeField] Vector2 size = new Vector2(16f, 5f);       // the rectangle the layout is fitted into, in world units
+        [SerializeField] Vector2 size = new Vector2(15f, 4f);       // the rectangle the layout is fitted into, in world units (15 x 4: one key is one world unit)
         [SerializeField] KeyboardPalette palette;                    // idle = key, lit = accent, backdrop = panel
         [SerializeField] Material cellMaterial;                      // flat unlit sprite material (Art/KeyboardCell.mat)
         [SerializeField, Range(0f, 0.3f)] float gap = 0.08f;         // between cells, in key units
@@ -30,7 +31,11 @@ namespace DetectiveDave.KeyboardInput
         public float Scale { get; private set; }                     // key units to world units
         public IReadOnlyDictionary<Key, KeyCell> Cells => cells;
 
-        void Start()
+        /// <summary>The width of the keys plus the backdrop around them, in the grid object's local units.</summary>
+        public float ContentWidth => Layout == null ? 0f : Layout.UnitsWide * Scale + BackgroundMargin * 2f;
+
+        // Built in Awake so that every Start can already ask for the layout and the cells.
+        void Awake()
         {
             if (!KeyboardSession.IsLocked)
             {
@@ -49,21 +54,44 @@ namespace DetectiveDave.KeyboardInput
             background.color = Palette.panel;
             foreach (var cell in cells.Values)
             {
-                var color = cell.Active ? Palette.accent : Palette.key;
+                var color = cell.Active ? Palette.accent : cell.Neighbour ? Palette.edge : cell.Background ?? Palette.key;
                 foreach (var part in cell.Parts) part.color = color;
             }
         }
 
-        /// <summary>The cell under a screen position, or null.</summary>
-        public KeyCell CellAt(Vector2 screenPosition)
+        /// <summary>Draws one rectangle of a key with a sprite, stretched to fill it. Null goes back to the flat square.</summary>
+        public void SetPartSprite(KeyCell cell, int part, Sprite sprite)
         {
-            var cam = Camera.main;
-            if (Layout == null || !cam) return null;
-            var local = GridUtils.ScreenToLocal(cam, transform, screenPosition);
-            return GridUtils.FindCellAt(cells.Values, GridUtils.ToKeyUnits(Layout, Scale, local));
+            if (!sprite) sprite = square;
+            var renderer = cell.Parts[part];
+            var drawn = GridUtils.PartRect(cell.Def.Rects, part, gap);
+            renderer.enabled = true;
+            renderer.sprite = sprite;
+            renderer.transform.localPosition = GridUtils.ToLocal(Layout, Scale, drawn.center);
+            renderer.transform.localScale = GridUtils.ScaleToFit(drawn.size * Scale, sprite.bounds.size);
         }
 
-        public Vector3 LabelWorldPosition(KeyCell cell) => transform.TransformPoint(cell.LabelPosition);
+        /// <summary>Draws a key of several rectangles with one sprite over the whole of it (the L-shaped Enter). The first part carries it, the others are hidden.</summary>
+        public void SetKeySprite(KeyCell cell, Sprite sprite)
+        {
+            var bounds = GridUtils.KeyBounds(cell.Def.Rects, gap);
+            var renderer = cell.Parts[0];
+            renderer.enabled = true;
+            renderer.sprite = sprite;
+            renderer.transform.localPosition = GridUtils.ToLocal(Layout, Scale, bounds.center);
+            renderer.transform.localScale = GridUtils.ScaleToFit(bounds.size * Scale, sprite.bounds.size);
+            for (int part = 1; part < cell.Parts.Length; part++) cell.Parts[part].enabled = false;
+        }
+
+        public Vector3 CenterWorldPosition(KeyCell cell) => transform.TransformPoint(cell.Center);
+
+        /// <summary>Where the player stands on a key, in world space. False for a key the layout does not have.</summary>
+        public bool TryGetWorldCenter(Key key, out Vector2 world)
+        {
+            bool found = cells.TryGetValue(key, out var cell);
+            world = found ? (Vector2)CenterWorldPosition(cell) : default;
+            return found;
+        }
 
         void Build()
         {
@@ -71,28 +99,29 @@ namespace DetectiveDave.KeyboardInput
             square = SpriteFactory.CreateUnitSquare();
             background = NewPart("Background", Vector2.zero, Layout.Size * Scale + Vector2.one * (BackgroundMargin * 2f), BackgroundSortingOrder);
 
-            foreach (var unknown in Layout.keys.Where(candidate => !candidate.InputKey.HasValue))
-                Debug.LogWarning($"Layout '{Layout.id}': '{unknown.code}' is not an Input System key name.", this);
+            foreach (var unknown in Layout.Keys.Where(candidate => !candidate.InputKey.HasValue))
+                Debug.LogWarning($"Layout '{Layout.Id}': '{unknown.Code}' is not an Input System key name.", this);
 
-            var firstOfEachKey = Layout.keys
-                .Where(candidate => candidate.InputKey.HasValue)
-                .GroupBy(candidate => candidate.InputKey.Value)
-                .Select(group => group.First());
-            foreach (var def in firstOfEachKey)
+            foreach (var def in Layout.UniqueKeys())
                 cells.Add(def.InputKey.Value, CreateCell(def));
         }
 
         KeyCell CreateCell(KeyDef def)
         {
-            var parts = def.rects
-                .Select(rect => NewPart(def.code, GridUtils.ToLocal(Layout, Scale, rect.Center), GridUtils.CellSize(rect, Scale, gap), CellSortingOrder))
+            var parts = Enumerable.Range(0, def.Rects.Count)
+                .Select(index =>
+                {
+                    var drawn = GridUtils.PartRect(def.Rects, index, gap);
+                    return NewPart(def.Code, GridUtils.ToLocal(Layout, Scale, drawn.center), drawn.size * Scale, CellSortingOrder);
+                })
                 .ToArray();
-            return new KeyCell(def, def.InputKey.Value, parts, GridUtils.ToLocal(Layout, Scale, def.center));
+            return new KeyCell(def, def.InputKey.Value, parts, GridUtils.ToLocal(Layout, Scale, def.Center));
         }
 
         SpriteRenderer NewPart(string partName, Vector2 localPosition, Vector2 localSize, int sortingOrder)
         {
             var go = new GameObject(partName);
+            go.AddComponent<KeyTag>();
             go.transform.SetParent(transform, false);
             go.transform.localPosition = localPosition;
             go.transform.localScale = new Vector3(localSize.x, localSize.y, 1f);

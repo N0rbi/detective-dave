@@ -1,6 +1,7 @@
+using DetectiveDave.KeyboardInput;
 using UnityEngine;
 
-namespace DetectiveDave.KeyboardInput
+namespace DetectiveDave.KeyboardGrid
 {
     /// <summary>Dims the glyphs of the layouts that were not chosen.</summary>
     public class LayoutChoiceView : MonoBehaviour
@@ -16,7 +17,7 @@ namespace DetectiveDave.KeyboardInput
             foreach (var choice in selector.Choices)
             {
                 if (!choice.Glyph) continue;
-                choice.Glyph.color = new Color(1f, 1f, 1f, choice.Layout.id == chosen.id ? 1f : dimmedAlpha);
+                choice.Glyph.color = new Color(1f, 1f, 1f, choice.Layout.Id == chosen.Id ? 1f : dimmedAlpha);
             }
         }
     }

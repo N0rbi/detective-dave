@@ -1,5 +1,30 @@
 {
   "dependencies": {
+    "com.detectivedave.keyboard-input": {
+      "version": "file:com.detectivedave.keyboard-input",
+      "depth": 0,
+      "source": "embedded",
+      "dependencies": {
+        "com.unity.inputsystem": "1.20.1"
+      }
+    },
+    "com.detectivedave.levels": {
+      "version": "file:com.detectivedave.levels",
+      "depth": 0,
+      "source": "embedded",
+      "dependencies": {
+        "com.unity.modules.tilemap": "1.0.0"
+      }
+    },
+    "com.unity.2d.tilemap": {
+      "version": "1.0.0",
+      "depth": 0,
+      "source": "builtin",
+      "dependencies": {
+        "com.unity.modules.tilemap": "1.0.0",
+        "com.unity.modules.uielements": "1.0.0"
+      }
+    },
     "com.unity.burst": {
       "version": "2.0.0",
       "depth": 2,

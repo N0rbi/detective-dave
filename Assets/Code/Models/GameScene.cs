@@ -8,5 +8,6 @@ namespace DetectiveDave
     {
         KeyboardSelect = 0,
         KeyboardGrid = 1,
+        KeyboardLevel = 2,
     }
 }

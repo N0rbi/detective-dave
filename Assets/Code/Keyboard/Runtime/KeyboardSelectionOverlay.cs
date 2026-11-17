@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace DetectiveDave.KeyboardInput
+namespace DetectiveDave.KeyboardGrid
 {
     /// <summary>The prompt on the layout selection screen (IMGUI).</summary>
     public class KeyboardSelectionOverlay : MonoBehaviour
@@ -20,7 +20,7 @@ namespace DetectiveDave.KeyboardInput
             style.normal.textColor = Color.white;
 
             var text = KeyboardSession.IsLocked
-                ? $"Layout: {KeyboardSession.Layout.name}"
+                ? $"Layout: {KeyboardSession.Layout.Name}"
                 : $"Press 1 - {selector.Choices.Count} to pick your keyboard layout";
             var area = new Rect(0f, Screen.height * TopPerScreen, Screen.width, Screen.height * HeightPerScreen);
             GUI.Label(area, text, style);

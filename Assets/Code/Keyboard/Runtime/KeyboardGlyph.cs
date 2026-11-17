@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace DetectiveDave.KeyboardInput
+namespace DetectiveDave.KeyboardGrid
 {
     /// <summary>
     /// Put on a SpriteRenderer that shows one of the keyboard_*.png masks with the KeyboardGlyph material.

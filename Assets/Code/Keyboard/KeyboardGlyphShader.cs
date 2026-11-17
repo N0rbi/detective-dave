@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace DetectiveDave.KeyboardInput
+namespace DetectiveDave.KeyboardGrid
 {
     /// <summary>
     /// Code mirror of KeyboardGlyph.shader: every shader property has exactly one entry here.

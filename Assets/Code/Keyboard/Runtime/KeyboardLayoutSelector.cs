@@ -1,10 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using DetectiveDave.KeyboardInput;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-namespace DetectiveDave.KeyboardInput
+namespace DetectiveDave.KeyboardGrid
 {
     /// <summary>
     /// Layout picker, no visuals. The first press of a layout's number key locks that layout for the session,
@@ -31,10 +32,10 @@ namespace DetectiveDave.KeyboardInput
             foreach (var option in options.Where(candidate => candidate != null && candidate.layout))
             {
                 var layout = KeyboardLayout.Parse(option.layout);
-                if (Enum.TryParse<Key>(DigitKeyPrefix + layout.digit, out var key))
+                if (Enum.TryParse<Key>(DigitKeyPrefix + layout.Digit, out var key))
                     choices.Add(new LayoutChoice(layout, key, option.glyph));
                 else
-                    Debug.LogError($"Layout '{layout.id}' has digit {layout.digit}, which is not a number key.", this);
+                    Debug.LogError($"Layout '{layout.Id}' has digit {layout.Digit}, which is not a number key.", this);
             }
         }
 
@@ -48,8 +49,14 @@ namespace DetectiveDave.KeyboardInput
             var keyboard = Keyboard.current;
             if (proceeding || keyboard == null) return;
 
-            var pressed = choices.FirstOrDefault(candidate => keyboard[candidate.Key].wasPressedThisFrame);
-            if (pressed != null && KeyboardSession.Lock(pressed.Layout)) Proceed();
+            // Read straight from the Input System, not through a KeyboardKeySource: there is no layout to read yet, and only a
+            // press during this frame counts (a digit already held when the scene starts must not pick a layout).
+            foreach (var choice in choices)          // the first choice pressed this frame wins
+            {
+                if (!keyboard[choice.Key].wasPressedThisFrame) continue;
+                if (KeyboardSession.Lock(choice.Layout)) Proceed();
+                return;
+            }
         }
 
         void Proceed()
@@ -59,6 +66,11 @@ namespace DetectiveDave.KeyboardInput
             Invoke(nameof(LoadNext), delay);
         }
 
-        void LoadNext() => SceneLoader.Load(nextScene);
+        void LoadNext()
+        {
+            var scene = KeyboardSession.ReturnTo ?? nextScene;
+            KeyboardSession.ReturnTo = null;
+            SceneLoader.Load(scene);
+        }
     }
 }

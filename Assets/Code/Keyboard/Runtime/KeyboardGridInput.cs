@@ -1,72 +1,77 @@
-using System;
 using System.Collections.Generic;
-using System.Linq;
+using DetectiveDave.KeyboardInput;
 using UnityEngine;
 using UnityEngine.InputSystem;
-using UnityEngine.InputSystem.Controls;
 
-namespace DetectiveDave.KeyboardInput
+namespace DetectiveDave.KeyboardGrid
 {
     /// <summary>
-    /// Decides which cells are held: keys on the keyboard, and the left mouse button on a cell.
-    /// Writes the result to <see cref="KeyCell.Active"/> and reports presses. Draws nothing.
+    /// The test bench's reading of the board, driven only by the key source's events: a cell is lit from <c>KeyPressed</c> until <c>KeyReleased</c>
+    /// and optionally the neighbours of lit cells are tinted.
+    /// Writes <see cref="KeyCell.Active"/> and <see cref="KeyCell.Neighbour"/> (view state), draws nothing.
     /// </summary>
-    [RequireComponent(typeof(KeyboardGridView))]
+    [RequireComponent(typeof(KeyboardGridView), typeof(KeyboardBoard), typeof(KeyboardKeySource))]
     public class KeyboardGridInput : MonoBehaviour
     {
-        [SerializeField, Min(0f)] float togglePulse = 0.25f;     // how long a toggle key (Caps Lock) stays lit after a state change
+        [SerializeField] bool showNeighbours = true;             // tint the keys that touch a lit key
 
-        readonly HashSet<Key> reportedUnmapped = new HashSet<Key>();
+        readonly HashSet<Key> pressed = new HashSet<Key>();      // between the source's pressed and released events
+        readonly List<Key> lit = new List<Key>();
         KeyboardGridView view;
+        KeyboardBoard board;
+        KeyboardKeySource source;
 
-        /// <summary>Raised for every key going down, including keys the layout does not have.</summary>
-        public event Action<KeyPress> KeyPressed;
+        void Awake()
+        {
+            view = GetComponent<KeyboardGridView>();
+            board = GetComponent<KeyboardBoard>();
+            source = GetComponent<KeyboardKeySource>();
+            // A scene saved before these components existed lacks them (RequireComponent only adds on Add Component): say how to fix it, do not throw.
+            if (!board || !source)
+            {
+                Debug.LogError($"{GetType().Name} on '{name}' needs {nameof(KeyboardBoard)} and {nameof(KeyboardKeySource)}: add {nameof(KeyboardBoard)} to this object (it brings {nameof(KeyboardKeySource)}).", this);
+                enabled = false;
+            }
+        }
 
-        /// <summary>Raised when the mouse button goes down on a cell.</summary>
-        public event Action<KeyCell> CellClicked;
+        void OnEnable()
+        {
+            source.KeyPressed += OnKeyPressed;
+            source.KeyReleased += OnKeyReleased;
+        }
 
-        void Awake() => view = GetComponent<KeyboardGridView>();
+        void OnDisable()
+        {
+            source.KeyPressed -= OnKeyPressed;
+            source.KeyReleased -= OnKeyReleased;
+        }
 
         void Update()
         {
             if (view.Layout == null) return;
-            var keyboard = Keyboard.current;
-            var mouse = Mouse.current;
-
-            var mouseCell = mouse != null && mouse.leftButton.isPressed ? view.CellAt(mouse.position.ReadValue()) : null;
-            if (mouseCell != null && mouse.leftButton.wasPressedThisFrame) CellClicked?.Invoke(mouseCell);
-            if (keyboard != null) ReportPresses(keyboard);
-
             foreach (var cell in view.Cells.Values)
-                cell.Active = !cell.Def.inert && (IsHeld(keyboard, cell) || cell == mouseCell);
+                cell.Active = !cell.Def.IsInert && pressed.Contains(cell.InputKey);
+            MarkNeighbours();
         }
 
-        bool IsHeld(Keyboard keyboard, KeyCell cell)
+        void OnKeyPressed(Key key) => pressed.Add(key);
+
+        void OnKeyReleased(Key key) => pressed.Remove(key);
+
+        void MarkNeighbours()
         {
-            if (keyboard == null) return false;
-            if (cell.Def.toggle) return IsPulsing(keyboard[cell.InputKey], cell);
-            return keyboard[cell.InputKey].isPressed || cell.Def.AlsoKeys.Any(other => keyboard[other].isPressed);
+            lit.Clear();
+            foreach (var cell in view.Cells.Values)
+                if (cell.Active) lit.Add(cell.InputKey);
+            foreach (var cell in view.Cells.Values)
+                cell.Neighbour = showNeighbours && !cell.Active && TouchesAny(cell.InputKey);
         }
 
-        // Caps Lock only reports its on/off state, never a real hold, so it pulses on each change.
-        bool IsPulsing(KeyControl control, KeyCell cell)
+        bool TouchesAny(Key key)
         {
-            if (control.wasPressedThisFrame || control.wasReleasedThisFrame)
-                cell.PulseUntil = Time.unscaledTime + togglePulse;
-            return Time.unscaledTime < cell.PulseUntil;
-        }
-
-        // Keys the layout does not have are logged once each: that log is how unverified key codes get confirmed.
-        void ReportPresses(Keyboard keyboard)
-        {
-            foreach (var control in keyboard.allKeys.Where(candidate => candidate.wasPressedThisFrame))
-            {
-                view.Cells.TryGetValue(control.keyCode, out var cell);
-                if (cell == null && reportedUnmapped.Add(control.keyCode))
-                    Debug.Log($"[Keyboard] Not in layout '{view.Layout.id}': Key.{control.keyCode}, displayName '{control.displayName}', " +
-                              $"keyboardLayout '{keyboard.keyboardLayout}', platform {Application.platform}");
-                KeyPressed?.Invoke(new KeyPress(control.keyCode, control.displayName, cell));
-            }
+            foreach (var other in lit)
+                if (board.IsNeighbour(other, key)) return true;
+            return false;
         }
     }
 }

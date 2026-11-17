@@ -1,7 +1,8 @@
+using DetectiveDave.KeyboardInput;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-namespace DetectiveDave.KeyboardInput
+namespace DetectiveDave.KeyboardGrid
 {
     /// <summary>A pickable layout on the selection screen, resolved from a <see cref="LayoutOption"/>.</summary>
     public class LayoutChoice

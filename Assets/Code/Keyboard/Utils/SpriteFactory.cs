@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace DetectiveDave.KeyboardInput
+namespace DetectiveDave.KeyboardGrid
 {
     public static class SpriteFactory
     {
