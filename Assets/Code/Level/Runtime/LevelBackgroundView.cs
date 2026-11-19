@@ -3,30 +3,30 @@ using UnityEngine;
 namespace DetectiveDave.LevelPlay
 {
     /// <summary>
-    /// Draws the level's background sprite (<see cref="Levels.LevelDefinition.Background"/>) behind everything, scaled to cover the
-    /// main camera's view and kept centred on it. Nothing is drawn when the level has no background.
+    /// Draws the level's background (the sprite of its Background renderer, else its Key Art's default background) behind everything,
+    /// scaled to cover the main camera's view and kept centred on it. Nothing is drawn when the level has no background.
     /// The sprite lives on its own root object, so the keyboard's screen fit does not scale it. Needs an orthographic main camera.
     /// </summary>
-    [RequireComponent(typeof(TileMapKeyboardMapper))]
+    [RequireComponent(typeof(LevelLoader))]
     public sealed class LevelBackgroundView : MonoBehaviour
     {
         [Tooltip("Sorting order of the background. The keyboard's own backdrop is -1, so keep this lower.")]
         [SerializeField] int sortingOrder = -100;
 
-        TileMapKeyboardMapper mapper;
+        LevelLoader loader;
         SpriteRenderer background;
         Vector3 fittedCamera;
         Vector2 fittedView;
 
         void Awake()
         {
-            mapper = GetComponent<TileMapKeyboardMapper>();
+            loader = GetComponent<LevelLoader>();
             background = new GameObject("Level Background").AddComponent<SpriteRenderer>();
         }
 
-        void OnEnable() => mapper.LevelChanged += Refresh;
+        void OnEnable() => loader.LevelChanged += Refresh;
 
-        void OnDisable() => mapper.LevelChanged -= Refresh;
+        void OnDisable() => loader.LevelChanged -= Refresh;
 
         void Start() => Refresh();
 
@@ -49,7 +49,7 @@ namespace DetectiveDave.LevelPlay
 
         void Refresh()
         {
-            var level = mapper.Level;
+            var level = loader.Current;
             var sprite = level ? level.Background : null;
             background.sortingOrder = sortingOrder;
             background.sprite = sprite;

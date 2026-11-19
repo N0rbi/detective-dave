@@ -1,27 +1,62 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Tilemaps;
 
 namespace DetectiveDave.Levels
 {
     /// <summary>
-    /// The baked shape of a level: what type every painted cell is, in board space (see <see cref="TileMapGroup"/>).
-    /// Read-only at runtime. Made by baking a <see cref="TileMapGroup"/> in the editor (the Bake button), stored in the <see cref="LevelDefinition"/>.
+    /// A level's shape as a lookup: what kind of key every painted cell is, in board space, plus paths between cells.
+    /// Built from a level's Shape tilemap with <see cref="FromTilemap"/> (or <see cref="Level.BuildTerrain"/>) when the level is
+    /// loaded; it is derived data, never stored. Read-only once built.
     /// </summary>
-    [Serializable]
     public sealed class LevelTerrain
     {
         const int MaxTypes = byte.MaxValue;     // cell value 0 is "empty", 1..255 index the type palette
 
-        [SerializeField] RectInt cellBounds;
-        [SerializeField] Vector2 origin;                       // board position of the lower-left corner of cellBounds.min
-        [SerializeField] Vector2 cellSize = Vector2.one;
-        [SerializeField] TileType[] types = Array.Empty<TileType>();
-        [SerializeField] byte[] cells = Array.Empty<byte>();   // row-major from cellBounds.min, 0 = empty, n = types[n - 1]
-        [SerializeField] int paintedCells;                     // cells with a type, counted at bake
+        readonly RectInt cellBounds;
+        readonly Vector2 origin;                       // board position of the lower-left corner of cellBounds.min
+        readonly Vector2 cellSize = Vector2.one;
+        readonly TileType[] types = Array.Empty<TileType>();
+        readonly byte[] cells = Array.Empty<byte>();   // row-major from cellBounds.min, 0 = empty, n = types[n - 1]
+        readonly int paintedCells;                     // cells with a type
 
         /// <summary>An empty terrain: every query answers "nothing here".</summary>
         public LevelTerrain() { }
+
+        /// <summary>
+        /// Reads <paramref name="tilemap"/> into a terrain. Only <see cref="TileType"/> tiles count; other tiles are skipped.
+        /// Positions are in the local space of <paramref name="boardSpace"/> (the keyboard object; see <see cref="Level.BoardSpace"/>).
+        /// The terrain covers the painted cells only. Assumes the tilemap is not rotated relative to <paramref name="boardSpace"/>.
+        /// Allocates and reads every cell of the tilemap's bounds: call it when a level is loaded or changed, not every frame.
+        /// </summary>
+        public static LevelTerrain FromTilemap(Tilemap tilemap, Transform boardSpace)
+        {
+            if (!tilemap) throw new ArgumentNullException(nameof(tilemap));
+            if (!boardSpace) throw new ArgumentNullException(nameof(boardSpace));
+
+            int xMin = int.MaxValue, yMin = int.MaxValue, xMax = int.MinValue, yMax = int.MinValue;
+            var area = tilemap.cellBounds;
+            for (int y = area.yMin; y < area.yMax; y++)
+                for (int x = area.xMin; x < area.xMax; x++)
+                {
+                    if (!tilemap.GetTile<TileType>(new Vector3Int(x, y, 0))) continue;
+                    xMin = Mathf.Min(xMin, x);
+                    yMin = Mathf.Min(yMin, y);
+                    xMax = Mathf.Max(xMax, x + 1);
+                    yMax = Mathf.Max(yMax, y + 1);
+                }
+            if (xMin > xMax) return new LevelTerrain();
+
+            var bounds = new RectInt(xMin, yMin, xMax - xMin, yMax - yMin);
+            Vector2 BoardCenter(Vector2Int cell) => boardSpace.InverseTransformPoint(tilemap.GetCellCenterWorld(new Vector3Int(cell.x, cell.y, 0)));
+            var first = BoardCenter(bounds.min);
+            var step = new Vector2(
+                Mathf.Abs(BoardCenter(bounds.min + Vector2Int.right).x - first.x),
+                Mathf.Abs(BoardCenter(bounds.min + Vector2Int.up).y - first.y));
+            if (step.x <= 0f || step.y <= 0f) return new LevelTerrain();
+            return new LevelTerrain(bounds, first - step * 0.5f, step, cell => tilemap.GetTile<TileType>(new Vector3Int(cell.x, cell.y, 0)));
+        }
 
         /// <summary>
         /// A terrain over <paramref name="cellBounds"/> whose cell <c>cellBounds.min</c> has its lower-left corner at <paramref name="origin"/> in board space.
@@ -36,6 +71,7 @@ namespace DetectiveDave.Levels
 
             var palette = new List<TileType>();
             cells = new byte[this.cellBounds.width * this.cellBounds.height];
+            int painted = 0;
             for (int y = 0; y < this.cellBounds.height; y++)
                 for (int x = 0; x < this.cellBounds.width; x++)
                 {
@@ -49,12 +85,13 @@ namespace DetectiveDave.Levels
                         index = palette.Count - 1;
                     }
                     cells[y * this.cellBounds.width + x] = (byte)(index + 1);
-                    paintedCells++;
+                    painted++;
                 }
             types = palette.ToArray();
+            paintedCells = painted;
         }
 
-        /// <summary>True when nothing is painted (or the level was never baked).</summary>
+        /// <summary>True when nothing is painted.</summary>
         public bool IsEmpty => paintedCells == 0;
 
         /// <summary>How many cells have a type.</summary>
@@ -67,9 +104,9 @@ namespace DetectiveDave.Levels
         public Vector2 CellSize => cellSize;
 
         /// <summary>Every type that appears in the terrain, each once.</summary>
-        public IReadOnlyList<TileType> Types => Array.AsReadOnly(types ?? Array.Empty<TileType>());
+        public IReadOnlyList<TileType> Types => Array.AsReadOnly(types);
 
-        byte[] Cells => cells ?? Array.Empty<byte>();
+        byte[] Cells => cells;
 
         /// <summary>The cell that contains a board position. Positions on a border belong to the cell above and to the right.</summary>
         public Vector2Int ToCell(Vector2 boardPosition)
@@ -109,22 +146,7 @@ namespace DetectiveDave.Levels
             var data = Cells;
             if (index >= data.Length) return null;
             int value = data[index];
-            return value == 0 || types == null || value > types.Length ? null : types[value - 1];
-        }
-
-        /// <summary>True when both terrains hold the same types in the same cells at the same place. Used to tell whether a bake is out of date.</summary>
-        internal bool SameAs(LevelTerrain other)
-        {
-            if (other == null) return IsEmpty;
-            if (IsEmpty && other.IsEmpty) return true;
-            if (paintedCells != other.paintedCells || !cellBounds.Equals(other.cellBounds) || origin != other.origin || cellSize != other.cellSize) return false;
-            for (int y = cellBounds.yMin; y < cellBounds.yMax; y++)
-                for (int x = cellBounds.xMin; x < cellBounds.xMax; x++)
-                {
-                    var cell = new Vector2Int(x, y);
-                    if (TypeAt(cell) != other.TypeAt(cell)) return false;
-                }
-            return true;
+            return value == 0 || value > types.Length ? null : types[value - 1];
         }
     }
 }

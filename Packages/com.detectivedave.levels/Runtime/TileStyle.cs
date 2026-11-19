@@ -14,7 +14,7 @@ namespace DetectiveDave.Levels
         [Tooltip("Multiplied with the sprites (and used alone on keys that have no sprite). White keeps the art's own colours.")]
         [SerializeField] Color tint = Color.white;
 
-        [Tooltip("One entry per key shape. Use \"Add Standard Key Shapes\" in the level's inspector to fill the shapes every keyboard layout uses.")]
+        [Tooltip("One entry per key shape. Use \"Add Standard Key Shapes\" in the Key Art inspector to fill the shapes every keyboard layout uses.")]
         [SerializeField] KeyShapeSprite[] shapes = Array.Empty<KeyShapeSprite>();
 
         /// <summary>For serialization.</summary>

@@ -1,0 +1,23 @@
+{
+    "name": "DetectiveDave.Game.Editor",
+    "rootNamespace": "DetectiveDave.EditorTools",
+    "references": [
+        "DetectiveDave.Game",
+        "DetectiveDave.KeyboardInput",
+        "DetectiveDave.Levels",
+        "DetectiveDave.Levels.Editor",
+        "Unity.InputSystem",
+        "Unity.2D.Tilemap.Editor"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": false,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

@@ -13,7 +13,7 @@ namespace DetectiveDave.LevelPlay
     /// marker (in the tile type's editor colour) on it until the key comes up. Every few seconds an "enemy" appears on a random
     /// walkable key and follows a path to another one. Listens to the key source; never calls into it.
     /// </summary>
-    [RequireComponent(typeof(KeyboardBoard), typeof(KeyboardGridView), typeof(TileMapKeyboardMapper))]
+    [RequireComponent(typeof(KeyboardBoard), typeof(KeyboardGridView), typeof(LevelLoader))]
     public sealed class KeyboardBoardSampler : MonoBehaviour
     {
         const float MarkerSize = 0.5f;
@@ -33,7 +33,7 @@ namespace DetectiveDave.LevelPlay
         readonly List<PathWalker> finished = new List<PathWalker>();
         IKeyboardBoard board;
         KeyboardGridView view;
-        TileMapKeyboardMapper mapper;
+        LevelLoader mapper;
         IKeyEventSource keys;
         Sprite square;
         float nextEnemyTime;
@@ -42,7 +42,7 @@ namespace DetectiveDave.LevelPlay
         {
             board = GetComponent<KeyboardBoard>();
             view = GetComponent<KeyboardGridView>();
-            mapper = GetComponent<TileMapKeyboardMapper>();
+            mapper = GetComponent<LevelLoader>();
             keys = TryGetComponent(out KeyboardKeySource source) ? source : null;   // a real null: an interface hides Unity's fake null
             square = SpriteFactory.CreateUnitSquare();
         }

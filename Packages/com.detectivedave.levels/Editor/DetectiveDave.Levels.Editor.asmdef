@@ -2,7 +2,8 @@
     "name": "DetectiveDave.Levels.Editor",
     "rootNamespace": "DetectiveDave.Levels.Editor",
     "references": [
-        "DetectiveDave.Levels"
+        "DetectiveDave.Levels",
+        "Unity.2D.Tilemap.Editor"
     ],
     "includePlatforms": [
         "Editor"

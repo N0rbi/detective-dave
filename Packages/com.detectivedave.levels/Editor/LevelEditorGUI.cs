@@ -12,15 +12,31 @@ namespace DetectiveDave.Levels.Editor
         static readonly Color PreviewBackground = new Color(0.12f, 0.12f, 0.12f);
         static readonly Color MissingColor = new Color(0.8f, 0.2f, 0.2f, 0.6f);
 
-        public static void DrawIssues(IReadOnlyList<LevelIssue> issues)
+        /// <summary>Draws the issues as help boxes, each with its fix button. Returns true when a fix was requested (it runs right after this GUI pass; recompute the issues).</summary>
+        public static bool DrawIssues(IReadOnlyList<LevelIssue> issues)
         {
             if (issues.Count == 0)
             {
                 EditorGUILayout.HelpBox("All checks passed.", MessageType.None);
-                return;
+                return false;
             }
-            foreach (var issue in issues.OrderByDescending(issue => (int)issue.Severity))
+            bool fixedSomething = false;
+            foreach (var issue in issues)
+            {
                 EditorGUILayout.HelpBox(issue.Message, issue.Severity);
+                if (issue.Fix == null) continue;
+                using (new EditorGUILayout.HorizontalScope())
+                {
+                    GUILayout.FlexibleSpace();
+                    if (GUILayout.Button(issue.FixLabel, EditorStyles.miniButton))
+                    {
+                        var fix = issue.Fix;
+                        EditorApplication.delayCall += () => fix();   // after this GUI pass: fixes may add or move objects
+                        fixedSomething = true;
+                    }
+                }
+            }
+            return fixedSomething;
         }
 
         /// <summary>Draws a sprite into a rect (atlas-aware), or a red box when it is missing.</summary>
@@ -40,7 +56,7 @@ namespace DetectiveDave.Levels.Editor
             GUI.color = previous;
         }
 
-        /// <summary>A map of the baked terrain: one coloured square per cell (the type's editor colour), y up, plus a legend.</summary>
+        /// <summary>A map of the terrain: one coloured square per cell (the type's editor colour), y up, plus a legend.</summary>
         public static void DrawTerrainPreview(LevelTerrain terrain)
         {
             if (terrain == null || terrain.IsEmpty) return;

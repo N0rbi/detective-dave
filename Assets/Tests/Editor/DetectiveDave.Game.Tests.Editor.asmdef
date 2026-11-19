@@ -1,0 +1,29 @@
+{
+    "name": "DetectiveDave.Game.Tests.Editor",
+    "rootNamespace": "DetectiveDave.Tests",
+    "references": [
+        "DetectiveDave.Game",
+        "DetectiveDave.Game.Editor",
+        "DetectiveDave.KeyboardInput",
+        "DetectiveDave.Levels",
+        "Unity.InputSystem",
+        "Unity.2D.Tilemap.Editor",
+        "UnityEngine.TestRunner",
+        "UnityEditor.TestRunner"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": true,
+    "precompiledReferences": [
+        "nunit.framework.dll"
+    ],
+    "autoReferenced": false,
+    "defineConstraints": [
+        "UNITY_INCLUDE_TESTS"
+    ],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

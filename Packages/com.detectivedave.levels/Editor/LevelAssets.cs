@@ -1,18 +1,18 @@
 using System.Linq;
 using UnityEditor;
 using UnityEngine;
-using UnityEngine.Tilemaps;
 
 namespace DetectiveDave.Levels.Editor
 {
-    /// <summary>Creating level assets and objects with sensible defaults, and the menu items that do it.</summary>
-    internal static class LevelAssets
+    /// <summary>Finding and creating level assets, and the Create menu items.</summary>
+    public static class LevelAssets
     {
-        const string CreateMenu = "Assets/Create/Detective Dave/Level/";
-        const string GameObjectMenu = "GameObject/Detective Dave/Level/";
-        const float CellsPerKey = 4f;
+        /// <summary>The name the default Key Art goes by.</summary>
+        public const string DefaultKeyArtName = "Default Key Art";
 
-        // The terrain kinds the game started with. Start and goal are floor the player stands on, so they are walkable.
+        const string CreateMenu = "Assets/Create/Detective Dave/";
+
+        // The kinds of key the game started with. Start and goal are floor the player stands on, so they are walkable.
         static readonly (string name, Color color, bool walkable, string description)[] StandardTypes =
         {
             ("Walkable", new Color(0.35f, 0.85f, 0.45f), true, "Floor: the player and enemies walk here."),
@@ -23,46 +23,30 @@ namespace DetectiveDave.Levels.Editor
             ("Goal", new Color(1f, 0.85f, 0.2f), true, "Where the player has to get to."),
         };
 
-        /// <summary>Every Tile Type asset in the project, by name.</summary>
-        public static TileType[] FindAllTileTypes() =>
-            AssetDatabase.FindAssets("t:" + nameof(TileType))
-                .Select(guid => AssetDatabase.LoadAssetAtPath<TileType>(AssetDatabase.GUIDToAssetPath(guid)))
-                .Where(type => type)
-                .Distinct()
-                .OrderBy(type => type.name)
-                .ToArray();
+        /// <summary>Every Tile Type asset in the project, by name. Scans the project: cache the result.</summary>
+        public static TileType[] FindAllTileTypes() => FindAll<TileType>().OrderBy(type => type.name).ToArray();
 
-        /// <summary>
-        /// Creates a Level Definition at <paramref name="path"/>. It uses the project's usual style template (the level most other levels
-        /// use as their template) when there is one; otherwise it gets an empty style, with the standard key shapes, for every Tile Type.
-        /// </summary>
-        public static LevelDefinition CreateLevel(string path)
+        /// <summary>The Key Art named <see cref="DefaultKeyArtName"/>, else the only Key Art in the project, else null.</summary>
+        public static KeyArt FindDefaultKeyArt()
         {
-            var level = ScriptableObject.CreateInstance<LevelDefinition>();
-            AssetDatabase.CreateAsset(level, path);
-            var serialized = new SerializedObject(level);
-            var template = FindUsualTemplate();
-            if (template && template != level)
-                serialized.FindProperty("styleTemplate").objectReferenceValue = template;
-            else
-            {
-                var styles = serialized.FindProperty("tileStyles");
-                foreach (var type in FindAllTileTypes())
-                    LevelDefinitionEditor.ResetStyle(LevelDefinitionEditor.AppendElement(styles), type);
-            }
-            serialized.ApplyModifiedPropertiesWithoutUndo();
-            AssetDatabase.SaveAssetIfDirty(level);
-            return level;
+            var all = FindAll<KeyArt>().ToList();
+            return all.FirstOrDefault(art => art.name == DefaultKeyArtName) ?? (all.Count == 1 ? all[0] : null);
         }
 
-        static LevelDefinition FindUsualTemplate() =>
-            AssetDatabase.FindAssets("t:" + nameof(LevelDefinition))
-                .Select(guid => AssetDatabase.LoadAssetAtPath<LevelDefinition>(AssetDatabase.GUIDToAssetPath(guid)))
-                .Where(level => level && level.StyleTemplate)
-                .GroupBy(level => level.StyleTemplate)
-                .OrderByDescending(group => group.Count())
-                .Select(group => group.Key)
-                .FirstOrDefault();
+        /// <summary>Creates the folder (and its parents) when it does not exist. <paramref name="folder"/> is a project path like "Assets/Levels".</summary>
+        public static void EnsureFolder(string folder)
+        {
+            if (string.IsNullOrEmpty(folder) || AssetDatabase.IsValidFolder(folder)) return;
+            var parent = System.IO.Path.GetDirectoryName(folder)?.Replace('\\', '/');
+            EnsureFolder(parent);
+            AssetDatabase.CreateFolder(parent, System.IO.Path.GetFileName(folder));
+        }
+
+        static System.Collections.Generic.IEnumerable<T> FindAll<T>() where T : Object =>
+            AssetDatabase.FindAssets("t:" + typeof(T).Name)
+                .Select(guid => AssetDatabase.LoadAssetAtPath<T>(AssetDatabase.GUIDToAssetPath(guid)))
+                .Where(asset => asset)
+                .Distinct();
 
         [MenuItem(CreateMenu + "Standard Tile Types", false, 20)]
         static void CreateStandardTileTypes()
@@ -74,6 +58,7 @@ namespace DetectiveDave.Levels.Editor
                 var path = $"{folder}/{typeName}.asset";
                 if (AssetDatabase.LoadAssetAtPath<Object>(path)) continue;
                 var type = ScriptableObject.CreateInstance<TileType>();
+                type.color = color;
                 AssetDatabase.CreateAsset(type, path);
                 var serialized = new SerializedObject(type);
                 serialized.FindProperty("editorColor").colorValue = color;
@@ -83,21 +68,7 @@ namespace DetectiveDave.Levels.Editor
                 created++;
             }
             AssetDatabase.SaveAssets();
-            Debug.Log(created > 0
-                ? $"Created {created} tile type(s) in {folder}."
-                : $"{folder} already has every standard tile type.");
-        }
-
-        [MenuItem(GameObjectMenu + "Tile Map Group", false, 10)]
-        static void CreateTileMapGroup(MenuCommand command)
-        {
-            var root = new GameObject("Level Shape", typeof(Grid), typeof(TileMapGroup));
-            root.GetComponent<Grid>().cellSize = new Vector3(1f / CellsPerKey, 1f / CellsPerKey, 0f);
-            var tilemap = new GameObject("Terrain", typeof(Tilemap), typeof(TilemapRenderer));
-            tilemap.transform.SetParent(root.transform, false);
-            GameObjectUtility.SetParentAndAlign(root, command.context as GameObject);
-            Undo.RegisterCreatedObjectUndo(root, "Create Tile Map Group");
-            Selection.activeObject = root;
+            Debug.Log(created > 0 ? $"Created {created} tile type(s) in {folder}." : $"{folder} already has every standard tile type.");
         }
 
         static string SelectedFolder()

@@ -75,6 +75,52 @@ namespace DetectiveDave.Levels.Tests
         }
 
         [Test]
+        public void FromTilemapReadsTileTypesInBoardSpaceTrimmedToThePaintedCells()
+        {
+            var level = make.Level(gridPosition: new Vector3(1f, 0f, 0f));
+            LevelTestUtility.Paint(level.Shape, floor, new RectInt(2, 0, 4, 4));
+
+            var terrain = LevelTerrain.FromTilemap(level.Shape, level.BoardSpace);
+
+            Assert.AreEqual(new RectInt(2, 0, 4, 4), terrain.CellBounds);
+            Assert.AreEqual(16, terrain.PaintedCellCount);
+            // Cell (2, 0) spans x 0.5..0.75 in grid space, so 1.5..1.75 on the board.
+            var center = terrain.CellCenter(new Vector2Int(2, 0));
+            Assert.AreEqual(1.625f, center.x, 1e-5f);
+            Assert.AreEqual(0.125f, center.y, 1e-5f);
+            Assert.AreEqual(floor, terrain.GetTile(new Vector2(1.6f, 0.1f)).Type);
+            Assert.IsTrue(terrain.GetTile(new Vector2(1.4f, 0.1f)).IsEmpty);
+        }
+
+        [Test]
+        public void FromTilemapSkipsTilesThatAreNotAKindOfKey()
+        {
+            var level = make.Level();
+            LevelTestUtility.Paint(level.Shape, make.PlainTile(), new RectInt(0, 0, 2, 2));
+            LevelTestUtility.Paint(level.Shape, wall, new RectInt(5, 0, 1, 1));
+
+            var terrain = LevelTerrain.FromTilemap(level.Shape, level.BoardSpace);
+
+            Assert.AreEqual(1, terrain.PaintedCellCount);
+            CollectionAssert.AreEqual(new[] { wall }, terrain.Types);
+            Assert.IsTrue(LevelTerrain.FromTilemap(make.Level("Empty").Shape, level.BoardSpace).IsEmpty);
+        }
+
+        [Test]
+        public void BuildTerrainUsesTheParentAsBoardSpace()
+        {
+            var placed = make.Level();
+            placed.transform.localPosition = new Vector3(3f, 0f, 0f);
+            var alone = make.Level("Alone", underBoard: false);
+            alone.transform.localPosition = new Vector3(3f, 0f, 0f);
+            LevelTestUtility.Paint(placed.Shape, floor, new RectInt(0, 0, 1, 1));
+            LevelTestUtility.Paint(alone.Shape, floor, new RectInt(0, 0, 1, 1));
+
+            Assert.AreEqual(floor, placed.BuildTerrain().GetTile(new Vector2(3.1f, 0.1f)).Type, "under a board: the level's offset counts");
+            Assert.AreEqual(floor, alone.BuildTerrain().GetTile(new Vector2(0.1f, 0.1f)).Type, "at the root: its own local space");
+        }
+
+        [Test]
         public void PathWalkerReachesTheEnd()
         {
             var walker = new PathWalker(new[] { Vector2.zero, Vector2.right, new Vector2(1f, 1f) });

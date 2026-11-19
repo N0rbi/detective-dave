@@ -8,6 +8,6 @@ namespace DetectiveDave
     {
         KeyboardSelect = 0,
         KeyboardGrid = 1,
-        KeyboardLevel = 2,
+        Game = 2,           // was KeyboardLevel: the scene that plays levels
     }
 }
