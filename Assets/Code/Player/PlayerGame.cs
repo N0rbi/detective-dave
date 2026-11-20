@@ -102,11 +102,18 @@ namespace DetectiveDave.PlayerPlay
         {
             startWorld = default;
             goalWorld = default;
-            return level.TryGetEnds(out startKey, out goalKey) && board.TryGetPosition(startKey, out startWorld) && board.TryGetPosition(goalKey, out goalWorld);
+            if (!level.TryGetEnds(out startKey, out goalKey) || !board.TryGetPosition(startKey, out startWorld)) return false;
+            if (goalKey == Key.None)
+            {
+                goalWorld = startWorld;
+                return true;
+            }
+            return board.TryGetPosition(goalKey, out goalWorld);
         }
 
         void PerformOutcome(MoveOutcome outcome, Key target)
         {
+            if (outcome == MoveOutcome.Slip && settings.ForgivingMoves) return;
             switch (outcome)
             {
                 case MoveOutcome.Step: Walk(target, PlayerState.Moving, () => StepTo(target)); break;

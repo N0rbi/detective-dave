@@ -35,6 +35,15 @@ namespace DetectiveDave.Tests
         }
 
         [Test]
-        public void FewerThanTwoFramesIsRejected() => Assert.Throws<ArgumentOutOfRangeException>(() => new WalkCycle(1));
+        public void OneFrameStaysOnTheIdleFrame()
+        {
+            var cycle = new WalkCycle(1);
+            cycle.Advance();
+            cycle.Advance();
+            Assert.AreEqual(0, cycle.Frame);
+        }
+
+        [Test]
+        public void NoFramesIsRejected() => Assert.Throws<ArgumentOutOfRangeException>(() => new WalkCycle(0));
     }
 }

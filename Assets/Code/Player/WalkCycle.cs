@@ -9,7 +9,7 @@ namespace DetectiveDave.PlayerPlay
 
         public WalkCycle(int frameCount)
         {
-            if (frameCount < 2) throw new ArgumentOutOfRangeException(nameof(frameCount));
+            if (frameCount < 1) throw new ArgumentOutOfRangeException(nameof(frameCount));
             this.frameCount = frameCount;
         }
 
@@ -21,6 +21,7 @@ namespace DetectiveDave.PlayerPlay
 
         int FrameAfter(int stepCount)
         {
+            if (frameCount == 1) return 0;
             int period = 2 * (frameCount - 1);
             int position = stepCount % period;
             return position < frameCount ? position : period - position;

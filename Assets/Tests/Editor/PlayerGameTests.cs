@@ -714,5 +714,61 @@ namespace DetectiveDave.Tests
         }
 
         int CountCalls(string name) => animations.Calls.FindAll(call => call == name).Count;
+
+        [Test]
+        public void LevelWithoutGoalStillStartsAndWalks()
+        {
+            level.Goal = Key.None;
+            game.Restart();
+            game.OnKeyPressed(Start);
+            game.OnKeyPressed(Next);
+            animations.CompleteAll();
+            Assert.IsTrue(game.IsActive);
+            Assert.IsFalse(game.EndsMissing);
+            Assert.AreEqual(PlayerState.Idle, game.State);
+            CollectionAssert.AreEqual(new[] { Next }, moved);
+        }
+
+        [Test]
+        public void LevelWithoutGoalFacesRight()
+        {
+            level.Goal = Key.None;
+            game.Restart();
+            Assert.AreEqual(Facing.Right, presentation.Facing);
+        }
+
+        [Test]
+        public void LevelWithoutGoalNeverReachesTheGoal()
+        {
+            level.Goal = Key.None;
+            game.Restart();
+            game.OnKeyPressed(Start);
+            game.OnKeyPressed(Next);
+            animations.CompleteAll();
+            game.OnKeyPressed(Goal);
+            animations.CompleteAll();
+            Assert.AreEqual(0, goalReached);
+            Assert.AreEqual(PlayerState.Idle, game.State);
+        }
+
+        [Test]
+        public void ForgivingMovesIgnoreAKeyThatIsNotANeighbour()
+        {
+            game = new PlayerGame(board, level, animations, presentation, gust, new PlayerGameSettings(3, 3, SlipDistanceInKeys, DropMarginInKeys, BumpDistanceInKeys, true));
+            Begin();
+            game.OnKeyPressed(Far);
+            Assert.AreEqual(PlayerState.Idle, game.State);
+            Assert.AreEqual(0, CountCalls(nameof(FakeAnimations.SlipBy)));
+            Assert.IsEmpty(gust.Dashes);
+        }
+
+        [Test]
+        public void ForgivingMovesStillWalkToANeighbour()
+        {
+            game = new PlayerGame(board, level, animations, presentation, gust, new PlayerGameSettings(3, 3, SlipDistanceInKeys, DropMarginInKeys, BumpDistanceInKeys, true));
+            Begin();
+            game.OnKeyPressed(Next);
+            Assert.AreEqual(PlayerState.Moving, game.State);
+        }
     }
 }

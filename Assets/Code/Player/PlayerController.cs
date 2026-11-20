@@ -91,12 +91,12 @@ namespace DetectiveDave.PlayerPlay
             }
             if (!settings.HasValidWalkFrames)
             {
-                ReportProblem("PlayerMovementSettings: walkFrames needs at least two non-null sprites.");
+                ReportProblem("PlayerMovementSettings: walkFrames needs at least one non-null sprite.");
                 return false;
             }
             if (!settings.HasValidClimbFrames)
             {
-                ReportProblem("PlayerMovementSettings: climbFrames needs at least two non-null sprites.");
+                ReportProblem("PlayerMovementSettings: climbFrames needs at least one non-null sprite.");
                 return false;
             }
             CreateView();
@@ -142,7 +142,7 @@ namespace DetectiveDave.PlayerPlay
 
         void BuildGame()
         {
-            game = new PlayerGame(board, level, animations, view, gustView, new PlayerGameSettings(settings.WalkFrames.Length, settings.ClimbFrames.Length, settings.SlipDistanceInKeys, settings.DropMarginInKeys, settings.BumpDistanceInKeys));
+            game = new PlayerGame(board, level, animations, view, gustView, new PlayerGameSettings(settings.WalkFrames.Length, settings.ClimbFrames.Length, settings.SlipDistanceInKeys, settings.DropMarginInKeys, settings.BumpDistanceInKeys, settings.ForgivingMoves));
             game.GoalReached += ForwardGoalReached;
         }
 

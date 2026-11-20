@@ -8,12 +8,13 @@ namespace DetectiveDave.PlayerPlay
     {
         [Header("Look")]
         [SerializeField, Min(0.1f)] [Tooltip("Player height measured in key sizes.")] float heightInKeys = 1.1f;
-        [Tooltip("Walk cycle sprites. Frame 0 is the idle pose. At least two.")]
+        [Tooltip("Walk cycle sprites. Frame 0 is the idle pose. At least one.")]
         [SerializeField] Sprite[] walkFrames;
-        [Tooltip("Climb cycle sprites shown while the player is on a gutter. At least two.")]
+        [Tooltip("Climb cycle sprites shown while the player is on a gutter. At least one.")]
         [SerializeField] Sprite[] climbFrames;
 
         [SerializeField] [Tooltip("Turn on if the walk cycle art looks to the right when not flipped.")] bool artFacesRight = false;
+        [SerializeField] [Tooltip("Turn off for a player that has no left or right, like the magnifying glass.")] bool flipsWithFacing = true;
 
         [Header("Timing")]
         [SerializeField, Min(0.01f)] [Tooltip("Seconds to walk onto a neighbouring key.")] float stepSeconds = 0.2f;
@@ -28,6 +29,9 @@ namespace DetectiveDave.PlayerPlay
         [SerializeField, Min(0f)] [Tooltip("Key sizes the player leans towards a wall before squashing against it.")] float bumpDistanceInKeys = 0.35f;
         [SerializeField, Range(0.2f, 1f)] [Tooltip("Scale factor the player is squashed to when walking into a wall.")] float squashScale = 0.6f;
         [SerializeField, Min(0f)] [Tooltip("Degrees the player tilts backwards when slipping.")] float slipTiltDegrees = 15f;
+
+        [Header("Rules")]
+        [SerializeField] [Tooltip("Off: pressing a key that is not a neighbour makes the player slip back. On: nothing happens.")] bool forgivingMoves = false;
 
         [Header("Dash gust")]
         [SerializeField] [Tooltip("The wind lines drawn behind the player when it dashes to a key. Each one has its own offset, thickness, length and start. Remove all to turn the gust off.")] GustLine[] gustLines =
@@ -73,6 +77,8 @@ namespace DetectiveDave.PlayerPlay
         public Sprite[] WalkFrames => walkFrames;
         public Sprite[] ClimbFrames => climbFrames;
         public bool ArtFacesRight => artFacesRight;
+        public bool FlipsWithFacing => flipsWithFacing;
+        public bool ForgivingMoves => forgivingMoves;
         public float StepSeconds => stepSeconds;
         public float SlipSeconds => slipSeconds;
         public float WallSquashSeconds => wallSquashSeconds;
@@ -114,12 +120,12 @@ namespace DetectiveDave.PlayerPlay
         public bool HasValidWalkFrames => AreValidFrames(walkFrames);
         public bool HasValidClimbFrames => AreValidFrames(climbFrames);
 
-        static bool AreValidFrames(Sprite[] frames) => frames != null && frames.Length >= 2 && System.Array.TrueForAll(frames, frame => frame);
+        static bool AreValidFrames(Sprite[] frames) => frames != null && frames.Length >= 1 && System.Array.TrueForAll(frames, frame => frame);
 
         void OnValidate()
         {
-            if (!HasValidWalkFrames) Debug.LogError("PlayerMovementSettings: walkFrames needs at least two non-null sprites.", this);
-            if (!HasValidClimbFrames) Debug.LogError("PlayerMovementSettings: climbFrames needs at least two non-null sprites.", this);
+            if (!HasValidWalkFrames) Debug.LogError("PlayerMovementSettings: walkFrames needs at least one non-null sprite.", this);
+            if (!HasValidClimbFrames) Debug.LogError("PlayerMovementSettings: climbFrames needs at least one non-null sprite.", this);
         }
     }
 }

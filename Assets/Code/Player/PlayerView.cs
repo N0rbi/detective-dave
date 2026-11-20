@@ -74,7 +74,7 @@ namespace DetectiveDave.PlayerPlay
 
         void ApplyClimbDrop() => drawing.localPosition = new Vector3(0f, climbing ? -Settings.ClimbDropInHeights * spriteHeight : 0f, 0f);
 
-        public void SetFacing(Facing facing) => sprite.flipX = Settings.ArtFacesRight ? facing == Facing.Left : facing == Facing.Right;
+        public void SetFacing(Facing facing) => sprite.flipX = Settings.FlipsWithFacing && (Settings.ArtFacesRight ? facing == Facing.Left : facing == Facing.Right);
 
         public void SetClimbing(bool isClimbing)
         {
