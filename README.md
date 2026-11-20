@@ -35,6 +35,8 @@ Config assets (tuning values a designer edits) are named `<Name>.config.asset` a
 
 Cases (the overworld's clients and stories) are `<Name>.case.asset` files made with Assets > Create > Detective Dave > Case. They carry the `Case` label: search `l:Case`. A case holds the client name, suspects (`{key}` in any text is replaced by the value, `{client}` by the client name), the description, the accept and decline messages, the findings, the level to play and the cases that must be solved first. The inspector previews the resolved letters and warns when the two messages do not diverge. Solved cases are saved in `progress.json` in Unity's persistent data folder.
 
+The desk (the overworld) is plain logic so far: `DeskMarker` (a case file's centre, size and rotation in world units), `DeskKeyMap` (a key belongs to the marker whose rectangle holds the key's centre; it also reports a marker over no key, a key under two markers and a marker over the start Shift), `DeskCases` (the state of the case under a key) and `DeskLevel` (every key is floor, the magnifier starts on Left Shift, there is no goal).
+
 A new domain follows the same pattern: content in its own folder under `Assets/`, code in `Assets/Code/<Domain>/`.
 
 ## Layouts
