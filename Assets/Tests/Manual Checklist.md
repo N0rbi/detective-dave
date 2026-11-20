@@ -64,3 +64,11 @@ Play with F5 on a level with a Gap and a WallGutter key between the two Shifts. 
 - [ ] Only valid keys tint and click; Backspace removes a letter; the wrong path stays grey after the split.
 - [ ] Declining returns to the desk; accepting wipes into the level; reaching the goal returns to the desk with the case solved.
 - [ ] F5 with the sample desk selected plays the overworld; F5 on a level still plays the level.
+
+## Overworld briefing (round 2)
+
+- Run Set Up Overworld twice: the second dialog says nothing needed changing.
+- Dwell on a case: the description types at a steady speed with soft clicks; a key press speeds it up; the letter paper appears only afterwards and typing before that does nothing.
+- Both papers are slightly rotated on the desk; untyped text is grey, typed text black; each valid key clicks, Backspace plays the softer clip.
+- Finish a level: back in the overworld the findings type on the paper, then the folder shows the solved picture. Walk onto it again: the findings replay.
+- The magnifier is on Left Shift again and twice as big; the detective shows a gust when dashing, the magnifier does not.
