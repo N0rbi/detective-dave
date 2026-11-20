@@ -37,6 +37,7 @@ namespace DetectiveDave.LevelPlay
         Level source;
         Level instance;
         bool loadRequested;
+        bool playsSequence;
         LevelTerrain terrain = new LevelTerrain();
 
         /// <summary>Raised after <see cref="Load"/> or <see cref="Reload"/> put a level (or none) on the keyboard.</summary>
@@ -60,12 +61,25 @@ namespace DetectiveDave.LevelPlay
         {
             if (loadRequested || !sequence) return;
             var first = sequence.First;
-            if (first) Load(first);
+            if (first)
+            {
+                Show(first);
+                playsSequence = true;
+            }
             else Debug.LogWarning($"Level sequence '{sequence.name}' has no levels: nothing to play.", this);
         }
 
         /// <summary>Plays <paramref name="level"/> (a level prefab; null for none) and tells the views to redraw.</summary>
         public void Load(Level level)
+        {
+            playsSequence = false;
+            Show(level);
+        }
+
+        /// <summary>Plays the next level of the sequence (the first again after the last one). A level handed to <see cref="Load"/> is replayed instead.</summary>
+        public void Advance() => Show(playsSequence && sequence ? sequence.AfterWrapping(source) : source);
+
+        void Show(Level level)
         {
             loadRequested = true;
             source = level;

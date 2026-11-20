@@ -37,5 +37,8 @@ namespace DetectiveDave.LevelPlay
             int index = IndexOf(level);
             return index < 0 ? null : Next(index);
         }
+
+        /// <summary>The level after <paramref name="level"/>, or the first level again after the last one (or when it is not in the sequence).</summary>
+        public Level AfterWrapping(Level level) => After(level) ?? First;
     }
 }

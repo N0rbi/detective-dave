@@ -63,6 +63,20 @@ namespace DetectiveDave.Tests
         }
 
         [Test]
+        public void AfterWrapping_GoesToTheNextLevel_AndStartsOverAfterTheLast()
+        {
+            Assert.That(sequence.AfterWrapping(first), Is.SameAs(second));
+            Assert.That(sequence.AfterWrapping(second), Is.SameAs(first));
+        }
+
+        [Test]
+        public void AfterWrapping_StartsAtTheFirstLevelForOneThatIsNotInTheSequence()
+        {
+            Assert.That(sequence.AfterWrapping(NewLevel("Other")), Is.SameAs(first));
+            Assert.That(sequence.AfterWrapping(null), Is.SameAs(first));
+        }
+
+        [Test]
         public void IndexOf_IsMinusOneForALevelNotInTheSequence()
         {
             Assert.That(sequence.IndexOf(second), Is.EqualTo(2));
