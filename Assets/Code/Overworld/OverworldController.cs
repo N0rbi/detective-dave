@@ -8,7 +8,8 @@ using UnityEngine.InputSystem;
 
 namespace DetectiveDave.OverworldPlay
 {
-    [RequireComponent(typeof(KeyboardBoard), typeof(KeyboardKeySource), typeof(KeyboardGridView), typeof(KeyboardGridScreenFit))]
+    [RequireComponent(typeof(KeyboardBoard), typeof(KeyboardKeySource), typeof(KeyboardGridView))]
+    [RequireComponent(typeof(KeyboardGridScreenFit))]
     public sealed class OverworldController : MonoBehaviour, ICaseLauncher
     {
         const float DeskOverscan = 2f;
