@@ -33,6 +33,8 @@ Assets/
 
 Config assets (tuning values a designer edits) are named `<Name>.config.asset` and carry the `Config` label: search `l:Config` in the Project window to list them all. New ones get the label automatically.
 
+Cases (the overworld's clients and stories) are `<Name>.case.asset` files made with Assets > Create > Detective Dave > Case. They carry the `Case` label: search `l:Case`. A case holds the client name, suspects (`{key}` in any text is replaced by the value, `{client}` by the client name), the description, the accept and decline messages, the findings, the level to play and the cases that must be solved first. The inspector previews the resolved letters and warns when the two messages do not diverge. Solved cases are saved in `progress.json` in Unity's persistent data folder.
+
 A new domain follows the same pattern: content in its own folder under `Assets/`, code in `Assets/Code/<Domain>/`.
 
 ## Layouts
