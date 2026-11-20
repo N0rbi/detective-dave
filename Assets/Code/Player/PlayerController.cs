@@ -2,6 +2,7 @@ using System;
 using DetectiveDave.KeyboardGrid;
 using DetectiveDave.KeyboardInput;
 using DetectiveDave.LevelPlay;
+using DetectiveDave.OverworldPlay;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -165,7 +166,7 @@ namespace DetectiveDave.PlayerPlay
             wipeView.Configure(settings, zoomView);
             var focus = new ZoomFocus(board, settings.EvidenceHandRiseInKeys, settings.ZoomFocusHandShare);
             introSequence = new IntroSequence(board, level, wipeView, zoomView, focus);
-            goalSequence = new GoalSequence(board, level, decorations, evidenceView, zoomView, focus, wipeView, new LoaderAdvance(GetComponent<LevelLoader>()), introSequence, settings.EvidenceHandRiseInKeys);
+            goalSequence = new GoalSequence(board, level, decorations, evidenceView, zoomView, focus, wipeView, CaseSession.IsActive ? (ILevelAdvance)new OverworldReturn() : new LoaderAdvance(GetComponent<LevelLoader>()), introSequence, settings.EvidenceHandRiseInKeys);
         }
 
         void Subscribe()

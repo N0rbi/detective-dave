@@ -9,5 +9,6 @@ namespace DetectiveDave
         KeyboardSelect = 0,
         KeyboardGrid = 1,
         Game = 2,           // was KeyboardLevel: the scene that plays levels
+        Overworld = 3,      // the desk with the case files
     }
 }
