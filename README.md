@@ -220,3 +220,9 @@ The lock lives in a static, so it is gone after leaving Play Mode, and there is 
 - Glyphs show one legend per key, so second legends are missing. Modifier keys share the key color, so there is no separate color for them. Five color roles is the limit of one RGBA mask: a sixth role needs a second texture. Unity backends generally route all attached keyboards to a single device.
 
 References: [Unity forum: detect ANSI or ISO](https://forum.unity.com/threads/is-there-a-way-to-detect-ansi-or-iso-keyboard-layout.1192684/), [issue: key named backslash](https://issuetracker.unity3d.com/issues/input-system-number-key-is-named-backslash-in-the-input-debug-for-keyboard), [issue: Linux international layouts](https://issuetracker.unity3d.com/issues/linux-input-system-does-not-register-some-keys-when-using-international-keyboard-layouts), [issue: yen key](https://issuetracker.unity3d.com/issues/the-y-equals-yen-key-is-not-recognized-when-japanese-keyboard-layout-is-used).
+
+## Overworld (desk with case files)
+
+1. Unity: `Window > Detective Dave > Set Up Overworld` (once; makes the scene, a sample case and a sample desk).
+2. Press `Shift+F5` (or `Window > Detective Dave > Play Overworld`). With a desk open in Prefab Mode or selected, plain `F5` plays that desk.
+3. Move the magnifier (Left Shift starts) onto the case file, wait 2 seconds, then type the accept or decline answer.

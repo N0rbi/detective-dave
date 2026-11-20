@@ -1,0 +1,128 @@
+using System.Linq;
+using DetectiveDave.Levels;
+using DetectiveDave.OverworldPlay;
+using DetectiveDave.PlayerPlay;
+using UnityEditor;
+using UnityEngine;
+
+namespace DetectiveDave.EditorTools
+{
+    public static class OverworldSetup
+    {
+        const string DialogTitle = "Set Up Overworld";
+
+        [MenuItem("Window/Detective Dave/Set Up Overworld")]
+        static void SetUpFromWindowMenu()
+        {
+            if (EditorApplication.isPlayingOrWillChangePlaymode)
+            {
+                PlayerSetup.ShowProblem(DialogTitle, "Exit Play Mode before setting up the overworld. Nothing was changed.");
+                return;
+            }
+            var error = ApplyOrError();
+            if (error != null)
+            {
+                PlayerSetup.ShowProblem(DialogTitle, error);
+                return;
+            }
+            Selection.activeObject = AssetDatabase.LoadAssetAtPath<Object>(OverworldSetupPaths.SampleDeskPath);
+            EditorUtility.DisplayDialog(DialogTitle, "The overworld is set up. Use Window > Detective Dave > Play Overworld (Shift+F5).", "OK");
+        }
+
+        public static string ApplyOrError()
+        {
+            var playerError = PlayerSetup.ApplyOrError();
+            if (playerError != null) return "The player cannot be set up:\n" + playerError;
+            var missing = OverworldSetupPaths.SpritePaths.Where(path => !AssetImporter.GetAtPath(path)).ToArray();
+            if (missing.Length > 0) return "Nothing was changed. Missing assets:\n" + string.Join("\n", missing);
+            var level = AssetDatabase.LoadAssetAtPath<Level>(OverworldSetupPaths.LevelPath);
+            var sprites = OverworldSetupPaths.SpritePaths.Select(PlayerSpriteImport.ImportDecoration).ToArray();
+            EnsureFolder(OverworldSetupPaths.OverworldFolder);
+            EnsureFolder(OverworldSetupPaths.CasesFolder);
+            var settings = EnsureSettings(sprites[1], sprites[2]);
+            var magnifier = EnsureMagnifierSettings(sprites[0]);
+            var sampleCase = EnsureSampleCase(level);
+            var desk = EnsureSampleDesk(sampleCase, sprites[1]);
+            AssetDatabase.SaveAssets();
+            var playerPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(PlayerSetupPaths.PrefabPath).GetComponent<PlayerView>();
+            return OverworldSceneBuilder.WireOrError(desk, playerPrefab, magnifier, settings);
+        }
+
+        static void EnsureFolder(string path)
+        {
+            if (!AssetDatabase.IsValidFolder(path)) AssetDatabase.CreateFolder(System.IO.Path.GetDirectoryName(path).Replace('\\', '/'), System.IO.Path.GetFileName(path));
+        }
+
+        static OverworldSettings EnsureSettings(Sprite folder, Sprite solved)
+        {
+            var settings = AssetDatabase.LoadAssetAtPath<OverworldSettings>(OverworldSetupPaths.SettingsPath);
+            if (!settings)
+            {
+                settings = ScriptableObject.CreateInstance<OverworldSettings>();
+                AssetDatabase.CreateAsset(settings, OverworldSetupPaths.SettingsPath);
+            }
+            var serialized = new SerializedObject(settings);
+            if (!serialized.FindProperty("folderSprite").objectReferenceValue) serialized.FindProperty("folderSprite").objectReferenceValue = folder;
+            if (!serialized.FindProperty("solvedSprite").objectReferenceValue) serialized.FindProperty("solvedSprite").objectReferenceValue = solved;
+            serialized.ApplyModifiedPropertiesWithoutUndo();
+            return settings;
+        }
+
+        static PlayerMovementSettings EnsureMagnifierSettings(Sprite glass)
+        {
+            var magnifier = AssetDatabase.LoadAssetAtPath<PlayerMovementSettings>(OverworldSetupPaths.MagnifierSettingsPath);
+            if (!magnifier)
+            {
+                var player = AssetDatabase.LoadAssetAtPath<PlayerMovementSettings>(PlayerSetupPaths.SettingsPath);
+                magnifier = Object.Instantiate(player);
+                magnifier.name = "Magnifier Movement Settings.config";
+                AssetDatabase.CreateAsset(magnifier, OverworldSetupPaths.MagnifierSettingsPath);
+                var created = new SerializedObject(magnifier);
+                created.FindProperty("forgivingMoves").boolValue = true;
+                created.FindProperty("flipsWithFacing").boolValue = false;
+                created.FindProperty("heightInKeys").floatValue = 0.8f;
+                created.ApplyModifiedPropertiesWithoutUndo();
+            }
+            var serialized = new SerializedObject(magnifier);
+            SetFrames(serialized.FindProperty("walkFrames"), glass);
+            SetFrames(serialized.FindProperty("climbFrames"), glass);
+            serialized.ApplyModifiedPropertiesWithoutUndo();
+            return magnifier;
+        }
+
+        static void SetFrames(SerializedProperty property, Sprite sprite)
+        {
+            property.arraySize = 1;
+            property.GetArrayElementAtIndex(0).objectReferenceValue = sprite;
+        }
+
+        static CaseFile EnsureSampleCase(Level level)
+        {
+            var file = AssetDatabase.LoadAssetAtPath<CaseFile>(OverworldSetupPaths.SampleCasePath);
+            if (file) return file;
+            file = ScriptableObject.CreateInstance<CaseFile>();
+            AssetDatabase.CreateAsset(file, OverworldSetupPaths.SampleCasePath);
+            var serialized = new SerializedObject(file);
+            serialized.FindProperty("caseId").stringValue = "sample-case";
+            serialized.FindProperty("clientName").stringValue = "Mrs. Finch";
+            var suspects = serialized.FindProperty("suspects");
+            suspects.arraySize = 1;
+            suspects.GetArrayElementAtIndex(0).FindPropertyRelative("key").stringValue = "husband";
+            suspects.GetArrayElementAtIndex(0).FindPropertyRelative("value").stringValue = "Mr. Finch";
+            serialized.FindProperty("description").stringValue = "SAMPLE: {client} writes that her husband, {husband}, comes home late every night and smells of cheap cigars. She wants to know where he goes.";
+            serialized.FindProperty("acceptMessage").stringValue = "I will take your case.";
+            serialized.FindProperty("declineMessage").stringValue = "Sorry, I cannot help you.";
+            serialized.FindProperty("findings").stringValue = "SAMPLE: {husband} was at the bowling club all along.";
+            serialized.FindProperty("level").objectReferenceValue = level;
+            serialized.ApplyModifiedPropertiesWithoutUndo();
+            return file;
+        }
+
+        static DeskLayout EnsureSampleDesk(CaseFile sampleCase, Sprite folder)
+        {
+            var existing = AssetDatabase.LoadAssetAtPath<GameObject>(OverworldSetupPaths.SampleDeskPath);
+            if (!existing) existing = OverworldDeskBuilder.SaveDesk(OverworldSetupPaths.SampleDeskPath, sampleCase, folder, OverworldDeskBuilder.CentredScale(folder));
+            return existing.GetComponent<DeskLayout>();
+        }
+    }
+}

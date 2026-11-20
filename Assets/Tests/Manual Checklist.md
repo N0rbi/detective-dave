@@ -56,3 +56,11 @@ Play with F5 on a level with a Gap and a WallGutter key between the two Shifts. 
 - [ ] Change the level's Start key: start and goal flip (player shown on the other Shift; the other is the End).
 - [ ] Paint a Gap on a Shift key: it is ignored in play and Level Checks warns, with a "Make it Floor" fix.
 - [ ] Change a value in `Assets/Player/Player Movement Settings.config.asset` (e.g. Step Seconds): the change takes effect (check that the field is read live; otherwise on the next Play).
+
+## Overworld
+- [ ] Set Up Overworld runs without errors; Assets/Scenes/Overworld.unity exists and is in the build list.
+- [ ] Shift+F5 shows the desk and the magnifier; the ring fills on the sample case and resets when leaving.
+- [ ] After 2 s the desk slides left, the description types in, the grey paper shows the letter.
+- [ ] Only valid keys tint and click; Backspace removes a letter; the wrong path stays grey after the split.
+- [ ] Declining returns to the desk; accepting wipes into the level; reaching the goal returns to the desk with the case solved.
+- [ ] F5 with the sample desk selected plays the overworld; F5 on a level still plays the level.

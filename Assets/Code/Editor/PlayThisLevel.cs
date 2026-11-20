@@ -32,7 +32,10 @@ namespace DetectiveDave.EditorTools
 
         /// <summary>Default F5, rebindable in Edit > Shortcuts. Plays the level open in Prefab Mode, else the selected level, else the first of the sequence.</summary>
         [Shortcut("Detective Dave/Play This Level", KeyCode.F5)]
-        static void PlayShortcut() => Play(LevelTools.LevelToPlay());
+        static void PlayShortcut()
+        {
+            if (!PlayOverworld.TryPlayDeskInContext()) Play(LevelTools.LevelToPlay());
+        }
 
         /// <summary>Starts the game scene on <paramref name="level"/> (a level prefab asset, or the root of an open level in Prefab Mode).</summary>
         public static void Play(Level level)
