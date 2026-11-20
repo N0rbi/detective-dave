@@ -66,6 +66,7 @@ namespace DetectiveDave.EditorTools
                 return;
             }
             LevelTools.SaveOpenLevel();
+            if (!PlayerAutoSetup.EnsureReady()) return;
             SessionState.SetString(LevelKey, AssetDatabase.AssetPathToGUID(path));
             SessionState.SetString(LayoutKey, layout.Id);
             EditorSceneManager.playModeStartScene = scene;
