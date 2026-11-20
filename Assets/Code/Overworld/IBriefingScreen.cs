@@ -6,6 +6,8 @@ namespace DetectiveDave.OverworldPlay
     {
         void Open(string caseId, Action<LetterOutcome> finished);
 
+        void OpenFindings(string caseId, Action finished);
+
         void Close(Action done);
     }
 }
