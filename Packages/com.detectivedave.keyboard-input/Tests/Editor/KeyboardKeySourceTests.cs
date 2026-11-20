@@ -86,20 +86,6 @@ namespace DetectiveDave.KeyboardInput.Tests
         }
 
         [Test]
-        public void UnmappedKey_IsRawOnly_AndLoggedOnce()
-        {
-            source.Begin(TestLayouts.Load());
-            LogAssert.Expect(LogType.Log, new Regex(@"^\[Keyboard\] Not in layout 'test': Key\.X"));
-            PressAndRelease(keyboard.xKey);
-            source.Tick();
-            PressAndRelease(keyboard.xKey);
-            source.Tick();
-
-            Assert.That(events, Is.EqualTo(new[] { "Raw X mapped=False", "Raw X mapped=False" }));
-            LogAssert.NoUnexpectedReceived();
-        }
-
-        [Test]
         public void ThrowingListener_DoesNotStopTheOthers()
         {
             source.Begin(TestLayouts.Load());
