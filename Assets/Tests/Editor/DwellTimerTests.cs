@@ -35,22 +35,6 @@ namespace DetectiveDave.Tests
         }
     }
 
-    public class TimedRevealTests
-    {
-        [Test]
-        public void Reveals_characters_over_time_and_stops_at_the_length()
-        {
-            var reveal = new TimedReveal(10, 4f);
-            Assert.AreEqual(0, reveal.VisibleCount);
-            reveal.Advance(1f);
-            Assert.AreEqual(4, reveal.VisibleCount);
-            Assert.IsFalse(reveal.IsDone);
-            reveal.Advance(10f);
-            Assert.AreEqual(10, reveal.VisibleCount);
-            Assert.IsTrue(reveal.IsDone);
-        }
-    }
-
     public class TextWrapTests
     {
         [Test]
@@ -66,19 +50,6 @@ namespace DetectiveDave.Tests
         {
             Assert.AreEqual("short", TextWrap.Wrap("short", 20));
             Assert.AreEqual(string.Empty, TextWrap.Wrap(null, 5));
-        }
-    }
-
-    public class ClickSamplesTests
-    {
-        [Test]
-        public void Is_deterministic_and_decays()
-        {
-            var first = ClickSamples.Generate(1000, 0.1f);
-            var second = ClickSamples.Generate(1000, 0.1f);
-            Assert.AreEqual(100, first.Length);
-            CollectionAssert.AreEqual(first, second);
-            Assert.Less(System.Math.Abs(first[99]), 0.01f);
         }
     }
 

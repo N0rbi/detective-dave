@@ -20,9 +20,12 @@ namespace DetectiveDave.Tests
         sealed class FakeBriefing : IBriefingScreen
         {
             public string OpenedCase;
+            public string FindingsCase;
             public Action<LetterOutcome> Finished;
+            public Action FindingsFinished;
             public bool Closed;
             public void Open(string caseId, Action<LetterOutcome> finished) { OpenedCase = caseId; Finished = finished; }
+            public void OpenFindings(string caseId, Action finished) { FindingsCase = caseId; FindingsFinished = finished; }
             public void Close(Action done) { Closed = true; done(); }
         }
 
@@ -74,14 +77,38 @@ namespace DetectiveDave.Tests
         }
 
         [Test]
-        public void Locked_and_solved_cases_do_not_dwell()
+        public void Locked_cases_do_not_dwell()
         {
             state = CaseState.Locked;
             flow.OnMoved(Key.J);
             Assert.AreEqual(OverworldStage.Desk, flow.Stage);
+        }
+
+        [Test]
+        public void Solved_cases_dwell_and_replay_their_findings_instead_of_the_letter()
+        {
             state = CaseState.Solved;
-            flow.OnMoved(Key.J);
+            Dwell();
+            Assert.AreEqual("a", briefing.FindingsCase);
+            Assert.IsNull(briefing.OpenedCase);
+            Assert.AreEqual(OverworldStage.Briefing, flow.Stage);
+            briefing.FindingsFinished();
             Assert.AreEqual(OverworldStage.Desk, flow.Stage);
+            Assert.IsNull(launcher.Launched);
+        }
+
+        [Test]
+        public void Playing_findings_blocks_moves_and_reports_completion_after_the_briefing_closes()
+        {
+            bool completed = false;
+            flow.PlayFindings("a", () => completed = true);
+            Assert.AreEqual("a", briefing.FindingsCase);
+            Assert.IsFalse(flow.AcceptsMoves);
+            Assert.IsFalse(completed);
+            briefing.FindingsFinished();
+            Assert.IsTrue(briefing.Closed);
+            Assert.IsTrue(completed);
+            Assert.IsTrue(flow.AcceptsMoves);
         }
 
         [Test]
