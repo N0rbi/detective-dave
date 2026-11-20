@@ -23,7 +23,7 @@ namespace DetectiveDave.Tests
 
         // A small 15 x 4 layout so the test does not depend on the layout files.
         const string LayoutJson = @"{ ""id"": ""play-test"", ""name"": ""Play Test"", ""form"": ""ansi"", ""digit"": 9, ""unitsWide"": 15, ""unitsHigh"": 4,
-  ""keys"": [ { ""code"": ""KeyA"", ""label"": ""A"", ""rects"": [ { ""x"": 0, ""y"": 0, ""w"": 1, ""h"": 1 } ], ""center"": { ""x"": 0.5, ""y"": 0.5 } } ] }";
+  ""keys"": [ { ""code"": ""A"", ""label"": ""A"", ""rects"": [ { ""x"": 0, ""y"": 0, ""w"": 1, ""h"": 1 } ], ""center"": { ""x"": 0.5, ""y"": 0.5 } } ] }";
 
         LevelLoader loader;
         Level handed;

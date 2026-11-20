@@ -63,7 +63,7 @@ namespace DetectiveDave.KeyboardInput.Tests
         [Test]
         public void MissingArrays_ReadAsEmpty()
         {
-            var layout = KeyboardLayout.Parse(@"{ ""id"": ""empty"", ""keys"": [ { ""code"": ""KeyA"" } ] }");
+            var layout = KeyboardLayout.Parse(@"{ ""id"": ""empty"", ""keys"": [ { ""code"": ""A"" } ] }");
             Assert.That(layout.Keys[0].Rects, Is.Empty);
             Assert.That(layout.Keys[0].AlsoKeys, Is.Empty);
         }

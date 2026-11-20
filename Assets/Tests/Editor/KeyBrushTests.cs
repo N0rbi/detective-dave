@@ -15,8 +15,8 @@ namespace DetectiveDave.Tests
         const string LayoutJson = @"{
   ""id"": ""brush-test"", ""name"": ""Brush Test"", ""form"": ""iso"", ""digit"": 9, ""unitsWide"": 15, ""unitsHigh"": 4,
   ""keys"": [
-    { ""code"": ""KeyA"", ""label"": ""A"", ""rects"": [ { ""x"": 0, ""y"": 0, ""w"": 1, ""h"": 1 } ], ""center"": { ""x"": 0.5, ""y"": 0.5 } },
-    { ""code"": ""KeyS"", ""label"": ""S"", ""rects"": [ { ""x"": 2, ""y"": 0, ""w"": 1, ""h"": 1 } ], ""center"": { ""x"": 2.5, ""y"": 0.5 } },
+    { ""code"": ""A"", ""label"": ""A"", ""rects"": [ { ""x"": 0, ""y"": 0, ""w"": 1, ""h"": 1 } ], ""center"": { ""x"": 0.5, ""y"": 0.5 } },
+    { ""code"": ""S"", ""label"": ""S"", ""rects"": [ { ""x"": 2, ""y"": 0, ""w"": 1, ""h"": 1 } ], ""center"": { ""x"": 2.5, ""y"": 0.5 } },
     { ""code"": ""Enter"", ""label"": ""Enter"", ""rects"": [ { ""x"": 13.5, ""y"": 1, ""w"": 1.5, ""h"": 1 }, { ""x"": 13.75, ""y"": 2, ""w"": 1.25, ""h"": 1 } ],
       ""center"": { ""x"": 14.375, ""y"": 2 } },
     { ""code"": ""Slash"", ""label"": ""/"", ""rects"": [ { ""x"": 14, ""y"": 3, ""w"": 1, ""h"": 1 } ], ""center"": { ""x"": 14.5, ""y"": 3.5 } }
