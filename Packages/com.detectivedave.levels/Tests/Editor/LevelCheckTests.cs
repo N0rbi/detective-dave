@@ -96,7 +96,7 @@ namespace DetectiveDave.Levels.Tests
         [Test]
         public void MergeKeepsTheHigherLayerAndLogsEachConflict()
         {
-            var goal = make.Type("Goal");
+            var marker = make.Type("Marker");
             var level = make.Level();
             var grid = level.Shape.transform.parent;
             Tilemap Layer(string layerName)
@@ -105,18 +105,18 @@ namespace DetectiveDave.Levels.Tests
                 layer.transform.SetParent(grid, false);
                 return layer.GetComponent<Tilemap>();
             }
-            var goals = Layer("Goals");
+            var markers = Layer("Markers");
             var ground = Layer("Ground");
-            LevelTestUtility.Paint(goals, make.PlainTile(), new RectInt(0, 0, 1, 1));
+            LevelTestUtility.Paint(markers, make.PlainTile(), new RectInt(0, 0, 1, 1));
             LevelTestUtility.Paint(ground, make.PlainTile(), new RectInt(0, 0, 3, 1));
             var log = new List<string>();
 
-            int conflicts = ShapeMerger.Merge(new[] { new ShapeMerger.Layer(goals, goal), new ShapeMerger.Layer(ground, floor) }, level.Shape, log.Add);
+            int conflicts = ShapeMerger.Merge(new[] { new ShapeMerger.Layer(markers, marker), new ShapeMerger.Layer(ground, floor) }, level.Shape, log.Add);
 
             Assert.AreEqual(1, conflicts);
             Assert.AreEqual(1, log.Count);
-            StringAssert.Contains("kept Goal from 'Goals', dropped Floor from 'Ground'", log[0]);
-            Assert.AreEqual(goal, level.Shape.GetTile(new Vector3Int(0, 0, 0)));
+            StringAssert.Contains("kept Marker from 'Markers', dropped Floor from 'Ground'", log[0]);
+            Assert.AreEqual(marker, level.Shape.GetTile(new Vector3Int(0, 0, 0)));
             Assert.AreEqual(floor, level.Shape.GetTile(new Vector3Int(2, 0, 0)));
         }
     }

@@ -29,6 +29,8 @@ namespace DetectiveDave.Levels.Tests
             ["95ac8a0e30a14e61b75e95702418446c"] = "Data/WallGutter.asset",
             ["3ee672c23f272499c9d9780738a0d402"] = "Data/Start.asset",
             ["33e2a864fc2f44d37b97b98fade09118"] = "Data/Goal.asset",
+            ["26c0c1773cca4c5ea592ee2a7ca8bfe4"] = "Tiles/Start.asset",
+            ["4a558437e407422bbde441a2d49dd10c"] = "Tiles/Goal.asset",
         };
 
         static IEnumerable<string> ProjectFiles(params string[] extensions) =>

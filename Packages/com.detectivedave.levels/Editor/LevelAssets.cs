@@ -12,15 +12,12 @@ namespace DetectiveDave.Levels.Editor
 
         const string CreateMenu = "Assets/Create/Detective Dave/";
 
-        // The kinds of key the game started with. Start and goal are floor the player stands on, so they are walkable.
         static readonly (string name, Color color, bool walkable, string description)[] StandardTypes =
         {
             ("Walkable", new Color(0.35f, 0.85f, 0.45f), true, "Floor: the player and enemies walk here."),
             ("Gap", new Color(0.6f, 0.4f, 0.95f), false, "A hole: nobody walks here."),
             ("Wall", new Color(0.9f, 0.35f, 0.3f), false, "Blocks the way."),
             ("WallGutter", new Color(0.95f, 0.65f, 0.25f), false, "A wall with a gutter the player can climb."),
-            ("Start", new Color(0.25f, 0.5f, 0.85f), true, "Where the player starts."),
-            ("Goal", new Color(1f, 0.85f, 0.2f), true, "Where the player has to get to."),
         };
 
         /// <summary>Every Tile Type asset in the project, by name. Scans the project: cache the result.</summary>

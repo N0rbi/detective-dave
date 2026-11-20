@@ -6,7 +6,7 @@ namespace DetectiveDave.EditorTools
 {
     /// <summary>
     /// Editor-only defaults for the level tools, shared by the team (saved in ProjectSettings, never shipped):
-    /// where things live, the Key Art new levels start with, the Start / Goal kinds the checks look for, and the board size the keyboard is drawn at.
+    /// where things live, the Key Art new levels start with, the Gap, Wall Gutter and Floor kinds the checks look for, and the board size the keyboard is drawn at.
     /// Edit in Project Settings > Detective Dave > Levels. The game never reads this: what it plays comes from the scene.
     /// </summary>
     [FilePath("ProjectSettings/DetectiveDaveLevelSettings.asset", FilePathAttribute.Location.ProjectFolder)]
@@ -18,8 +18,9 @@ namespace DetectiveDave.EditorTools
         const string DefaultPalette = "Assets/Tiles/Level Tiles.prefab";
         const string DefaultLayoutsFolder = "Assets/Game/Keyboard/Data";
         const string DefaultGameScene = "Assets/Scenes/Game.unity";
-        const string DefaultStartType = "Assets/Tiles/Start.asset";
-        const string DefaultGoalType = "Assets/Tiles/Goal.asset";
+        const string DefaultGapType = "Assets/Tiles/Gap.asset";
+        const string DefaultWallGutterType = "Assets/Tiles/WallGutter.asset";
+        const string DefaultFloorType = "Assets/Tiles/Walkable.asset";
 
         // Object references, not paths: moving or renaming any of these keeps the setting (GUIDs).
         [Tooltip("New levels are created in this folder.")]
@@ -40,11 +41,14 @@ namespace DetectiveDave.EditorTools
         [Tooltip("Key Art given to new levels. Empty: keep the template's.")]
         [SerializeField] KeyArt defaultKeyArt;
 
-        [Tooltip("The kind of key the player starts on: the checks want exactly one on every keyboard.")]
-        [SerializeField] TileType startType;
+        [Tooltip("The kind of key that is a hole: walking through it is not possible, so the checks do not count it as a way.")]
+        [SerializeField] TileType gapType;
 
-        [Tooltip("The kind of key that ends the level: the checks want exactly one on every keyboard.")]
-        [SerializeField] TileType goalType;
+        [Tooltip("The kind of key that is a wall you can hang from the gutter of: the checks count it as a way.")]
+        [SerializeField] TileType wallGutterType;
+
+        [Tooltip("The kind of key painted on a Shift key by the checks' fixes.")]
+        [SerializeField] TileType floorType;
 
         [Tooltip("The rectangle the keyboard is fitted into, in world units. Must match Size on the Keyboard Grid View in the game scene (15 x 4: one key is one unit).")]
         [SerializeField] Vector2 boardSize = new Vector2(15f, 4f);
@@ -57,8 +61,9 @@ namespace DetectiveDave.EditorTools
         public string LayoutsFolder => PathOf(Resolve(ref layoutsFolder, DefaultLayoutsFolder), DefaultLayoutsFolder);
         public SceneAsset GameScene => Resolve(ref gameScene, DefaultGameScene);
         public KeyArt DefaultKeyArt => defaultKeyArt;
-        public TileType StartType => Resolve(ref startType, DefaultStartType);
-        public TileType GoalType => Resolve(ref goalType, DefaultGoalType);
+        public TileType GapType => Resolve(ref gapType, DefaultGapType);
+        public TileType WallGutterType => Resolve(ref wallGutterType, DefaultWallGutterType);
+        public TileType FloorType => Resolve(ref floorType, DefaultFloorType);
         public Vector2 BoardSize => boardSize;
 
         internal void SaveSettings() => Save(true);
@@ -80,7 +85,7 @@ namespace DetectiveDave.EditorTools
             SerializedObject serialized = null;
             return new SettingsProvider("Project/Detective Dave/Levels", SettingsScope.Project)
             {
-                keywords = new[] { "level", "key art", "palette", "layout", "template", "start", "goal" },
+                keywords = new[] { "level", "key art", "palette", "layout", "template", "gap", "gutter", "floor" },
                 activateHandler = (_, __) =>
                 {
                     instance.hideFlags &= ~HideFlags.NotEditable;

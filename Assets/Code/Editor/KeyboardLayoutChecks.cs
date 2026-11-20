@@ -13,7 +13,6 @@ namespace DetectiveDave.EditorTools
     /// <summary>
     /// The checks that need keyboards, run by the level package's validator (it finds every <see cref="ILevelCheck"/>):
     /// <list type="bullet">
-    /// <item>Start and Goal: exactly one key of each on every layout.</item>
     /// <item>Keys that read differently on another layout than on the preview layout (a key painted on UK that is empty on JIS, say).</item>
     /// <item>Keys of the preview layout that are only partly painted or mixed, with a fix that fills them with the kind at their centre.</item>
     /// </list>
@@ -31,16 +30,11 @@ namespace DetectiveDave.EditorTools
             var terrain = level.BuildTerrain();
             if (terrain == null || terrain.IsEmpty) return;      // the package reports an empty shape
 
-            var settings = LevelSettings.instance;
-            var start = settings.StartType;
-            var goal = settings.GoalType;
             var previewRead = Read(terrain, preview);
 
             foreach (var layout in layouts)
             {
                 var read = layout == preview ? previewRead : Read(terrain, layout);
-                CheckCount(issues, level, layout, read, start, "Start");
-                CheckCount(issues, level, layout, read, goal, "Goal");
                 if (layout != preview) CheckDifferences(issues, level, layout, read, preview, previewRead);
             }
             CheckMixed(issues, level, preview);
@@ -56,17 +50,6 @@ namespace DetectiveDave.EditorTools
                 read[key.InputKey.Value] = (key, terrain.GetTile(KeyGeometry.Center(layout, key) + KeyGeometry.CenterNudge).Type);
             }
             return read;
-        }
-
-        static void CheckCount(List<LevelIssue> issues, Level level, KeyboardLayout layout,
-            Dictionary<UnityEngine.InputSystem.Key, (KeyDef def, TileType type)> read, TileType type, string what)
-        {
-            if (!type) return;
-            var keys = read.Values.Where(entry => entry.type == type).Select(entry => entry.def.Label).ToList();
-            if (keys.Count == 0)
-                issues.Add(new LevelIssue(MessageType.Error, $"No {what} key on the {layout.Name} keyboard.", level));
-            else if (keys.Count > 1)
-                issues.Add(new LevelIssue(MessageType.Warning, $"{keys.Count} {what} keys on the {layout.Name} keyboard: {List(keys)}.", level));
         }
 
         static void CheckDifferences(List<LevelIssue> issues, Level level, KeyboardLayout layout,
