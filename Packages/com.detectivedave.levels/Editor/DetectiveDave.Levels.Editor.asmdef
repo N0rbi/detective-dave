@@ -1,0 +1,19 @@
+{
+    "name": "DetectiveDave.Levels.Editor",
+    "rootNamespace": "DetectiveDave.Levels.Editor",
+    "references": [
+        "DetectiveDave.Levels",
+        "Unity.2D.Tilemap.Editor"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

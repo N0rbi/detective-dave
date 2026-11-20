@@ -1,0 +1,20 @@
+{
+  "name": "com.detectivedave.levels",
+  "displayName": "Detective Dave Levels",
+  "version": "0.2.0",
+  "unity": "6000.6",
+  "description": "Levels as data for a keyboard-as-board game. A level is one prefab: a Level component with its name, Key Art and background, and one Shape tilemap painted with Tile Type tiles (one asset per kind of key). The game reads the shape straight from the tilemap. Editor checks with one-click fixes, the Level Tiles palette helpers. No dependency on input handling.",
+  "keywords": [
+    "level",
+    "tilemap",
+    "level design",
+    "keyboard"
+  ],
+  "author": {
+    "name": "Detective Dave"
+  },
+  "dependencies": {
+    "com.unity.modules.tilemap": "1.0.0",
+    "com.unity.2d.tilemap": "1.0.0"
+  }
+}

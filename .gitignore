@@ -107,3 +107,11 @@ InitTestScene*.unity*
 
 # Auto-generated cache in Assets folder
 /[Aa]ssets/[Ss]ceneDependencyCache*
+
+# Ignore JetBrains config
+.idea
+# macOS
+.DS_Store
+
+# Local backups waiting to be deleted
+_to_delete/
