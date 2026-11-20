@@ -8,9 +8,8 @@ and its name. Nothing has to be baked, wired into a scene or saved by hand.
 | Folder | What is in it |
 |---|---|
 | `Assets/Levels` | One prefab per level. `Templates/Level Template.prefab` is what new levels start from: edit it to change every new level. |
-| `Assets/Tiles` | One file per kind of key (`Walkable`, `Gap`, `Wall`, `WallGutter`, `Start`, `Goal`) and the **Level Tiles** palette |
+| `Assets/Tiles` | One file per kind of key (`Walkable`, `Gap`, `Wall`, `WallGutter`) and the **Level Tiles** palette. The Start key (Left or Right Shift) is a setting on the Level, not a tile; the other Shift is the End. |
 | `Assets/Key Art` | `Default Key Art` and one sprite folder per kind |
-| `Assets/Backgrounds` | Background sprites |
 
 ## Make a level
 
@@ -18,7 +17,7 @@ and its name. Nothing has to be baked, wired into a scene or saved by hand.
    for editing with the keyboard drawn as key outlines and the **Level Tiles** palette ready.
 2. **Paint**: pick a kind of key in the palette and click keys in the Scene view. Each key takes the kind you clicked it with.
    The level's **Checks** (in the Levels window and in the level's inspector) update while you paint; most have a button that fixes them.
-3. **Background**: drag a sprite from `Assets/Backgrounds` onto **Background**.
+3. **Background**: drag a sprite from the Project window onto **Background**.
 4. **Play This Level** (or F5) starts the game on your level.
 
 Rename a level with F2 in the Project window: the name shown in game follows the file name, unless you type a **Display Name**.

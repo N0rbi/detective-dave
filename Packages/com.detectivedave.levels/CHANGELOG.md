@@ -2,6 +2,11 @@
 
 All notable changes to this package are documented here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [Unreleased]
+
+### Changed (breaking)
+- Level gained Start key (Left/Right Shift); the Start and Goal tile types were retired.
+
 ## [0.2.0] - 2026-11-17
 
 Breaking: a level is now one prefab read directly by the game. Data in this project was migrated (see below).

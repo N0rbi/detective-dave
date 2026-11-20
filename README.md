@@ -12,32 +12,28 @@ Packages/
   com.detectivedave.levels/           levels as data (see its README and Documentation~): TileType, TerrainTile, TileMapGroup, LevelDefinition, baked LevelTerrain, editor tools
 Assets/
   Code/                          all C# lives here, and nothing else
-    Keyboard/
-      KeyboardGlyph.shader       draws the glyph masks with palette colors
-      KeyboardGlyphShader.cs     code mirror of that shader: one entry per shader property
-      KeyboardCell.shader        flat unlit sprite for the grid cells
-      Models/                    plain data classes, one per file (grid cell, selection choice); the layout JSON classes and KeyGraph are in the keyboard-input package
-      Utils/                     GridUtils (key units / local conversions, sizing), SpriteFactory
-      Runtime/                   the MonoBehaviours and the palette asset type; IKeyboardBoard and KeyboardBoard (the board API)
-    Level/
-      Runtime/                   glue between the levels package and the keyboard grid (namespace DetectiveDave.LevelPlay): TileMapKeyboardMapper (the level on the keys: tiles and paths), KeyTerrainView (key art), LevelBackgroundView, KeyboardBoardSampler (test bench)
-      Obsolete~/                 superseded work in progress (TileKind, GridItems, GridSprites, TerrainSampleLevel), ignored by Unity: delete when no longer needed
+    Keyboard/                    shaders, Models/ (plain data), Utils/ (GridUtils, SpriteFactory), Runtime/ (MonoBehaviours, IKeyboardBoard, KeyboardBoard), Authoring~/ (Python tools, ignored by Unity)
+    Level/Runtime/               glue between the levels package and the keyboard grid (namespace DetectiveDave.LevelPlay): TileMapKeyboardMapper, KeyTerrainView, LevelBackgroundView, LevelLoader, LevelMessageView, KeyboardBoardSampler (test bench)
+    Player/                      the player (namespace DetectiveDave.PlayerPlay), see Player below
+    Editor/                      editor tools (assembly DetectiveDave.Game.Editor): Levels window, key brush, Play This Level
     Models/                      GameScene enum (shared across domains)
     AssetDependencies/           code that depends on specific assets: SceneLoader, and an editor-only build-list registrar
-      Authoring~/                Python tools, ignored by Unity (validate.py, render_glyphs.py, out/)
-  Game/
-    Keyboard/                    the keyboard domain
-      Data/                      one JSON file per layout (us, uk, de, hu, fr, jp) and KeyboardPalette.asset
-      Art/                       generated glyph masks keyboard_<id>.png, KeyboardGlyph and KeyboardCell materials
-    Level/                       the level domain
-      Art/                       16 x 16 tile sprites (64 pixels per unit: one tile is a quarter of a key)
-      Data/                      the Terrain Tile assets you paint with: Walkable, Gap, Wall, WallGutter, Start, Goal (each carries a Tile Type)
-      Types/                     the Tile Type assets (one per kind of key: editor colour, walkable)
-      Levels/                    Level Definitions: DefaultKeyArt (the key-art template every level falls back to), SampleLevel
-      View/                      one folder per kind (Walkable, Gap, Wall, WallGutter, Start, Goal) with a sprite for every key shape, used by DefaultKeyArt
+  Game/Keyboard/                 Data/ (one JSON per layout, KeyboardPalette.config.asset) and Art/ (glyph masks keyboard_<id>.png, glyph and cell materials)
+  Key Art/                       Default Key Art.config.asset (the style template every level falls back to) and one folder per kind (Walkable, Gap, Wall, WallGutter) with a sprite for every key shape.
+  Tiles/                         the Terrain Tile assets you paint with: Walkable, Gap, Wall, WallGutter (each carries its Tile Type), Level Tiles.prefab (the palette), Sprites/ (16 x 16 tile sprites, 64 pixels per unit: one tile is a quarter of a key)
+  Levels/                        one prefab per level (the Level Definition), Level Sequence.config.asset, Templates/
+  Player/                        Player.prefab, Player Movement Settings.config.asset, the walk and climb cycle PNGs
+  Decorations/                   pictures drawn on top of keys: the start grate, the goal folder (stealth_goal_both, plus its folder and glass parts) and the goal star
+  Staging/                       temporary drop folder for new art: the asset step moves everything out to its proper folder, so it is normally empty
+  Plugins/Demigiant/             DOTween (third party)
+  Resources/                     DOTweenSettings.asset
+  Scenes/                        KeyboardSelect, KeyboardGrid, Game
+  Tests/                         Editor and PlayMode tests, and Manual Checklist.md
 ```
 
-A new domain follows the same pattern: `Assets/Game/<Domain>/{Art,Data,...}` for content, `Assets/Code/<Domain>/` for code.
+Config assets (tuning values a designer edits) are named `<Name>.config.asset` and carry the `Config` label: search `l:Config` in the Project window to list them all. New ones get the label automatically.
+
+A new domain follows the same pattern: content in its own folder under `Assets/`, code in `Assets/Code/<Domain>/`.
 
 ## Layouts
 
@@ -82,7 +78,7 @@ python3 Assets/Code/Keyboard/Authoring~/render_glyphs.py
 
 The glyph PNGs are masks, not pictures. Each channel holds the coverage of one color role: R = edge (keycap outline), G = key (keycaps, modifiers included), B = text (labels and layout name), A = accent (number badge). The panel is the background, and the shader cuts its rounded corners. Opened in an image viewer they look like colored noise, which is expected.
 
-To recolor, edit `Assets/Game/Keyboard/Data/KeyboardPalette.asset` (panel, key, edge, text, accent). Glyphs in the scene repaint immediately, in edit mode too. Make another palette with Assets > Create > Game > Keyboard > Palette.
+To recolor, edit `Assets/Game/Keyboard/Data/KeyboardPalette.config.asset` (panel, key, edge, text, accent). Glyphs in the scene repaint immediately, in edit mode too. Make another palette with Assets > Create > Game > Keyboard > Palette.
 
 Per glyph in the scene: a GameObject with a SpriteRenderer using `keyboard_<id>` as sprite and `Art/KeyboardGlyph.mat` as material, plus the `KeyboardGlyph` component with the palette assigned. Without a palette the shader's defaults (the original colors) are used.
 
@@ -106,6 +102,7 @@ event Action<KeyPress> RawKeyPressed; // diagnostics: every physical key going d
 bool IsNeighbour(Key key, Key other);
 IReadOnlyCollection<Key> GetNeighbours(Key key);
 bool TryGetPosition(Key key, out Vector2 world);          // where the player stands on that key (a hair above-right of its center)
+float KeyWorldSize { get; }                               // world units per key unit (grid scale x transform scale)
 ```
 
 - **Events** come from the locked layout only, once per key and frame, in `Update` (execution order -100, so before your scripts). Disabling the source releases every key that is down. Keys are independent, there are no chords. A key the layout does not have fires nothing. The Hungarian `0`/`í` swap is already folded in: either physical key fires `í`, and `0` fires nothing. Caps Lock is reported by the OS as a switch, so every switch (on or off) fires a press that stays held until another key is pressed.
@@ -121,17 +118,17 @@ step-by-step guide for designers and artists is `Packages/com.detectivedave.leve
 has the API. In short:
 
 1. A **Tile Map Group** (GameObject > Detective Dave > Level > Tile Map Group, as a child of the Keyboard Grid object at 0, 0, 0,
-   cell size 0.25 so a key is 4 x 4 tiles) holds the tilemaps of one level. Its **Layers** list is the priority order: the first
+   cell size 0.25 so a key is 4 tiles wide and 8 tall: keys are drawn `Key Height Stretch` (default 2) times taller than wide, so the climbing player fits inside a gutter key) holds the tilemaps of one level. Its **Layers** list is the priority order: the first
    layer with a typed tile in a cell decides the cell. A layer can give all its tiles one **Type**, or leave it empty and let each
    `TerrainTile` carry its own. Any number of groups can exist; each bakes into its own level.
-2. Paint with the tiles in `Assets/Game/Level/Data` (Window > 2D > Tile Palette). Paint the middle of each key: that is what the
+2. Paint with the tiles in `Assets/Tiles` (Window > 2D > Tile Palette). Paint the middle of each key: that is what the
    key becomes. Keys with nothing painted are hidden in the game.
 3. **Bake** on the group writes the shape into its level. Entering Play and saving the scene bake too. The runtime only reads the
    bake, never the tilemaps, so tilemap renderers can stay off in a build.
 4. On the Keyboard Grid object, `TileMapKeyboardMapper > Level` is the level that is played. That is the only wiring.
 
-Tile types are assets (`Assets/Game/Level/Types`), so a new kind of key needs no code: create a Tile Type, a Terrain Tile (or a
-layer) for it, and give it sprites in the key art. The key art lives in `Assets/Game/Level/Levels/DefaultKeyArt.asset`; a level
+Tile types are assets (each Terrain Tile in `Assets/Tiles` carries one), so a new kind of key needs no code: create a Tile Type, a Terrain Tile (or a
+layer) for it, and give it sprites in the key art. The key art lives in `Assets/Key Art/Default Key Art.config.asset`; a level
 points at it as its **Style Template** and overrides only what it wants to change. Sprites are grayscale and multiplied by each
 style's tint; see the designer guide for the naming convention and the **Fill From Folder…** button.
 
@@ -155,6 +152,31 @@ IReadOnlyList<Vector2> GetPath(Vector2 start, Vector2 goal, Func<MapTile, bool> 
   `LevelBackgroundView` draws the level's background behind everything, covering the camera.
 - The glue only reads the keyboard (layout, key centers, events) and writes only to the grid view; it never calls into the input package.
 
+## Player
+
+The player is shown on the level's start Shift key and the game does not start until that Shift is pressed; then press neighbouring keys to move. The other Shift is the End. All code is in `Assets/Code/Player` (namespace `DetectiveDave.PlayerPlay`, assembly `DetectiveDave.Game`).
+
+- `PlayerController`: thin glue on the Keyboard Grid object; wires board, key events, level, view and animations to the game.
+- `PlayerGame`: the rules (start on the start Shift, move, bump walls, respawn after slips and gaps, lock on the end Shift). No Unity types beyond plain data; unit tested.
+- `PlayerMoveRule`, `PlayerStateMachine`, `PlayerFacing`, `WalkCycle`: small pure helpers (what a step does, state, flip, yoyo frame order).
+- `LevelCellClassifier`: maps only Gap and WallGutter tiles; the two Shifts (`ShiftEnds` helper) always count as Floor.
+- `PlayerView`: the sprite on screen. `PlayerAnimations`: step, slip backwards then drop in from above, wall bump (lean, squash, return), idle breathing, gap fade (DOTween).
+- `PlayerMovementSettings` (asset): all timings and sizes, in `Assets/Player`.
+- `EndDecorationsDirector` (rules), `EndDecorationsView` (sprites, spinning star), `DecorationScale`: the drain grate on the start key, the folder icon on the goal key and the star that spins behind the player at the goal. Pictures in `Assets/Decorations`, sizes and speed in the player settings.
+- `GoalSequence`, `IntroSequence` (rules), `EvidenceView`, `CameraZoomView` (behind `ICameraZoom`), `SpiralScreenWipe` (behind `IScreenWipe`), `SpiralGeometry`: at the goal the evidence pops up above the player's head, the camera zooms onto the player holding it (the grid's `KeyboardGridScreenFit` is paused while the camera is zoomed and resumes when it is back), a snail-house spiral of large strips winds from the outer screen edge inwards to the player and covers the screen, `LevelLoader.Advance` loads the next level (wrapping to the first; the same level after Play This Level). Every level start (the first load, F5, after a goal) runs the same `IntroSequence`: the screen starts covered and zoomed on the player at the start key, then the spiral unwinds outwards while the camera zooms back out; keys are ignored until it is done. Zoom factor, zoom time, zoom aim, timings, spiral segments, turns (at least 2) and colour are in the "Goal sequence" section of the player settings.
+
+F5 (Play This Level) is the single entry point; the player is wired automatically.
+
+**DOTween** (`Assets/Plugins/Demigiant`, `Assets/Resources/DOTweenSettings.asset`) drives the animations. `DetectiveDave.Game.asmdef` sets Override References and lists `DOTween.dll`, because DOTween is a precompiled DLL that an asmdef assembly does not see otherwise (it is not auto-referenced).
+
+Designer workflow:
+
+1. Open `Window > Detective Dave > Levels` and select or create a level.
+2. Pick the level's Start key (Left or Right Shift); the other Shift is the End. Paint the keys in between.
+3. Paint Gap and WallGutter keys, plus walkable and Wall keys around them.
+4. Press F5 (Play This Level). Press the Start Shift first: nothing else responds until then.
+5. Tune `Assets/Player/Player Movement Settings.config.asset` and replay.
+
 ## Test scenes
 
 Both live in `Assets/Scenes`. They load each other through the `GameScene` enum and `SceneLoader`, never by a string. Entering Play Mode adds any `GameScene` that is missing to the build list (`BuildSceneRegistrar`, editor only). In a player build a missing scene stops the game at startup with an error. To add a scene: add its name to `GameScene` (new number, never renumber) and create `<Name>.unity`.
@@ -162,8 +184,8 @@ Both live in `Assets/Scenes`. They load each other through the `GameScene` enum 
 - **KeyboardSelect**: six glyphs, on three components: `KeyboardLayoutSelector` (logic), `LayoutChoiceView` (dims the glyphs) and `KeyboardSelectionOverlay` (the prompt). Press 1 to 6 to lock a layout; the chosen glyph stays lit, the rest dim, and Game (the first level) loads after 0.8 s. If a layout is already locked the scene just moves on.
 - **KeyboardGrid**: `KeyboardGridView` (draws), `KeyboardKeySource` (the key events), `KeyboardBoard` (the board API), `KeyboardGridInput` (lights cells from the source's events, and tints the neighbours of lit keys, `Show Neighbours`), `KeyboardGridDebugOverlay` (labels and readout: each press shows the neighbour count the board reports; delete it when done testing) and `KeyboardLayoutGate` (sends you to KeyboardSelect when nothing is locked) sit on one object. It builds the locked layout as cells inside a rectangle (the white outline in the Scene view, `Size` on the component). A cell lights up from the source's pressed event until its released event. Labels and the last pressed key are drawn with IMGUI, which is only meant for testing. Opening it with nothing locked sends you to KeyboardSelect, so press Play from either scene.
 
-- **Fit to the screen**: add `KeyboardGridScreenFit` to the grid object and the keyboard (with its backdrop) spans the screen width, edge to edge, at any window size, keeping its proportions. It scales the whole object, so tilemaps that are children of it stay lined up with the keys; `Side Margin` leaves a share of the width empty. Without it the grid keeps the fixed `Size`.
-- **Game**: plays levels. The Keyboard Grid object of KeyboardGrid plus `LevelLoader` (plays the first level of `Assets/Levels/Level Sequence.asset`, or the level Play This Level hands it), `KeyTerrainView` (draws each key in its kind's Key Art), `LevelBackgroundView`, `LevelMessageView` (a red banner when there is no level or its shape is empty), and, disabled, `KeyboardGridDebugOverlay` and `KeyboardBoardSampler` (test benches: enable them to log tiles and spawn path-following markers). KeyboardSelect leads here after the layout is picked. Designers never open it: use Window > Detective Dave > Levels and Play This Level (F5). If no layout is locked it sends you to KeyboardSelect and back (`KeyboardSession.ReturnTo`).
+- **Fit to the screen**: add `KeyboardGridScreenFit` to the grid object and the keyboard (with its backdrop) spans the screen width, edge to edge, at any window size, keeping its proportions (it fits the height instead when the stretched keyboard would be taller than the screen). It scales the whole object, so tilemaps that are children of it stay lined up with the keys; `Side Margin` leaves a share of the width empty. Without it the grid keeps the fixed `Size`.
+- **Game**: plays levels. The Keyboard Grid object of KeyboardGrid plus `LevelLoader` (plays the first level of `Assets/Levels/Level Sequence.config.asset`, or the level Play This Level hands it), `KeyTerrainView` (draws each key in its kind's Key Art), `LevelBackgroundView`, `LevelMessageView` (a red banner when there is no level or its shape is empty), and, disabled, `KeyboardGridDebugOverlay` and `KeyboardBoardSampler` (test benches: enable them to log tiles and spawn path-following markers). KeyboardSelect leads here after the layout is picked. Designers never open it: use Window > Detective Dave > Levels and Play This Level (F5). If no layout is locked it sends you to KeyboardSelect and back (`KeyboardSession.ReturnTo`).
 
 Making a level (Levels window, Key brush, Play This Level, live reload) is described in `Packages/com.detectivedave.levels/README.md` and checked by hand with `Assets/Tests/Manual Checklist.md`. Game code is in the `DetectiveDave.Game` assembly (`Assets/Code`), its editor tools in `DetectiveDave.Game.Editor` (`Assets/Code/Editor`); tests in `Assets/Tests`.
 

@@ -13,7 +13,7 @@ positions, draws the keys and loads levels. Designer guide (no code): [Documenta
 |---|---|---|
 | `TileType : Tile` | One kind of key **and** the tile you paint it with: editor colour, walkable flag, notes, plus the tile's own sprite/colour for painting. | `Assets/Tiles/<Kind>.asset` (Create > Detective Dave > Tile Type) |
 | Level Tiles palette | The Tile Palette with every Tile Type. | `Assets/Tiles/Level Tiles.prefab` |
-| `KeyArt` | How keys look in game: per Tile Type a tint and a sprite per key shape; a default background. | `Assets/Key Art/Default Key Art.asset` (Create > Detective Dave > Key Art) |
+| `KeyArt` | How keys look in game: per Tile Type a tint and a sprite per key shape; a default background. | `Assets/Key Art/Default Key Art.config.asset` (Create > Detective Dave > Key Art) |
 | `Level` | Root of a level prefab: `displayName`, `keyArt`, `shape` (Tilemap), `background` (SpriteRenderer). | `Assets/Levels/<Name>.prefab` |
 | Level Template | What new levels are copied from (Grid cell 0.25, empty Shape, Background, Default Key Art). | `Assets/Levels/Templates/Level Template.prefab` |
 | `LevelTerrain` | The shape as a lookup, built from the Shape tilemap when a level loads. | runtime only |
@@ -22,7 +22,7 @@ positions, draws the keys and loads levels. Designer guide (no code): [Documenta
 
 A level prefab is placed under the keyboard object at its local origin, so the level root's parent's local space is board
 space (`Level.BoardSpace`; the root itself while the prefab is open on its own). One key is one unit for a 15-unit-wide layout;
-the keyboard grid in this project uses a 0.25 cell, so a key is 4 x 4 cells. Key positions come from game code.
+the keyboard grid in this project uses a 0.25 cell and stretches keys 2x taller than wide (`Key Height Stretch`, kept equal in Project Settings > Detective Dave > Levels and on the Keyboard Grid View), so a key is 4 x 8 cells. A level remembers the stretch it was painted with; when it differs, the editor redraws its paint to fit (on load, or with the **Fit paint to keys** check button). Key positions come from game code.
 
 The migrated `Level 01` is the exception on purpose: its Grid keeps the 0.5 cell at (0, 1.04) it was painted with before 0.2.0,
 so every key reads exactly what it read then. New levels (from the template) use 0.25 at the origin. The checks accept any
@@ -65,7 +65,7 @@ IReadOnlyList<Vector2> FindPath(Vector2 start, Vector2 goal, Func<MapTile, bool>
 // PathWalker — walks a FindPath result.
 ```
 
-Game code compares kinds by asset reference: keep a `[SerializeField] TileType goal;` and test `tile.Type == goal`.
+Game code compares kinds by asset reference: keep a `[SerializeField] TileType gap;` and test `tile.Type == gap`.
 
 ## Editor API (`DetectiveDave.Levels.Editor`)
 
