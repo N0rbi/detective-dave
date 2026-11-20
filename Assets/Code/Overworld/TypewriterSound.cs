@@ -4,35 +4,47 @@ namespace DetectiveDave.OverworldPlay
 {
     public sealed class TypewriterSound : MonoBehaviour
     {
-        const int SampleRate = 22050;
-        const float ClickSeconds = 0.05f;
-        const string ClipName = "PLACEHOLDER typewriter click";
-
+        OverworldSettings settings;
         AudioSource source;
-        AudioClip clip;
-        float volume;
 
-        public void Configure(float clickVolume) => volume = clickVolume;
-
-        public void Play()
+        public void Configure(OverworldSettings overworldSettings)
         {
-            EnsureSource();
-            source.PlayOneShot(clip, volume);
-        }
-
-        void OnDestroy()
-        {
-            if (clip) Destroy(clip);
-        }
-
-        void EnsureSource()
-        {
-            if (source) return;
+            settings = overworldSettings;
             source = gameObject.AddComponent<AudioSource>();
             source.playOnAwake = false;
-            var samples = ClickSamples.Generate(SampleRate, ClickSeconds);
-            clip = AudioClip.Create(ClipName, samples.Length, 1, SampleRate, false);
-            clip.SetData(samples, 0);
+            source.spatialBlend = 0f;
+        }
+
+        public void PlayKey() => PlayClick(1f);
+
+        public void PlayDescriptionKey()
+        {
+            if (settings.DescriptionClicks) PlayClick(settings.DescriptionClickShare);
+        }
+
+        public void PlayBackspace()
+        {
+            if (settings.BackspaceClip) Play(settings.BackspaceClip, 1f, 1f);
+        }
+
+        void PlayClick(float volumeShare)
+        {
+            var clip = PickClick();
+            if (!clip) return;
+            Play(clip, volumeShare, Random.Range(settings.ClickPitchMin, settings.ClickPitchMax));
+        }
+
+        void Play(AudioClip clip, float volumeShare, float pitch)
+        {
+            source.pitch = pitch;
+            source.PlayOneShot(clip, settings.ClickVolume * volumeShare);
+        }
+
+        AudioClip PickClick()
+        {
+            var clips = settings.TypewriterClicks;
+            if (clips == null || clips.Length == 0) return null;
+            return clips[Random.Range(0, clips.Length)];
         }
     }
 }

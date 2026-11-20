@@ -1,4 +1,3 @@
-using DetectiveDave.KeyboardGrid;
 using UnityEngine;
 
 namespace DetectiveDave.OverworldPlay
@@ -6,14 +5,10 @@ namespace DetectiveDave.OverworldPlay
     [DisallowMultipleComponent]
     public sealed class CaseMarker : MonoBehaviour
     {
-        const string ShadeName = "Locked Shade";
         const int ArtSortingOrder = 5;
-        const int ShadeSortingOffset = 1;
 
         [SerializeField] [Tooltip("The case this file on the desk opens. Place and rotate and scale this object freely; the keys under it belong to the case.")] CaseFile caseFile;
         [SerializeField] [Tooltip("The picture of the file. Its size and the scale of this object decide which keys it covers.")] SpriteRenderer art;
-
-        SpriteRenderer shade;
 
         public CaseFile CaseFile => caseFile;
 
@@ -30,25 +25,13 @@ namespace DetectiveDave.OverworldPlay
         {
             Art.sprite = state == CaseState.Solved && solved ? solved : folder;
             Art.sortingOrder = ArtSortingOrder;
-            ShowShade(state == CaseState.Locked, lockedShade);
+            Art.color = state == CaseState.Locked ? ShadeTint(lockedShade) : Color.white;
         }
 
-        void ShowShade(bool shown, float alpha)
+        static Color ShadeTint(float shade)
         {
-            if (!shade) shade = CreateShade();
-            shade.gameObject.SetActive(shown);
-            shade.color = new Color(0f, 0f, 0f, alpha);
-        }
-
-        SpriteRenderer CreateShade()
-        {
-            var shadeObject = new GameObject(ShadeName);
-            shadeObject.transform.SetParent(transform, false);
-            shadeObject.transform.localScale = new Vector3(Art.sprite.bounds.size.x, Art.sprite.bounds.size.y, 1f);
-            var renderer = shadeObject.AddComponent<SpriteRenderer>();
-            renderer.sprite = SpriteFactory.CreateUnitSquare();
-            renderer.sortingOrder = Art.sortingOrder + ShadeSortingOffset;
-            return renderer;
+            float brightness = 1f - Mathf.Clamp01(shade);
+            return new Color(brightness, brightness, brightness, 1f);
         }
     }
 }

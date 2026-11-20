@@ -5,25 +5,26 @@ namespace DetectiveDave.OverworldPlay
     public sealed class DwellRingView : MonoBehaviour, IDwellIndicator
     {
         const int StepsPerTurn = 48;
-        const int SortingOrder = 20;
+        const int TrackSortingOrder = 19;
+        const int FillSortingOrder = 20;
         const string TrackName = "Ring Track";
         const string FillName = "Ring Fill";
 
         Transform followed;
         float radiusWorld;
-        LineRenderer track;
+        SpriteRenderer track;
         LineRenderer fill;
         Material material;
         float progress;
         bool shown;
 
-        public void Configure(Transform followedTransform, float radiusInWorld, float widthInWorld, Color trackColor, Color fillColor)
+        public void Configure(Transform followedTransform, Sprite ringSprite, float radiusInWorld, float widthInWorld, Color trackColor, Color fillColor)
         {
             followed = followedTransform;
             radiusWorld = radiusInWorld;
             material = SpriteShaderMaterial.Create();
-            track = CreateLine(TrackName, widthInWorld, trackColor);
-            fill = CreateLine(FillName, widthInWorld, fillColor);
+            track = CreateTrack(ringSprite, trackColor);
+            fill = CreateFill(widthInWorld, fillColor);
             Hide();
         }
 
@@ -31,6 +32,7 @@ namespace DetectiveDave.OverworldPlay
         {
             shown = true;
             progress = value;
+            track.enabled = true;
             Draw();
         }
 
@@ -54,7 +56,7 @@ namespace DetectiveDave.OverworldPlay
         void Draw()
         {
             Vector2 centre = followed.position;
-            Apply(track, RingGeometry.ArcPoints(centre, radiusWorld, 1f, StepsPerTurn));
+            track.transform.position = new Vector3(centre.x, centre.y, 0f);
             Apply(fill, RingGeometry.ArcPoints(centre, radiusWorld, progress, StepsPerTurn));
         }
 
@@ -65,9 +67,22 @@ namespace DetectiveDave.OverworldPlay
             line.SetPositions(points);
         }
 
-        LineRenderer CreateLine(string lineName, float width, Color color)
+        SpriteRenderer CreateTrack(Sprite ringSprite, Color color)
         {
-            var lineObject = new GameObject(lineName);
+            var trackObject = new GameObject(TrackName);
+            trackObject.transform.SetParent(transform, false);
+            var renderer = trackObject.AddComponent<SpriteRenderer>();
+            renderer.sprite = ringSprite;
+            renderer.color = color;
+            renderer.sortingOrder = TrackSortingOrder;
+            float scale = 2f * radiusWorld / ringSprite.bounds.size.x;
+            trackObject.transform.localScale = new Vector3(scale, scale, 1f) / Mathf.Max(transform.lossyScale.x, 0.0001f);
+            return renderer;
+        }
+
+        LineRenderer CreateFill(float width, Color color)
+        {
+            var lineObject = new GameObject(FillName);
             lineObject.transform.SetParent(transform, false);
             var line = lineObject.AddComponent<LineRenderer>();
             line.useWorldSpace = true;
@@ -76,7 +91,7 @@ namespace DetectiveDave.OverworldPlay
             line.startColor = color;
             line.endColor = color;
             line.numCapVertices = 4;
-            line.sortingOrder = SortingOrder;
+            line.sortingOrder = FillSortingOrder;
             return line;
         }
     }
