@@ -215,7 +215,7 @@ namespace DetectiveDave.EditorTools
                 return;
             }
             var created = CreateInstance<LevelSequence>();
-            AssetDatabase.CreateAsset(created, AssetDatabase.GenerateUniqueAssetPath($"{folder}/Level Sequence.asset"));
+            AssetDatabase.CreateAsset(created, AssetDatabase.GenerateUniqueAssetPath($"{folder}/Level Sequence.config.asset"));
             foreach (var level in LevelTools.FindLevels()) LevelTools.AddToSequence(created, level);
             BindSequence(created);
             Debug.Log("Created the Level Sequence. Assign it to the Level Loader in the game scene once.", created);

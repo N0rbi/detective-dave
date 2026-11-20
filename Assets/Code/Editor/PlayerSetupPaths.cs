@@ -10,7 +10,7 @@ namespace DetectiveDave.EditorTools
         public const string StartGratePath = DecorationsFolder + "/stealth_start_grate.png";
         public const string GoalIconPath = DecorationsFolder + "/stealth_goal_both.png";
         public const string GoalBurstPath = DecorationsFolder + "/stealth_goal_decoration.png";
-        public const string SettingsPath = PlayerFolder + "/Player Movement Settings.asset";
+        public const string SettingsPath = PlayerFolder + "/Player Movement Settings.config.asset";
         public const string PrefabPath = PlayerFolder + "/Player.prefab";
         public const string ScenePath = "Assets/Scenes/Game.unity";
         public const string TilePattern = "Assets/Tiles/{0}.asset";
