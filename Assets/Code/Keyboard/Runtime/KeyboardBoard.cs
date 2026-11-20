@@ -40,6 +40,8 @@ namespace DetectiveDave.KeyboardGrid
             source.Begin(view.Layout);
         }
 
+        public float KeyWorldSize => view.Scale * view.transform.lossyScale.x;
+
         public bool IsNeighbour(Key key, Key other) => graph != null && graph.AreNeighbours(key, other);
 
         public IReadOnlyCollection<Key> GetNeighbours(Key key) => graph != null ? graph.Of(key) : Array.Empty<Key>();

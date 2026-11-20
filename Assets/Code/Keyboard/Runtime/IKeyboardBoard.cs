@@ -21,5 +21,8 @@ namespace DetectiveDave.KeyboardGrid
 
         /// <summary>Where the player stands on a key, in world space (a hair above-right of the center, so it never sits on a tile border). False for a key the layout does not have.</summary>
         bool TryGetPosition(Key key, out Vector2 world);
+
+        /// <summary>World units of one key at the current screen fit.</summary>
+        float KeyWorldSize { get; }
     }
 }
