@@ -37,6 +37,8 @@ namespace DetectiveDave.Levels
         [Tooltip("Which Shift key the player starts on. The other Shift key is the End.")]
         [SerializeField] StartSide startKey = StartSide.Left;
 
+        [SerializeField, HideInInspector] float drawnHeightStretch = 1f;
+
         [Tooltip("Drawn behind the keyboard. Its sprite and colour are the level's background; with no sprite the Key Art's default background is used.")]
         [SerializeField] SpriteRenderer background;
 
@@ -59,6 +61,8 @@ namespace DetectiveDave.Levels
 
         /// <summary>The Shift key the player starts on; the other Shift key is the End.</summary>
         public StartSide StartKey => startKey;
+
+        public float DrawnHeightStretch => drawnHeightStretch;
 
         public StartSide EndKey => startKey == StartSide.Left ? StartSide.Right : StartSide.Left;
 

@@ -32,6 +32,7 @@ namespace DetectiveDave.Tests
         [SetUp]
         public void SetUp()
         {
+            KeyGeometry.HeightStretchOverride = 1f;
             root = new GameObject("Grid", typeof(Grid));
             grid = root.GetComponent<Grid>();
             grid.cellSize = new Vector3(0.25f, 0.25f, 0f);
@@ -48,6 +49,7 @@ namespace DetectiveDave.Tests
         [TearDown]
         public void TearDown()
         {
+            KeyGeometry.HeightStretchOverride = null;
             Object.DestroyImmediate(root);
             Object.DestroyImmediate(tile);
             Object.DestroyImmediate(brush);
@@ -73,6 +75,21 @@ namespace DetectiveDave.Tests
             Assert.That(tilemap.GetTile(new Vector3Int(-27, 7, 0)), Is.SameAs(tile), "upper-right cell");
             Assert.That(tilemap.GetTile(new Vector3Int(-26, 5, 0)), Is.Null, "the cell right of the key");
             Assert.That(tilemap.GetTile(new Vector3Int(-29, 3, 0)), Is.Null, "the cell below the key");
+        }
+
+        // With a height stretch of 2, key A covers board x -7.5 .. -6.5, y 2 .. 4: cells x -30 .. -27, y 8 .. 15.
+        [Test]
+        public void Paint_StretchedKey_CoversTwiceAsManyRows()
+        {
+            KeyGeometry.HeightStretchOverride = 2f;
+            brush.Paint(grid, tilemap.gameObject, new Vector3Int(-29, 10, 0));
+
+            Assert.That(PaintedCount(), Is.EqualTo(32));
+            Assert.That(tilemap.GetTile(new Vector3Int(-30, 8, 0)), Is.SameAs(tile), "lower-left cell");
+            Assert.That(tilemap.GetTile(new Vector3Int(-27, 15, 0)), Is.SameAs(tile), "upper-right cell");
+            Assert.That(tilemap.GetTile(new Vector3Int(-29, 16, 0)), Is.Null, "the cell above the key");
+            Assert.That(tilemap.GetTile(new Vector3Int(-29, 7, 0)), Is.Null, "the cell below the key");
+            Assert.That(tilemap.GetTile(new Vector3Int(-26, 10, 0)), Is.Null, "the cell right of the key: the width does not change");
         }
 
         [Test]

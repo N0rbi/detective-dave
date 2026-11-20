@@ -7,6 +7,7 @@ namespace DetectiveDave.KeyboardGrid
     /// <summary>
     /// Conversions between the two spaces of the keyboard grid:
     /// key units (origin top-left, y down) and the grid object's local space (origin at the center, y up), plus sizing.
+    /// The height stretch makes every key that many times taller than wide in local space; the width of a key never changes with it.
     /// </summary>
     public static class GridUtils
     {
@@ -14,11 +15,16 @@ namespace DetectiveDave.KeyboardGrid
         public static float FitScale(KeyboardLayout layout, Vector2 area) =>
             Mathf.Min(area.x / layout.UnitsWide, area.y / layout.UnitsHigh);
 
-        public static Vector2 ToLocal(KeyboardLayout layout, float scale, Vector2 keyUnits)
+        public const float DefaultHeightStretch = 2f;
+
+        public static Vector2 ToLocal(KeyboardLayout layout, float scale, Vector2 keyUnits, float heightStretch = 1f)
         {
             var fromCenter = keyUnits - layout.Size * 0.5f;
-            return new Vector2(fromCenter.x, -fromCenter.y) * scale;
+            return ToLocalSize(new Vector2(fromCenter.x, -fromCenter.y), scale, heightStretch);
         }
+
+        public static Vector2 ToLocalSize(Vector2 keyUnits, float scale, float heightStretch = 1f) =>
+            new Vector2(keyUnits.x * scale, keyUnits.y * scale * heightStretch);
 
         /// <summary>The scale that stretches a sprite of <paramref name="spriteSize"/> (world units) to <paramref name="target"/>.</summary>
         public static Vector3 ScaleToFit(Vector2 target, Vector2 spriteSize) =>

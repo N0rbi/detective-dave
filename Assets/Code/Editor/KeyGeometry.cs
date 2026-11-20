@@ -8,7 +8,7 @@ namespace DetectiveDave.EditorTools
 {
     /// <summary>
     /// Where the keys of a layout are in board space (the keyboard object's local space, which is also a level root's local space),
-    /// with the same math as <see cref="KeyboardGridView"/>: the layout is fitted into <see cref="LevelSettings.BoardSize"/>, centred.
+    /// with the same math as <see cref="KeyboardGridView"/>: the layout is fitted into <see cref="LevelSettings.BoardSize"/>, centred, then stretched vertically by <see cref="LevelSettings.KeyHeightStretch"/>.
     /// And which tilemap cells a key covers: a cell belongs to a key when its centre lies inside one of the key's rectangles.
     /// </summary>
     public static class KeyGeometry
@@ -20,7 +20,11 @@ namespace DetectiveDave.EditorTools
         public static float Scale(KeyboardLayout layout) => GridUtils.FitScale(layout, LevelSettings.instance.BoardSize);
 
         /// <summary>The key's centre in board space, before the nudge.</summary>
-        public static Vector2 Center(KeyboardLayout layout, KeyDef key) => GridUtils.ToLocal(layout, Scale(layout), key.Center);
+        public static Vector2 Center(KeyboardLayout layout, KeyDef key) => GridUtils.ToLocal(layout, Scale(layout), key.Center, HeightStretch);
+
+        internal static float? HeightStretchOverride { get; set; }
+
+        public static float HeightStretch => HeightStretchOverride ?? LevelSettings.instance.KeyHeightStretch;
 
         /// <summary>The key's rectangles in board space (y up).</summary>
         public static Rect[] Rects(KeyboardLayout layout, KeyDef key)
@@ -30,8 +34,8 @@ namespace DetectiveDave.EditorTools
             for (int i = 0; i < result.Length; i++)
             {
                 var rect = key.Rects[i];
-                var size = rect.Size * scale;
-                result[i] = new Rect(GridUtils.ToLocal(layout, scale, rect.Center) - size * 0.5f, size);
+                var size = GridUtils.ToLocalSize(rect.Size, scale, HeightStretch);
+                result[i] = new Rect(GridUtils.ToLocal(layout, scale, rect.Center, HeightStretch) - size * 0.5f, size);
             }
             return result;
         }

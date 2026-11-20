@@ -181,7 +181,8 @@ namespace DetectiveDave.KeyboardGrid
             foreach (var cell in view.Cells.Values)
             {
                 var screen = cam.WorldToScreenPoint(view.CenterWorldPosition(cell));
-                var area = new Rect(screen.x - cellPixels * 0.5f, Screen.height - screen.y - cellPixels * 0.5f, cellPixels, cellPixels);
+                float cellHeightPixels = cellPixels * view.HeightStretch;
+                var area = new Rect(screen.x - cellPixels * 0.5f, Screen.height - screen.y - cellHeightPixels * 0.5f, cellPixels, cellHeightPixels);
                 // IMGUI swaps in the hover / active / focused text color when the cursor is over a label, so set all of them.
                 var textColor = cell.Active ? view.Palette.panel : view.Palette.text;
                 labelStyle.normal.textColor = labelStyle.hover.textColor = labelStyle.active.textColor = labelStyle.focused.textColor = textColor;

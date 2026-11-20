@@ -1,3 +1,4 @@
+using DetectiveDave.KeyboardGrid;
 using DetectiveDave.Levels;
 using UnityEditor;
 using UnityEngine;
@@ -53,6 +54,9 @@ namespace DetectiveDave.EditorTools
         [Tooltip("The rectangle the keyboard is fitted into, in world units. Must match Size on the Keyboard Grid View in the game scene (15 x 4: one key is one unit).")]
         [SerializeField] Vector2 boardSize = new Vector2(15f, 4f);
 
+        [Tooltip("How many times taller than wide the keys are. Must match Key Height Stretch on the Keyboard Grid View in the game scene.")]
+        [SerializeField, Min(1f)] float keyHeightStretch = GridUtils.DefaultHeightStretch;
+
         /// <summary>The folder new levels go to (path), or the default when unset.</summary>
         public string LevelsFolder => PathOf(Resolve(ref levelsFolder, DefaultLevelsFolder), DefaultLevelsFolder);
 
@@ -65,6 +69,7 @@ namespace DetectiveDave.EditorTools
         public TileType WallGutterType => Resolve(ref wallGutterType, DefaultWallGutterType);
         public TileType FloorType => Resolve(ref floorType, DefaultFloorType);
         public Vector2 BoardSize => boardSize;
+        public float KeyHeightStretch => Mathf.Max(1f, keyHeightStretch);
 
         internal void SaveSettings() => Save(true);
 
