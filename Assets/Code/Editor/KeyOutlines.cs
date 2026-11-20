@@ -1,7 +1,11 @@
+using System.Linq;
+using DetectiveDave.KeyboardInput;
 using DetectiveDave.Levels;
+using DetectiveDave.PlayerPlay;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
+using UnityEngine.InputSystem;
 using UnityEngine.Tilemaps;
 
 namespace DetectiveDave.EditorTools
@@ -14,6 +18,8 @@ namespace DetectiveDave.EditorTools
     {
         static readonly Color OutlineColor = new Color(1f, 1f, 1f, 0.6f);
         static readonly Color EmptyColor = new Color(0.5f, 0.5f, 0.5f, 0.8f);
+        static readonly Color StartColor = new Color(0.25f, 0.55f, 1f, 1f);
+        static readonly Color EndColor = new Color(0.65f, 0.3f, 0.9f, 1f);
         const float DotSize = 0.08f;     // board units at scale 1
 
         [DrawGizmo(GizmoType.Selected | GizmoType.NonSelected)]
@@ -35,7 +41,31 @@ namespace DetectiveDave.EditorTools
                 Gizmos.color = tile ? tile.EditorColor : EmptyColor;
                 Gizmos.DrawCube(KeyGeometry.Center(layout, key), Vector3.one * (DotSize * scale));
             }
+            DrawShiftEnds(level, layout);
             Gizmos.matrix = matrix;
+        }
+
+        static void DrawShiftEnds(Level level, KeyboardLayout layout)
+        {
+            ShiftEnds.Of(level.StartKey, out var start, out var end);
+            DrawMarker(layout, start, "START", StartColor);
+            DrawMarker(layout, end, "END", EndColor);
+        }
+
+        static void DrawMarker(KeyboardLayout layout, Key shift, string text, Color color)
+        {
+            var key = layout.UniqueKeys().FirstOrDefault(def => def.InputKey == shift);
+            if (key == null) return;
+            Gizmos.color = color;
+            foreach (var rect in KeyGeometry.Rects(layout, key)) Gizmos.DrawWireCube(rect.center, rect.size);
+            Handles.Label(Gizmos.matrix.MultiplyPoint3x4(KeyGeometry.Center(layout, key)), text, MarkerStyle(color));
+        }
+
+        static GUIStyle MarkerStyle(Color color)
+        {
+            var style = new GUIStyle(EditorStyles.boldLabel) { alignment = TextAnchor.MiddleCenter };
+            style.normal.textColor = color;
+            return style;
         }
 
         static void DrawRect(Rect rect)

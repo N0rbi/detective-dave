@@ -242,6 +242,11 @@ namespace DetectiveDave.EditorTools
             EditorGUI.BeginChangeCheck();
             var sprite = (Sprite)EditorGUILayout.ObjectField(new GUIContent("Background", "Drawn behind the keyboard. Drag a sprite from Assets/Backgrounds."), current, typeof(Sprite), false);
             if (EditorGUI.EndChangeCheck()) Defer(() => LevelTools.SetBackground(level, sprite));
+
+            EditorGUI.BeginChangeCheck();
+            var side = (StartSide)EditorGUILayout.EnumPopup(new GUIContent("Start key", "Which Shift the player starts on. The other Shift is the End."), level.StartKey);
+            if (EditorGUI.EndChangeCheck()) Defer(() => LevelTools.SetStartKey(level, side));
+            LevelEditorGUI.DrawEndKey(level);
         }
 
         void DrawChecks()

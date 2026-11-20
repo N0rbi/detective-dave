@@ -172,6 +172,14 @@ namespace DetectiveDave.EditorTools
         /// <summary>Sets the Key Art of a level: in the open stage, or in the prefab asset.</summary>
         public static void SetKeyArt(Level level, KeyArt art) => Edit(level, edited => SetKeyArtField(edited, art));
 
+        /// <summary>Sets which Shift the player starts on: in the open stage, or in the prefab asset.</summary>
+        public static void SetStartKey(Level level, StartSide side) => Edit(level, edited =>
+        {
+            var serialized = new SerializedObject(edited);
+            serialized.FindProperty("startKey").enumValueIndex = (int)side;
+            serialized.ApplyModifiedProperties();
+        });
+
         static void SetKeyArtField(Level level, KeyArt art)
         {
             var serialized = new SerializedObject(level);
