@@ -16,7 +16,7 @@ namespace DetectiveDave.OverworldPlay
         static void OnSceneLoaded(Scene scene, LoadSceneMode mode)
         {
             if (!CaseSession.IsActive || scene.name != nameof(GameScene.Game)) return;
-            var loader = Object.FindFirstObjectByType<LevelLoader>();
+            var loader = Object.FindAnyObjectByType<LevelLoader>();
             if (!loader)
             {
                 Debug.LogError("The case cannot start: the Game scene has no Level Loader.");
