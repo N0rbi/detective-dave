@@ -19,6 +19,8 @@ namespace DetectiveDave.LevelPlay
         GUIStyle style;
         Texture2D fill;
 
+        public string PlayerMessage { get; set; }
+
         void Awake() => loader = GetComponent<LevelLoader>();
 
         void OnEnable() => loader.LevelChanged += Refresh;
@@ -42,7 +44,8 @@ namespace DetectiveDave.LevelPlay
 
         void OnGUI()
         {
-            if (string.IsNullOrEmpty(message)) return;
+            var text = string.IsNullOrEmpty(message) ? PlayerMessage : message;
+            if (string.IsNullOrEmpty(text)) return;
             if (!fill)
             {
                 fill = new Texture2D(1, 1);
@@ -54,7 +57,7 @@ namespace DetectiveDave.LevelPlay
             style.normal.textColor = Color.white;
             var area = new Rect(0f, 0f, Screen.width, Screen.height * HeightPerScreen);
             GUI.DrawTexture(area, fill);
-            GUI.Label(area, message, style);
+            GUI.Label(area, text, style);
         }
     }
 }
