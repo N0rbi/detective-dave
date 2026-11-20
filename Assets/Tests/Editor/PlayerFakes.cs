@@ -188,4 +188,15 @@ namespace DetectiveDave.Tests
             foreach (var done in batch) done();
         }
     }
+
+    public sealed class FakeDashGust : IDashGust
+    {
+        public readonly List<(Vector2 From, Vector2 To)> Dashes = new List<(Vector2 From, Vector2 To)>();
+
+        public int Clears { get; private set; }
+
+        public void Show(Vector2 from, Vector2 to) => Dashes.Add((from, to));
+
+        public void Clear() => Clears++;
+    }
 }

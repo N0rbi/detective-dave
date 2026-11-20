@@ -23,6 +23,7 @@ namespace DetectiveDave.PlayerPlay
         KeyboardGridView gridView;
         PlayerView view;
         IPlayerAnimations animations;
+        DashGustView gustView;
         PlayerGame game;
         EndDecorationsDirector decorations;
         GoalSequence goalSequence;
@@ -104,6 +105,7 @@ namespace DetectiveDave.PlayerPlay
                 Destroy(view.gameObject);
                 return false;
             }
+            BuildGust();
             BuildGame();
             BuildDecorations();
             BuildGoalSequence();
@@ -131,9 +133,16 @@ namespace DetectiveDave.PlayerPlay
             return false;
         }
 
+        void BuildGust()
+        {
+            gustView = new GameObject("Dash Gust").AddComponent<DashGustView>();
+            gustView.transform.SetParent(transform, false);
+            gustView.Configure(settings, gridView.Scale);
+        }
+
         void BuildGame()
         {
-            game = new PlayerGame(board, level, animations, view, new PlayerGameSettings(settings.WalkFrames.Length, settings.ClimbFrames.Length, settings.SlipDistanceInKeys, settings.DropMarginInKeys, settings.BumpDistanceInKeys));
+            game = new PlayerGame(board, level, animations, view, gustView, new PlayerGameSettings(settings.WalkFrames.Length, settings.ClimbFrames.Length, settings.SlipDistanceInKeys, settings.DropMarginInKeys, settings.BumpDistanceInKeys));
             game.GoalReached += ForwardGoalReached;
         }
 

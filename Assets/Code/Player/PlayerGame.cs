@@ -11,6 +11,7 @@ namespace DetectiveDave.PlayerPlay
         readonly IPlayerLevel level;
         readonly IPlayerAnimations animations;
         readonly IPlayerPresentation presentation;
+        readonly IDashGust gust;
         readonly PlayerGameSettings settings;
         readonly PlayerStateMachine state = new PlayerStateMachine();
         readonly PlayerFacing facing = new PlayerFacing();
@@ -22,12 +23,13 @@ namespace DetectiveDave.PlayerPlay
         Key currentKey;
         int generation;
 
-        public PlayerGame(IKeyboardBoard board, IPlayerLevel level, IPlayerAnimations animations, IPlayerPresentation presentation, PlayerGameSettings settings)
+        public PlayerGame(IKeyboardBoard board, IPlayerLevel level, IPlayerAnimations animations, IPlayerPresentation presentation, IDashGust gust, PlayerGameSettings settings)
         {
             this.board = board;
             this.level = level;
             this.animations = animations;
             this.presentation = presentation;
+            this.gust = gust;
             this.settings = settings;
             walk = new WalkCycle(settings.WalkFrameCount);
             climb = new WalkCycle(settings.ClimbFrameCount);
@@ -49,6 +51,7 @@ namespace DetectiveDave.PlayerPlay
         {
             generation++;
             animations.CancelAllWithoutCallbacks();
+            gust.Clear();
             state.Reset();
             EndsMissing = false;
             if (!level.HasLevel)
@@ -74,6 +77,7 @@ namespace DetectiveDave.PlayerPlay
         {
             generation++;
             animations.CancelAllWithoutCallbacks();
+            gust.Clear();
             IsActive = false;
         }
 
@@ -120,6 +124,7 @@ namespace DetectiveDave.PlayerPlay
             state.Enter(during);
             FaceTowards(to);
             ShowMovePose(target);
+            gust.Show(WorldOf(currentKey), to);
             animations.MoveTo(to, Guard(arrived));
         }
 
@@ -175,8 +180,11 @@ namespace DetectiveDave.PlayerPlay
 
         void Slip()
         {
+            var home = WorldOf(currentKey);
+            var offset = facing.BackwardsDirection() * settings.SlipDistanceInKeys * board.KeyWorldSize;
             state.Enter(PlayerState.Slipping);
-            animations.SlipBy(facing.BackwardsDirection() * settings.SlipDistanceInKeys * board.KeyWorldSize, Guard(Respawn));
+            gust.Show(home, home + offset);
+            animations.SlipBy(offset, Guard(Respawn));
         }
 
         void BumpInto(Key wall)
@@ -187,7 +195,9 @@ namespace DetectiveDave.PlayerPlay
             FaceTowards(to);
             ResetCycles();
             ShowCurrentPose();
-            animations.BumpWall(home + DirectionToWall(to) * settings.BumpDistanceInKeys * board.KeyWorldSize, home, Guard(RecoverFromBump));
+            var leanTarget = home + DirectionToWall(to) * settings.BumpDistanceInKeys * board.KeyWorldSize;
+            gust.Show(home, leanTarget);
+            animations.BumpWall(leanTarget, home, Guard(RecoverFromBump));
         }
 
         void RecoverFromBump() => state.Enter(PlayerState.Idle);

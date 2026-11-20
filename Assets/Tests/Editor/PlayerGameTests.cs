@@ -31,6 +31,7 @@ namespace DetectiveDave.Tests
         FakeLevel level;
         FakeAnimations animations;
         FakePresentation presentation;
+        FakeDashGust gust;
         PlayerGame game;
         List<Key> moved;
         int failed;
@@ -55,7 +56,8 @@ namespace DetectiveDave.Tests
             level = new FakeLevel();
             animations = new FakeAnimations();
             presentation = new FakePresentation();
-            game = new PlayerGame(board, level, animations, presentation, new PlayerGameSettings(3, 3, SlipDistanceInKeys, DropMarginInKeys, BumpDistanceInKeys));
+            gust = new FakeDashGust();
+            game = new PlayerGame(board, level, animations, presentation, gust, new PlayerGameSettings(3, 3, SlipDistanceInKeys, DropMarginInKeys, BumpDistanceInKeys));
             moved = new List<Key>();
             failed = 0;
             goalReached = 0;
@@ -627,6 +629,63 @@ namespace DetectiveDave.Tests
             animations.CompleteLast();
             Assert.AreEqual(PlayerState.Goal, game.State);
             Assert.AreEqual(1, goalReached);
+        }
+
+        [Test]
+        public void StepShowsGustFromKeyToKey()
+        {
+            Begin();
+            game.OnKeyPressed(Next);
+            Assert.AreEqual(new[] { (StartWorld, NextWorld) }, gust.Dashes);
+        }
+
+        [Test]
+        public void StepOntoGapShowsGustToTheGap()
+        {
+            level.Kinds[Next] = CellKind.Gap;
+            Begin();
+            game.OnKeyPressed(Next);
+            Assert.AreEqual(new[] { (StartWorld, NextWorld) }, gust.Dashes);
+        }
+
+        [Test]
+        public void WallBumpShowsGustOnlyAsFarAsTheLean()
+        {
+            level.Kinds[Next] = CellKind.Wall;
+            Begin();
+            game.OnKeyPressed(Next);
+            var leanTarget = StartWorld + Vector2.right * BumpDistanceInKeys * KeyWorldSize;
+            Assert.AreEqual(new[] { (StartWorld, leanTarget) }, gust.Dashes);
+        }
+
+        [Test]
+        public void SlipShowsGustBackwards()
+        {
+            Begin();
+            game.OnKeyPressed(Far);
+            var slipTarget = StartWorld + new Vector2(-SlipDistanceInKeys * KeyWorldSize, 0f);
+            Assert.AreEqual(new[] { (StartWorld, slipTarget) }, gust.Dashes);
+        }
+
+        [Test]
+        public void PressesThatMoveNothingShowNoGust()
+        {
+            game.Restart();
+            game.OnKeyPressed(Next);
+            Assert.IsEmpty(gust.Dashes);
+            game.OnKeyPressed(Start);
+            game.OnKeyPressed(Start);
+            Assert.IsEmpty(gust.Dashes);
+        }
+
+        [Test]
+        public void RestartAndStopClearTheGust()
+        {
+            int before = gust.Clears;
+            game.Restart();
+            Assert.AreEqual(before + 1, gust.Clears);
+            game.Stop();
+            Assert.AreEqual(before + 2, gust.Clears);
         }
 
         void Begin()
