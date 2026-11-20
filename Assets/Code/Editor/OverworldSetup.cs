@@ -26,20 +26,32 @@ namespace DetectiveDave.EditorTools
                 return;
             }
             Selection.activeObject = AssetDatabase.LoadAssetAtPath<Object>(OverworldSetupPaths.SampleDeskPath);
-            EditorUtility.DisplayDialog(DialogTitle, "The overworld is set up. Use Window > Detective Dave > Play Overworld (Shift+F5).", "OK");
+            EditorUtility.DisplayDialog(DialogTitle, Summary(), "OK");
         }
+
+        static readonly System.Collections.Generic.List<string> changes = new System.Collections.Generic.List<string>();
+
+        static string Summary() =>
+            changes.Count == 0
+                ? "Nothing needed changing. Everything was already set up.\nUse Window > Detective Dave > Play Overworld (Shift+F5)."
+                : "Set up:\n- " + string.Join("\n- ", changes) + "\n\nUse Window > Detective Dave > Play Overworld (Shift+F5).";
+
+        static void Note(string text) => changes.Add(text);
 
         public static string ApplyOrError()
         {
+            changes.Clear();
             var playerError = PlayerSetup.ApplyOrError();
             if (playerError != null) return "The player cannot be set up:\n" + playerError;
-            var missing = OverworldSetupPaths.SpritePaths.Where(path => !AssetImporter.GetAtPath(path)).ToArray();
+            AssetDatabase.Refresh();
+            var missing = OverworldSetupPaths.SpritePaths.Concat(OverworldSetupPaths.PlaceholderPaths).Where(path => !AssetImporter.GetAtPath(path)).ToArray();
             if (missing.Length > 0) return "Nothing was changed. Missing assets:\n" + string.Join("\n", missing);
             var level = AssetDatabase.LoadAssetAtPath<Level>(OverworldSetupPaths.LevelPath);
             var sprites = OverworldSetupPaths.SpritePaths.Select(PlayerSpriteImport.ImportDecoration).ToArray();
             EnsureFolder(OverworldSetupPaths.OverworldFolder);
             EnsureFolder(OverworldSetupPaths.CasesFolder);
             var settings = EnsureSettings(sprites[1], sprites[2]);
+            AssignPlaceholders(settings);
             var magnifier = EnsureMagnifierSettings(sprites[0]);
             var sampleCase = EnsureSampleCase(level);
             var desk = EnsureSampleDesk(sampleCase, sprites[1]);
@@ -60,12 +72,41 @@ namespace DetectiveDave.EditorTools
             {
                 settings = ScriptableObject.CreateInstance<OverworldSettings>();
                 AssetDatabase.CreateAsset(settings, OverworldSetupPaths.SettingsPath);
+                Note("created Overworld Settings");
             }
             var serialized = new SerializedObject(settings);
-            if (!serialized.FindProperty("folderSprite").objectReferenceValue) serialized.FindProperty("folderSprite").objectReferenceValue = folder;
-            if (!serialized.FindProperty("solvedSprite").objectReferenceValue) serialized.FindProperty("solvedSprite").objectReferenceValue = solved;
+            FillIfEmpty(serialized, "folderSprite", folder);
+            FillIfEmpty(serialized, "solvedSprite", solved);
             serialized.ApplyModifiedPropertiesWithoutUndo();
             return settings;
+        }
+
+        static void FillIfEmpty(SerializedObject serialized, string field, Object value)
+        {
+            var property = serialized.FindProperty(field);
+            if (property.objectReferenceValue) return;
+            property.objectReferenceValue = value;
+            Note("assigned " + field);
+        }
+
+        static void AssignPlaceholders(OverworldSettings settings)
+        {
+            var serialized = new SerializedObject(settings);
+            FillIfEmpty(serialized, "deskTopSprite", PlayerSpriteImport.ImportDecoration(OverworldSetupPaths.DeskTopPath));
+            FillIfEmpty(serialized, "descriptionPaperSprite", PlayerSpriteImport.ImportDecoration(OverworldSetupPaths.DescriptionPaperPath));
+            FillIfEmpty(serialized, "letterPaperSprite", PlayerSpriteImport.ImportDecoration(OverworldSetupPaths.LetterPaperPath));
+            FillIfEmpty(serialized, "ringSprite", PlayerSpriteImport.ImportDecoration(OverworldSetupPaths.RingPath));
+            FillIfEmpty(serialized, "textFont", AssetDatabase.LoadAssetAtPath<Font>(OverworldSetupPaths.FontPath));
+            FillIfEmpty(serialized, "backspaceClip", AssetDatabase.LoadAssetAtPath<AudioClip>(OverworldSetupPaths.BackspacePath));
+            var clicks = serialized.FindProperty("typewriterClicks");
+            if (clicks.arraySize == 0)
+            {
+                clicks.arraySize = OverworldSetupPaths.ClickPaths.Length;
+                for (var index = 0; index < clicks.arraySize; index++)
+                    clicks.GetArrayElementAtIndex(index).objectReferenceValue = AssetDatabase.LoadAssetAtPath<AudioClip>(OverworldSetupPaths.ClickPaths[index]);
+                Note("assigned typewriterClicks");
+            }
+            serialized.ApplyModifiedPropertiesWithoutUndo();
         }
 
         static PlayerMovementSettings EnsureMagnifierSettings(Sprite glass)
@@ -77,10 +118,12 @@ namespace DetectiveDave.EditorTools
                 magnifier = Object.Instantiate(player);
                 magnifier.name = "Magnifier Movement Settings.config";
                 AssetDatabase.CreateAsset(magnifier, OverworldSetupPaths.MagnifierSettingsPath);
+                Note("created Magnifier Movement Settings");
                 var created = new SerializedObject(magnifier);
                 created.FindProperty("forgivingMoves").boolValue = true;
                 created.FindProperty("flipsWithFacing").boolValue = false;
-                created.FindProperty("heightInKeys").floatValue = 0.8f;
+                created.FindProperty("dashGustEnabled").boolValue = false;
+                created.FindProperty("heightInKeys").floatValue = 1.6f;
                 created.ApplyModifiedPropertiesWithoutUndo();
             }
             var serialized = new SerializedObject(magnifier);

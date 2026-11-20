@@ -14,6 +14,29 @@ namespace DetectiveDave.EditorTools
         public const string ScenePath = "Assets/Scenes/Overworld.unity";
         public const string LevelPath = "Assets/Levels/Level 01.prefab";
 
+        public const string ArtFolder = OverworldFolder + "/Art";
+        public const string AudioFolder = OverworldFolder + "/Audio";
+        public const string FontFolder = OverworldFolder + "/Fonts";
+        public const string DeskTopPath = ArtFolder + "/placeholder_desk_top.png";
+        public const string DescriptionPaperPath = ArtFolder + "/placeholder_paper_description.png";
+        public const string LetterPaperPath = ArtFolder + "/placeholder_paper_letter.png";
+        public const string RingPath = ArtFolder + "/placeholder_ring.png";
+        public const string BackspacePath = AudioFolder + "/placeholder_typewriter_backspace.wav";
+        public const string FontPath = FontFolder + "/placeholder_typewriter_font.ttf";
+
+        public static readonly string[] ClickPaths =
+        {
+            AudioFolder + "/placeholder_typewriter_click_1.wav",
+            AudioFolder + "/placeholder_typewriter_click_2.wav",
+            AudioFolder + "/placeholder_typewriter_click_3.wav",
+        };
+
+        public static readonly string[] PlaceholderPaths =
+        {
+            DeskTopPath, DescriptionPaperPath, LetterPaperPath, RingPath, BackspacePath, FontPath,
+            ClickPaths[0], ClickPaths[1], ClickPaths[2],
+        };
+
         public static readonly string[] SpritePaths = { GlassPath, FolderPath, SolvedPath };
     }
 }
