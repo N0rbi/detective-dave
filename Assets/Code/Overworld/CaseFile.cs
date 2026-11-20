@@ -27,6 +27,8 @@ namespace DetectiveDave.OverworldPlay
 
         public string ResolvedDescription => Resolve(description);
         public string ResolvedFindings => Resolve(findings);
+        public string ResolvedAcceptMessage => Resolve(acceptMessage);
+        public string ResolvedDeclineMessage => Resolve(declineMessage);
         public string ResolvedAcceptLetter => LetterText.Compose(clientName, Resolve(acceptMessage));
         public string ResolvedDeclineLetter => LetterText.Compose(clientName, Resolve(declineMessage));
 
