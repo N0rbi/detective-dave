@@ -26,6 +26,7 @@ namespace DetectiveDave.PlayerPlay
         public void Show(Vector2 from, Vector2 to)
         {
             Clear();
+            if (!settings.DashGustEnabled) return;
             foreach (var segment in GustGeometry.Build(from, to, settings.GustLines, PlayerHeightInWorld))
             {
                 if (segment.Length <= 0f) continue;
