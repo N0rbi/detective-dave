@@ -12,7 +12,8 @@ namespace DetectiveDave.OverworldPlay
     [RequireComponent(typeof(KeyboardGridScreenFit))]
     public sealed class OverworldController : MonoBehaviour, ICaseLauncher
     {
-        const float DeskOverscan = 2f;
+        const float DeskOverscan = 3f;
+        const int DeskBackdropSortingOrder = -50;
 
         [SerializeField] DeskLayout deskPrefab;
         [SerializeField] PlayerView playerPrefab;
@@ -35,6 +36,8 @@ namespace DetectiveDave.OverworldPlay
         CameraZoomView zoomView;
         ZoomFocus focus;
         DwellRingView ringView;
+        SpriteRenderer backdrop;
+        string pendingFindingsCaseId;
         bool subscribed;
 
         public void UseDesk(DeskLayout prefab) => deskPrefab = prefab;
@@ -54,11 +57,13 @@ namespace DetectiveDave.OverworldPlay
                 return;
             }
             Subscribe();
-            game.Restart();
+            ResetToStart();
             intro.Begin(StartPlaying);
         }
 
         void Update() => flow?.Tick(Time.deltaTime);
+
+        void LateUpdate() => FitBackdrop();
 
         void OnDisable()
         {
@@ -71,6 +76,7 @@ namespace DetectiveDave.OverworldPlay
         {
             if (wipeView) Destroy(wipeView.gameObject);
             if (zoomView) Destroy(zoomView.gameObject);
+            if (backdrop) Destroy(backdrop.gameObject);
         }
 
         public void Launch(string caseId)
@@ -86,6 +92,14 @@ namespace DetectiveDave.OverworldPlay
                 Debug.LogError("OverworldController needs a desk, a player prefab, player settings and overworld settings.", this);
                 return false;
             }
+            var missing = overworldSettings.MissingReferences;
+            if (missing.Length > 0)
+            {
+                Debug.LogError("Overworld Settings has empty references: " + missing + ". Run Window > Detective Dave > Set Up Overworld.", overworldSettings);
+                return false;
+            }
+            EnsureAudioListener();
+            BuildBackdrop();
             BuildDesk();
             BuildProgress();
             BuildPlayer();
@@ -97,14 +111,40 @@ namespace DetectiveDave.OverworldPlay
         void BuildDesk()
         {
             desk = Instantiate(deskPrefab, transform, false);
-            desk.DrawTop(new Vector2(gridView.ContentWidth, gridView.ContentHeight) * DeskOverscan, overworldSettings.DeskColor);
             foreach (var marker in desk.Markers.Where(candidate => candidate.CaseFile)) casesById[marker.CaseFile.Id] = marker.CaseFile;
+        }
+
+        static void EnsureAudioListener()
+        {
+            if (FindAnyObjectByType<AudioListener>() || !Camera.main) return;
+            Camera.main.gameObject.AddComponent<AudioListener>();
+            Debug.LogWarning("The Overworld scene had no Audio Listener, so one was added to the main camera.");
+        }
+
+        void BuildBackdrop()
+        {
+            backdrop = new GameObject("Desk Backdrop").AddComponent<SpriteRenderer>();
+            backdrop.sprite = overworldSettings.DeskTopSprite;
+            backdrop.sortingOrder = DeskBackdropSortingOrder;
+            FitBackdrop();
+        }
+
+        void FitBackdrop()
+        {
+            if (!backdrop) return;
+            var camera = Camera.main;
+            var content = new Vector2(gridView.ContentWidth, gridView.ContentHeight);
+            var view = camera && camera.orthographic ? new Vector2(2f * camera.orthographicSize * camera.aspect, 2f * camera.orthographicSize) : content;
+            var size = Vector2.Max(view, content) * DeskOverscan;
+            var spriteSize = backdrop.sprite.bounds.size;
+            backdrop.transform.localScale = new Vector3(size.x / spriteSize.x, size.y / spriteSize.y, 1f);
+            backdrop.transform.position = camera ? new Vector3(camera.transform.position.x, camera.transform.position.y, 0f) : Vector3.zero;
         }
 
         void BuildProgress()
         {
             progress = new CaseProgress(JsonProgressStore.AtDefaultPath());
-            if (CaseSession.TryTakeSolved(out var solvedId)) progress.MarkSolved(solvedId);
+            if (CaseSession.TryTakeSolved(out var solvedId)) pendingFindingsCaseId = solvedId;
             var keyCentres = gridView.Cells.ToDictionary(cell => cell.Key, cell => (Vector2)cell.Value.Center);
             var map = new DeskKeyMap(desk.Markers.Where(marker => marker.CaseFile).Select(marker => marker.ToDeskMarker(transform)).ToArray(), keyCentres);
             deskCases = new DeskCases(map, StateOf);
@@ -153,10 +193,10 @@ namespace DetectiveDave.OverworldPlay
         {
             ringView = new GameObject("Dwell Ring").AddComponent<DwellRingView>();
             ringView.transform.SetParent(transform, false);
-            ringView.Configure(view.transform, overworldSettings.RingRadiusInKeys * board.KeyWorldSize, overworldSettings.RingWidthInKeys * board.KeyWorldSize, overworldSettings.RingTrackColor, overworldSettings.RingFillColor);
+            ringView.Configure(view.transform, overworldSettings.RingSprite, overworldSettings.RingRadiusInKeys * board.KeyWorldSize, overworldSettings.RingWidthInKeys * board.KeyWorldSize, overworldSettings.RingTrackColor, overworldSettings.RingFillColor);
             var sound = new GameObject("Typewriter Sound").AddComponent<TypewriterSound>();
             sound.transform.SetParent(transform, false);
-            sound.Configure(overworldSettings.ClickVolume);
+            sound.Configure(overworldSettings);
             var briefing = new GameObject("Briefing").AddComponent<BriefingView>();
             briefing.transform.SetParent(transform, false);
             briefing.Configure(overworldSettings, FindCase, transform, sound);
@@ -165,9 +205,38 @@ namespace DetectiveDave.OverworldPlay
 
         CaseFile FindCase(string caseId) => casesById[caseId];
 
+        void ResetToStart()
+        {
+            ringView.Hide();
+            wipeView.Cancel();
+            zoomView.Restore();
+            game.Restart();
+        }
+
         void StartPlaying()
         {
             if (level.TryGetEnds(out var startKey, out _)) game.OnKeyPressed(startKey);
+            PlayPendingFindings();
+        }
+
+        void PlayPendingFindings()
+        {
+            var caseId = pendingFindingsCaseId;
+            pendingFindingsCaseId = null;
+            if (string.IsNullOrEmpty(caseId)) return;
+            if (!casesById.ContainsKey(caseId))
+            {
+                progress.MarkSolved(caseId);
+                ShowCaseStates();
+                return;
+            }
+            flow.PlayFindings(caseId, () => CompleteCase(caseId));
+        }
+
+        void CompleteCase(string caseId)
+        {
+            progress.MarkSolved(caseId);
+            ShowCaseStates();
         }
 
         void Subscribe()

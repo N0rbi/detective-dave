@@ -1,3 +1,4 @@
+using System;
 using DetectiveDave.PlayerPlay;
 using UnityEngine.InputSystem;
 
@@ -11,6 +12,7 @@ namespace DetectiveDave.OverworldPlay
         readonly IBriefingScreen briefing;
         readonly ICaseLauncher launcher;
         string dwellCaseId;
+        CaseState dwellState;
 
         public OverworldFlow(DeskCases cases, DwellTimer dwell, IDwellIndicator indicator, IBriefingScreen briefing, ICaseLauncher launcher)
         {
@@ -28,8 +30,9 @@ namespace DetectiveDave.OverworldPlay
         public void OnMoved(Key key)
         {
             CancelDwell();
-            if (!TryGetOpenCase(key, out var caseId)) return;
+            if (!TryGetVisitableCase(key, out var caseId, out var state)) return;
             dwellCaseId = caseId;
+            dwellState = state;
             Stage = OverworldStage.Dwelling;
             dwell.Start();
             indicator.Show(0f);
@@ -47,10 +50,17 @@ namespace DetectiveDave.OverworldPlay
             else indicator.Show(dwell.Progress);
         }
 
-        bool TryGetOpenCase(Key key, out string caseId)
+        public void PlayFindings(string caseId, Action completed)
+        {
+            Stage = OverworldStage.Briefing;
+            briefing.OpenFindings(caseId, () => briefing.Close(() => FinishFindings(completed)));
+        }
+
+        bool TryGetVisitableCase(Key key, out string caseId, out CaseState state)
         {
             caseId = null;
-            return cases.TryGetState(key, out var state) && state == CaseState.Open && cases.TryGetCase(key, out caseId);
+            if (!cases.TryGetState(key, out state)) return false;
+            return (state == CaseState.Open || state == CaseState.Solved) && cases.TryGetCase(key, out caseId);
         }
 
         void CancelDwell()
@@ -66,8 +76,19 @@ namespace DetectiveDave.OverworldPlay
         {
             var caseId = dwellCaseId;
             indicator.Hide();
+            if (dwellState == CaseState.Solved)
+            {
+                PlayFindings(caseId, null);
+                return;
+            }
             Stage = OverworldStage.Briefing;
             briefing.Open(caseId, outcome => FinishLetter(caseId, outcome));
+        }
+
+        void FinishFindings(Action completed)
+        {
+            Stage = OverworldStage.Desk;
+            completed?.Invoke();
         }
 
         void FinishLetter(string caseId, LetterOutcome outcome)
