@@ -29,6 +29,16 @@ namespace DetectiveDave.PlayerPlay
         [SerializeField, Range(0.2f, 1f)] [Tooltip("Scale factor the player is squashed to when walking into a wall.")] float squashScale = 0.6f;
         [SerializeField, Min(0f)] [Tooltip("Degrees the player tilts backwards when slipping.")] float slipTiltDegrees = 15f;
 
+        [Header("Dash gust")]
+        [SerializeField] [Tooltip("The wind lines drawn behind the player when it dashes to a key. Each one has its own offset, thickness, length and start. Remove all to turn the gust off.")] GustLine[] gustLines =
+        {
+            new GustLine(-0.25f, 0.03f, 0.9f, 0.1f),
+            new GustLine(0.05f, 0.06f, 0.7f, 0f),
+            new GustLine(0.3f, 0.04f, 1f, 0f)
+        };
+        [SerializeField] [Tooltip("Colour of the gust lines. Its alpha is the starting opacity.")] Color gustColor = new Color(1f, 1f, 1f, 0.7f);
+        [SerializeField, Min(0.01f)] [Tooltip("Seconds the gust lines take to shorten and fade away.")] float gustFadeSeconds = 0.25f;
+
         [Header("Decorations")]
         [SerializeField] [Tooltip("Drain grate shown on the middle of the start key.")] Sprite startGrate;
         [SerializeField] [Tooltip("Folder with a magnifying glass, shown on the goal key.")] Sprite goalIcon;
@@ -71,6 +81,9 @@ namespace DetectiveDave.PlayerPlay
         public float SlipDistanceInKeys => slipDistanceInKeys;
         public float DropMarginInKeys => dropMarginInKeys;
         public float BumpDistanceInKeys => bumpDistanceInKeys;
+        public GustLine[] GustLines => gustLines;
+        public Color GustColor => gustColor;
+        public float GustFadeSeconds => gustFadeSeconds;
         public float ClimbDropInHeights => climbDropInHeights;
         public float BreathingAmount => breathingAmount;
         public float BreathingSeconds => breathingSeconds;
