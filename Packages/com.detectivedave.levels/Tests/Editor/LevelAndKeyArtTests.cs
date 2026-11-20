@@ -33,6 +33,19 @@ namespace DetectiveDave.Levels.Tests
         }
 
         [Test]
+        public void NewLevelStartsOnTheLeftShift() => Assert.AreEqual(StartSide.Left, make.Level().StartKey);
+
+        [Test]
+        public void StartKeyIsReadFromTheSerializedField()
+        {
+            var level = make.Level();
+            var serialized = new SerializedObject(level);
+            serialized.FindProperty("startKey").enumValueIndex = (int)StartSide.Right;
+            serialized.ApplyModifiedPropertiesWithoutUndo();
+            Assert.AreEqual(StartSide.Right, level.StartKey);
+        }
+
+        [Test]
         public void BackgroundFallsBackToTheKeyArtDefault()
         {
             var art = make.KeyArt();

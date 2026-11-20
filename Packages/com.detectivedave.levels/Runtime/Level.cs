@@ -3,6 +3,12 @@ using UnityEngine.Tilemaps;
 
 namespace DetectiveDave.Levels
 {
+    public enum StartSide
+    {
+        [InspectorName("Left Shift")] Left,
+        [InspectorName("Right Shift")] Right
+    }
+
     /// <summary>
     /// The root of a level prefab in Assets/Levels: one file holds the whole level. Children: a Grid with the Shape tilemap
     /// (painted with <see cref="TileType"/> tiles, one tile per cell, a key is the cells under it) and a Background sprite renderer.
@@ -25,8 +31,11 @@ namespace DetectiveDave.Levels
         [Tooltip("How the keys look in game. Duplicate a Key Art to give this level its own look.")]
         [SerializeField] KeyArt keyArt;
 
-        [Tooltip("The tilemap that holds the level's shape: which keys are floor, wall, gap, start, goal. Paint it with the Level Tiles palette.")]
+        [Tooltip("The tilemap that holds the level's shape: which keys are floor, wall or gap. The two Shift keys are the Start and End. Paint it with the Level Tiles palette.")]
         [SerializeField] Tilemap shape;
+
+        [Tooltip("Which Shift key the player starts on. The other Shift key is the End.")]
+        [SerializeField] StartSide startKey = StartSide.Left;
 
         [Tooltip("Drawn behind the keyboard. Its sprite and colour are the level's background; with no sprite the Key Art's default background is used.")]
         [SerializeField] SpriteRenderer background;
@@ -47,6 +56,11 @@ namespace DetectiveDave.Levels
 
         /// <summary>The tilemap with the level's shape, or null when not set.</summary>
         public Tilemap Shape => shape;
+
+        /// <summary>The Shift key the player starts on; the other Shift key is the End.</summary>
+        public StartSide StartKey => startKey;
+
+        public StartSide EndKey => startKey == StartSide.Left ? StartSide.Right : StartSide.Left;
 
         /// <summary>The renderer that draws the background, or null when the level has none.</summary>
         public SpriteRenderer BackgroundRenderer => background;

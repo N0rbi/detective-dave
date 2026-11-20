@@ -32,6 +32,7 @@ namespace DetectiveDave.Levels.Editor
             LevelEditorGUI.Header("Level");
             EditorGUI.BeginChangeCheck();
             DrawPropertiesExcluding(serializedObject, "m_Script");
+            LevelEditorGUI.DrawEndKey(level);
             if (EditorGUI.EndChangeCheck()) cache.MarkDirty();
             serializedObject.ApplyModifiedProperties();
 

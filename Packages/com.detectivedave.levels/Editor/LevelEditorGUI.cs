@@ -6,7 +6,7 @@ using UnityEngine;
 namespace DetectiveDave.Levels.Editor
 {
     /// <summary>Small drawing helpers shared by the level inspectors.</summary>
-    internal static class LevelEditorGUI
+    public static class LevelEditorGUI
     {
         const float MaxPreviewHeight = 160f;
         static readonly Color PreviewBackground = new Color(0.12f, 0.12f, 0.12f);
@@ -83,6 +83,12 @@ namespace DetectiveDave.Levels.Editor
                 EditorGUI.DrawRect(new Rect(line.x, line.y + 3f, 10f, 10f), type.EditorColor);
                 EditorGUI.LabelField(new Rect(line.x + 16f, line.y, line.width - 16f, line.height), type.name);
             }
+        }
+
+        public static void DrawEndKey(Level level)
+        {
+            using (new EditorGUI.DisabledScope(true))
+                EditorGUILayout.LabelField(new GUIContent("End key", "The other Shift key. Set by Start key."), new GUIContent($"{level.EndKey} Shift"));
         }
 
         public static void Header(string text)
