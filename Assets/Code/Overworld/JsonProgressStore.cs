@@ -18,6 +18,11 @@ namespace DetectiveDave.OverworldPlay
 
         public static JsonProgressStore AtDefaultPath() => new JsonProgressStore(Path.Combine(Application.persistentDataPath, FileName));
 
+        public void Reset()
+        {
+            if (File.Exists(path)) File.Delete(path);
+        }
+
         public IReadOnlyCollection<string> LoadSolved()
         {
             if (!File.Exists(path)) return new string[0];
