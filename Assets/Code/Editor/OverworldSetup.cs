@@ -54,6 +54,8 @@ namespace DetectiveDave.EditorTools
             AssignPlaceholders(settings);
             var magnifier = EnsureMagnifierSettings(sprites[0]);
             var sampleCase = EnsureSampleCase(level);
+            var stamped = CaseIds.StampAll();
+            if (stamped > 0) Note("locked the id of " + stamped + " cases");
             var desk = EnsureSampleDesk(sampleCase, sprites[1]);
             AssignDeskIfEmpty(settings, desk);
             AssetDatabase.SaveAssets();

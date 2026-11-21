@@ -10,9 +10,11 @@ namespace DetectiveDave.EditorTools
     {
         public override void OnInspectorGUI()
         {
+            var file = (CaseFile)target;
+            if (CaseIds.StampIfEmpty(file)) serializedObject.Update();
             DrawDefaultInspector();
             DrawLevelPicker();
-            var file = (CaseFile)target;
+            DrawIdProblems(file);
             EditorGUILayout.Space();
             EditorGUILayout.LabelField("Letter preview", EditorStyles.boldLabel);
             DrawLetter("Accept", file.ResolvedAcceptLetter);
@@ -33,6 +35,13 @@ namespace DetectiveDave.EditorTools
             if (picked == current) return;
             levelProperty.objectReferenceValue = picked == 0 ? null : levels[picked - 1];
             serializedObject.ApplyModifiedProperties();
+        }
+
+        static void DrawIdProblems(CaseFile file)
+        {
+            var others = CaseIds.OtherPathsSharing(file);
+            if (others.Count == 0) return;
+            EditorGUILayout.HelpBox("Another case already uses the id " + file.Id + ": " + string.Join(", ", others) + ". Give one of them another id before players have progress.", MessageType.Warning);
         }
 
         static void DrawLetter(string title, string letter)
