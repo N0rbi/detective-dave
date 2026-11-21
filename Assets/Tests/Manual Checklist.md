@@ -83,6 +83,10 @@ Play with F5 on a level with a Gap and a WallGutter key between the two Shifts. 
 - Move a case file over Left Shift: START turns red and says it is covered.
 - Change the Preview keyboard dropdown: the outlines and covered keys change to that layout.
 - Remove the case from a marker: its label says No case assigned.
+- Free keys (no case on them) are filled light grey with a dark outline everywhere on the keyboard, so you can see where a case file can go. A legend in the bottom-left corner of the Scene view explains the colours. Zoom in: the free keys show their labels.
+- Desk inspector, Cases section: every case in the project is listed with its colour and whether it is on the desk. Press Add to desk on a case that is not on it: a case file appears on the first free keys, selected, and Undo removes it. Add empty marker adds one without a case.
+- Drag a case asset from the Project window onto the Scene view while the desk is open: a case file appears where you drop it. A case that is already on the desk is ignored.
+- Select the desk prefab in the Project window without opening it: the Cases section says to open the desk first and the buttons are disabled.
 
 ## Overworld desk designer path
 - Overworld Settings has a Desk field (tooltip: the desk the game starts on). Set Up Overworld fills it only when empty. Shift+F5 with nothing selected plays that desk; F5 with a custom desk open or selected plays that desk instead.
