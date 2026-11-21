@@ -37,7 +37,7 @@ namespace DetectiveDave.EditorTools
             var prefab = PlayerPrefabBuilder.Ensure();
             var wiringError = PlayerSceneWiring.Wire(prefab, settings, tiles);
             AssetDatabase.SaveAssets();
-            return wiringError;
+            return wiringError ?? GuardSetup.ApplyOrError();
         }
 
         static TileType[] LoadTiles() => PlayerSetupPaths.TileNames.Select(LoadTile).ToArray();
@@ -70,7 +70,7 @@ namespace DetectiveDave.EditorTools
         {
             Selection.activeObject = prefab;
             EditorGUIUtility.PingObject(prefab);
-            EditorUtility.DisplayDialog(DialogTitle, "The player is set up in Game.unity. Press Play in the Game scene to try it.", "OK");
+            EditorUtility.DisplayDialog(DialogTitle, "The player and the guards are set up in Game.unity. Press Play in the Game scene to try it.", "OK");
         }
     }
 }
