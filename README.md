@@ -231,3 +231,5 @@ References: [Unity forum: detect ANSI or ISO](https://forum.unity.com/threads/is
 6. The magnifier always starts on Left Shift when the overworld opens. Its size is `heightInKeys` in `Magnifier Movement Settings.config`. The dash gust is the `Dash gust enabled` flag on a movement settings asset: on for the detective, off for the magnifier.
 
 All art and audio are references on settings assets; placeholders are files named `placeholder_*` in `Assets/Overworld/Art`, `Assets/Overworld/Audio` and `Assets/Overworld/Fonts`. Replace a placeholder by pointing the reference on `Overworld Settings.config` at your own file. Nothing is generated at runtime; `Set Up Overworld` only fills references that are empty and shows what it changed.
+
+Typewriter sound plays on every valid letter key, on Backspace, and softly while the description types in. Each strike picks a random clip (never the same twice in a row), pitch and volume within the ranges on `Overworld Settings.config` (Sound section); description clicks are never closer than `Min Seconds Between Clicks`. If the Console reports an empty click list, a missing Audio Listener or a zero volume, that is why it is silent.
