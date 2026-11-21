@@ -86,7 +86,6 @@ namespace DetectiveDave.Tests
         {
             var action = brain.Tick(1f, Key.Z);
             action = Finish(action, Key.D);
-            action = brain.Tick(0f, Key.D);
             Assert.That(brain.Mode, Is.EqualTo(GuardMode.Chasing));
             Assert.That(action.IsChasing, Is.True);
             AssertStep(action, Key.D, 0.5f);
@@ -139,7 +138,6 @@ namespace DetectiveDave.Tests
         {
             var action = brain.Tick(1f, Key.Z);
             action = Finish(action, Key.D);
-            action = brain.Tick(0f, Key.D);
             level.Kinds[Key.F] = CellKind.Gutter;
             action = Finish(action, Key.F);
             Assert.That(brain.Mode, Is.EqualTo(GuardMode.Patrolling));
@@ -148,22 +146,22 @@ namespace DetectiveDave.Tests
         }
 
         [Test]
-        public void LosingThePath_WalksBackToTheNearestRouteKey()
+        public void LosingThePathFarFromTheRoute_WalksBackToTheNearestRouteKey()
         {
-            var shortRoute = new[] { Key.A, Key.S };
             board.Connect(Key.S, Key.Q);
             board.Connect(Key.Q, Key.W);
-            var guard = CreateBrain(shortRoute, 0f, 0f);
+            var guard = CreateBrain(new[] { Key.A, Key.S }, 0f, 0f);
             var action = guard.Tick(0f, Key.Z);
-            action = guard.Tick(1f, Key.Z);
+            guard.Tick(1f, Key.Z);
             Assert.That(guard.Current, Is.EqualTo(Key.S));
-            board.Connect(Key.S, Key.W);
-            action = guard.Tick(0f, Key.W);
+            action = guard.Tick(0f, Key.Q);
             Assert.That(guard.Mode, Is.EqualTo(GuardMode.Chasing));
-            level.Kinds[Key.W] = CellKind.Wall;
+            level.Kinds[Key.W] = CellKind.Gutter;
             action = guard.Tick(0.5f, Key.W);
-            Assert.That(guard.Mode, Is.EqualTo(GuardMode.Patrolling));
-            Assert.That(action.Kind, Is.Not.EqualTo(GuardActionKind.Catch));
+            Assert.That(guard.Current, Is.EqualTo(Key.Q));
+            Assert.That(guard.Mode, Is.EqualTo(GuardMode.Rejoining));
+            Assert.That(action.IsChasing, Is.False);
+            AssertStep(action, Key.S, 1f);
         }
 
         [Test]
