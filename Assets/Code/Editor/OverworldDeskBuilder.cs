@@ -62,7 +62,12 @@ namespace DetectiveDave.EditorTools
         [MenuItem("GameObject/Detective Dave/Case Marker", false, 10)]
         static void CreateMarker(MenuCommand command)
         {
-            var parent = command.context ? ((GameObject)command.context).transform : null;
+            var parent = MarkerParent.Find(command.context as GameObject);
+            if (!parent)
+            {
+                EditorUtility.DisplayDialog("Case Marker", "Open a desk in Prefab Mode, or select a desk in the scene, so the case marker has a desk to go on.", "OK");
+                return;
+            }
             var art = AssetDatabase.LoadAssetAtPath<Sprite>(OverworldSetupPaths.FolderPath);
             var marker = AddMarker(parent, null, art, Vector3.zero, CentredScale(art));
             Undo.RegisterCreatedObjectUndo(marker.gameObject, "Create Case Marker");
