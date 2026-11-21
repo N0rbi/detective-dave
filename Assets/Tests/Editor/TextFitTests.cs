@@ -10,6 +10,8 @@ namespace DetectiveDave.Tests
         const float Advance = 0.5f;
         const float Ratio = 1f;
 
+        static string Words(int count) => string.Concat(System.Linq.Enumerable.Repeat("word ", count)).TrimEnd();
+
         [Test]
         public void ShortTextKeepsTheLargestSize()
         {
@@ -21,7 +23,7 @@ namespace DetectiveDave.Tests
         [Test]
         public void LongTextShrinksUntilItFits()
         {
-            var text = new string('a', 400);
+            var text = Words(80);
             var result = TextFit.Fit(text, new Vector2(10f, 4f), 1f, 0.1f, 0.1f, Advance, Ratio);
             Assert.Less(result.LineHeight, 1f);
             Assert.IsTrue(result.Fits);
@@ -31,7 +33,7 @@ namespace DetectiveDave.Tests
         [Test]
         public void TextThatNeverFitsStopsAtTheSmallestSizeAndReportsIt()
         {
-            var result = TextFit.Fit(new string('a', 100000), new Vector2(10f, 1f), 1f, 0.5f, 0.1f, Advance, Ratio);
+            var result = TextFit.Fit(Words(20000), new Vector2(10f, 1f), 1f, 0.5f, 0.1f, Advance, Ratio);
             Assert.AreEqual(0.5f, result.LineHeight, Tolerance);
             Assert.IsFalse(result.Fits);
         }

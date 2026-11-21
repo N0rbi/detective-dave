@@ -545,7 +545,7 @@ namespace DetectiveDave.Tests
             animations.CompleteLast();
             game.OnKeyPressed(Far);
             animations.CompleteLast();
-            animations.CompleteLast();
+            game.CompleteRespawn();
             game.OnKeyPressed(Next);
             Assert.IsTrue(presentation.Climbing);
             Assert.AreEqual(1, presentation.Frame);
@@ -650,8 +650,8 @@ namespace DetectiveDave.Tests
             Assert.AreEqual(2, presentation.Frame);
             game.OnKeyPressed(Far);
             animations.CompleteLast();
+            game.CompleteRespawn();
             Assert.AreEqual(0, presentation.Frame);
-            animations.CompleteLast();
             game.OnKeyPressed(Next);
             Assert.AreEqual(1, presentation.Frame);
         }
