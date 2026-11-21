@@ -35,6 +35,7 @@ namespace DetectiveDave.EditorTools
             DrawStartKey(desk, layout, design);
             DrawMarkers(desk, design);
             DrawLayoutName(layout);
+            DrawRootWarning(desk);
         }
 
         static DeskLayout CurrentDesk()
@@ -146,6 +147,16 @@ namespace DetectiveDave.EditorTools
             var style = new GUIStyle(EditorStyles.boldLabel) { alignment = TextAnchor.MiddleCenter };
             style.normal.textColor = colour;
             Handles.Label(position, text, style);
+        }
+
+        static void DrawRootWarning(DeskLayout desk)
+        {
+            if (!DeskRoot.NeedsReset(desk)) return;
+            Handles.BeginGUI();
+            var style = new GUIStyle(EditorStyles.boldLabel) { wordWrap = true };
+            style.normal.textColor = ProblemColor;
+            GUI.Label(new Rect(10f, 44f, 420f, 60f), DeskRootCheck.Warning + " Reset it in the desk inspector.", style);
+            Handles.EndGUI();
         }
 
         static void DrawLayoutName(KeyboardLayout layout)

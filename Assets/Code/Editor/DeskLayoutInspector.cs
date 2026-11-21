@@ -1,6 +1,7 @@
 using System.Linq;
 using DetectiveDave.OverworldPlay;
 using UnityEditor;
+using UnityEngine;
 
 namespace DetectiveDave.EditorTools
 {
@@ -10,10 +11,18 @@ namespace DetectiveDave.EditorTools
         public override void OnInspectorGUI()
         {
             var desk = (DeskLayout)target;
+            DrawRootWarning(desk);
             DrawKeyboardPicker();
             DrawSummary(desk);
             DrawProblems(desk);
             DrawChainProblems(desk);
+        }
+
+        static void DrawRootWarning(DeskLayout desk)
+        {
+            if (!DeskRoot.NeedsReset(desk)) return;
+            EditorGUILayout.HelpBox(DeskRootCheck.Warning, MessageType.Warning);
+            if (GUILayout.Button("Reset root transform")) DeskRoot.Reset(desk);
         }
 
         static void DrawKeyboardPicker()
