@@ -83,3 +83,13 @@ Play with F5 on a level with a Gap and a WallGutter key between the two Shifts. 
 - Move a case file over Left Shift: START turns red and says it is covered.
 - Change the Preview keyboard dropdown: the outlines and covered keys change to that layout.
 - Remove the case from a marker: its label says No case assigned.
+
+## Overworld desk designer path
+- Overworld Settings has a Desk field (tooltip: the desk the game starts on). Set Up Overworld fills it only when empty. Shift+F5 with nothing selected plays that desk; F5 with a custom desk open or selected plays that desk instead.
+- Accept a case that has no level: the briefing shows a short grey line "This case has no level yet", the case stays on the desk and nothing starts. Declining such a case is normal.
+- The desk inspector and the marker label in the Scene view say "No level yet" for such a case.
+- Desk inspector Preview as: Open, Locked, Solved and By progress file change how the case files look in the Scene view. Leave Prefab Mode and check the prefab shows no changes (not marked as modified).
+- Desk inspector Case chain: make two cases require each other, require a case that is not on the desk, make every case locked, and give two cases the same id: each is listed.
+- Case inspector: an old case keeps its asset name as the id; a new case gets an id like case-1a2b3c4d; renaming the asset does not change the id; two cases with the same id warn.
+- Case Marker menu: in Prefab Mode with nothing selected the marker lands under the open desk; in a scene with one desk it lands under it; with no desk a dialog explains why nothing happened.
+- Move or scale the desk root: the inspector and the Scene view warn; Reset root transform puts it back at position 0 and scale 1.
