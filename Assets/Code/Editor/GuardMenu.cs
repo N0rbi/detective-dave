@@ -1,6 +1,7 @@
 using DetectiveDave.GuardPlay;
 using DetectiveDave.Levels;
 using UnityEditor;
+using UnityEditor.SceneManagement;
 using UnityEngine;
 
 namespace DetectiveDave.EditorTools
@@ -26,7 +27,14 @@ namespace DetectiveDave.EditorTools
         static Level LevelOf(GameObject context)
         {
             if (context) return context.GetComponentInParent<Level>();
-            return Selection.activeGameObject ? Selection.activeGameObject.GetComponentInParent<Level>() : null;
+            var selected = Selection.activeGameObject ? Selection.activeGameObject.GetComponentInParent<Level>() : null;
+            return selected ? selected : OpenStageLevel();
+        }
+
+        static Level OpenStageLevel()
+        {
+            var stage = PrefabStageUtility.GetCurrentPrefabStage();
+            return stage ? stage.prefabContentsRoot.GetComponent<Level>() : null;
         }
     }
 }
