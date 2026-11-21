@@ -37,9 +37,9 @@ namespace DetectiveDave.PlayerPlay
         [SerializeField] [Tooltip("Turns the whole dash gust on or off. The detective dashes, the magnifying glass does not.")] bool dashGustEnabled = true;
         [SerializeField] [Tooltip("The wind lines drawn behind the player when it dashes to a key. Each one has its own offset, thickness, length and start. Remove all to turn the gust off.")] GustLine[] gustLines =
         {
-            new GustLine(-0.25f, 0.03f, 0.9f, 0.1f),
-            new GustLine(0.05f, 0.06f, 0.7f, 0f),
-            new GustLine(0.3f, 0.04f, 1f, 0f)
+            new GustLine(-0.25f, 0.03f, 0.9f),
+            new GustLine(0.05f, 0.06f, 0.7f),
+            new GustLine(0.3f, 0.04f, 1f)
         };
         [SerializeField] [Tooltip("Colour of the gust lines. Its alpha is the starting opacity.")] Color gustColor = new Color(0.2f, 0.23f, 0.34f, 0.7f);
         [SerializeField, Min(0.01f)] [Tooltip("Seconds the gust lines take to shorten and fade away.")] float gustFadeSeconds = 0.25f;

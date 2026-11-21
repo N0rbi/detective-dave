@@ -138,7 +138,7 @@ namespace DetectiveDave.PlayerPlay
         {
             gustView = new GameObject("Dash Gust").AddComponent<DashGustView>();
             gustView.transform.SetParent(transform, false);
-            gustView.Configure(settings, gridView.Scale);
+            gustView.Configure(settings, gridView.Scale, view.transform);
         }
 
         void BuildGame()

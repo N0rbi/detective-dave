@@ -204,7 +204,7 @@ namespace DetectiveDave.PlayerPlay
             ShowCurrentPose();
             var leanTarget = home + DirectionToWall(to) * settings.BumpDistanceInKeys * board.KeyWorldSize;
             gust.Show(home, leanTarget);
-            animations.BumpWall(leanTarget, home, Guard(RecoverFromBump));
+            animations.BumpWall(leanTarget, home, Guard(() => gust.Show(leanTarget, home)), Guard(RecoverFromBump));
         }
 
         void RecoverFromBump() => state.Enter(PlayerState.Idle);

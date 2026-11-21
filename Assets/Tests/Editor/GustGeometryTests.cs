@@ -10,93 +10,119 @@ namespace DetectiveDave.Tests
         const float Tolerance = 0.0001f;
 
         static readonly Vector2 Origin = Vector2.zero;
+        static readonly Vector2 FarEnd = new Vector2(4f, 0f);
+
+        static GustLine[] OneLine(float offset = 0f, float thickness = 0.05f, float lengthShare = 1f) => new[] { new GustLine(offset, thickness, lengthShare) };
 
         [Test]
         public void NoMovementGivesNoSegments()
         {
-            var segments = GustGeometry.Build(Origin, Origin, new[] { new GustLine(0f, 0.05f, 1f, 0f) }, PlayerHeight);
-            Assert.IsEmpty(segments);
+            Assert.IsEmpty(GustGeometry.Follow(Origin, Origin, Origin, OneLine(), PlayerHeight));
+        }
+
+        [Test]
+        public void PlayerStillAtTheStartGivesNoSegments()
+        {
+            Assert.IsEmpty(GustGeometry.Follow(Origin, FarEnd, Origin, OneLine(), PlayerHeight));
+        }
+
+        [Test]
+        public void PlayerBehindTheStartGivesNoSegments()
+        {
+            Assert.IsEmpty(GustGeometry.Follow(Origin, FarEnd, new Vector2(-1f, 0f), OneLine(), PlayerHeight));
         }
 
         [Test]
         public void NoLinesGiveNoSegments()
         {
-            Assert.IsEmpty(GustGeometry.Build(Origin, Vector2.right, new GustLine[0], PlayerHeight));
-            Assert.IsEmpty(GustGeometry.Build(Origin, Vector2.right, null, PlayerHeight));
+            Assert.IsEmpty(GustGeometry.Follow(Origin, FarEnd, Vector2.right, new GustLine[0], PlayerHeight));
+            Assert.IsEmpty(GustGeometry.Follow(Origin, FarEnd, Vector2.right, null, PlayerHeight));
         }
 
         [Test]
-        public void FullLengthLineCoversTheTravelledDistance()
+        public void HeadIsAtThePlayer()
         {
-            var segment = GustGeometry.Build(Origin, new Vector2(4f, 0f), new[] { new GustLine(0f, 0.05f, 1f, 0f) }, PlayerHeight)[0];
-            Assert.AreEqual(Origin, segment.Start);
-            Assert.AreEqual(new Vector2(4f, 0f), segment.End);
+            var segment = GustGeometry.Follow(Origin, FarEnd, new Vector2(1.5f, 0f), OneLine(), PlayerHeight)[0];
+            Assert.AreEqual(1.5f, segment.End.x, Tolerance);
+            Assert.AreEqual(0f, segment.End.y, Tolerance);
         }
 
         [Test]
-        public void LengthIsAShareOfTheDistanceTravelled()
+        public void TailTrailsBehindTheHeadAndNeverBeforeTheStart()
         {
-            var segment = GustGeometry.Build(Origin, new Vector2(4f, 0f), new[] { new GustLine(0f, 0.05f, 0.5f, 0f) }, PlayerHeight)[0];
-            Assert.AreEqual(2f, segment.Length, Tolerance);
+            var segment = GustGeometry.Follow(Origin, FarEnd, new Vector2(1.5f, 0f), OneLine(), PlayerHeight)[0];
+            Assert.AreEqual(0f, segment.Start.x, Tolerance);
+            Assert.LessOrEqual(segment.Start.x, segment.End.x);
         }
 
         [Test]
-        public void ShortDistanceGivesShortLines()
+        public void LengthIsAShareOfTheDistanceTravelledSoFar()
         {
-            var lines = new[] { new GustLine(0f, 0.05f, 1f, 0f) };
-            var longDash = GustGeometry.Build(Origin, new Vector2(4f, 0f), lines, PlayerHeight)[0];
-            var bump = GustGeometry.Build(Origin, new Vector2(0.7f, 0f), lines, PlayerHeight)[0];
-            Assert.AreEqual(0.7f, bump.Length, Tolerance);
-            Assert.Less(bump.Length, longDash.Length);
+            var segment = GustGeometry.Follow(Origin, FarEnd, new Vector2(3f, 0f), OneLine(lengthShare: 0.5f), PlayerHeight)[0];
+            Assert.AreEqual(1.5f, segment.Length, Tolerance);
+            Assert.AreEqual(1.5f, segment.Start.x, Tolerance);
         }
 
         [Test]
-        public void StartShareMovesTheLineAlongTheDash()
+        public void LinesGrowAsThePlayerMovesAway()
         {
-            var segment = GustGeometry.Build(Origin, new Vector2(4f, 0f), new[] { new GustLine(0f, 0.05f, 0.25f, 0.5f) }, PlayerHeight)[0];
-            Assert.AreEqual(new Vector2(2f, 0f), segment.Start);
-            Assert.AreEqual(new Vector2(3f, 0f), segment.End);
+            var early = GustGeometry.Follow(Origin, FarEnd, new Vector2(1f, 0f), OneLine(lengthShare: 0.5f), PlayerHeight)[0];
+            var late = GustGeometry.Follow(Origin, FarEnd, new Vector2(3f, 0f), OneLine(lengthShare: 0.5f), PlayerHeight)[0];
+            Assert.Less(early.Length, late.Length);
         }
 
         [Test]
-        public void LineNeverRunsPastTheEndOfTheDash()
+        public void PlayerPastTheLimitIsHeldAtTheLimit()
         {
-            var segment = GustGeometry.Build(Origin, new Vector2(4f, 0f), new[] { new GustLine(0f, 0.05f, 1f, 0.75f) }, PlayerHeight)[0];
+            var segment = GustGeometry.Follow(Origin, FarEnd, new Vector2(9f, 0f), OneLine(), PlayerHeight)[0];
             Assert.AreEqual(4f, segment.End.x, Tolerance);
+            Assert.AreEqual(4f, segment.Length, Tolerance);
+        }
+
+        [Test]
+        public void ShortReachGivesShortLines()
+        {
+            var bump = GustGeometry.Follow(Origin, new Vector2(0.7f, 0f), new Vector2(0.7f, 0f), OneLine(), PlayerHeight)[0];
+            var dash = GustGeometry.Follow(Origin, FarEnd, FarEnd, OneLine(), PlayerHeight)[0];
+            Assert.AreEqual(0.7f, bump.Length, Tolerance);
+            Assert.Less(bump.Length, dash.Length);
         }
 
         [Test]
         public void OffsetIsPerpendicularToTheDashInPlayerHeights()
         {
-            var horizontal = GustGeometry.Build(Origin, new Vector2(4f, 0f), new[] { new GustLine(0.25f, 0.05f, 1f, 0f) }, PlayerHeight)[0];
+            var horizontal = GustGeometry.Follow(Origin, FarEnd, FarEnd, OneLine(0.25f), PlayerHeight)[0];
             Assert.AreEqual(0.5f, horizontal.Start.y, Tolerance);
             Assert.AreEqual(0.5f, horizontal.End.y, Tolerance);
-            var vertical = GustGeometry.Build(Origin, new Vector2(0f, 4f), new[] { new GustLine(0.25f, 0.05f, 1f, 0f) }, PlayerHeight)[0];
-            Assert.AreEqual(-0.5f, vertical.Start.x, Tolerance);
-            Assert.AreEqual(0f, vertical.Start.y, Tolerance);
+            var upEnd = new Vector2(0f, 4f);
+            var vertical = GustGeometry.Follow(Origin, upEnd, upEnd, OneLine(0.25f), PlayerHeight)[0];
+            Assert.AreEqual(-0.5f, vertical.End.x, Tolerance);
+            Assert.AreEqual(4f, vertical.End.y, Tolerance);
         }
 
         [Test]
         public void ThicknessIsAShareOfThePlayerHeight()
         {
-            var segment = GustGeometry.Build(Origin, Vector2.right, new[] { new GustLine(0f, 0.05f, 1f, 0f) }, PlayerHeight)[0];
+            var segment = GustGeometry.Follow(Origin, Vector2.right, Vector2.right, OneLine(), PlayerHeight)[0];
             Assert.AreEqual(0.1f, segment.Thickness, Tolerance);
         }
 
         [Test]
-        public void EachLineKeepsItsOwnThicknessAndOffset()
+        public void EachLineKeepsItsOwnThicknessOffsetAndLength()
         {
-            var lines = new[] { new GustLine(-0.25f, 0.03f, 0.9f, 0f), new GustLine(0.3f, 0.06f, 1f, 0f) };
-            var segments = GustGeometry.Build(Origin, new Vector2(2f, 0f), lines, PlayerHeight);
+            var lines = new[] { new GustLine(-0.25f, 0.03f, 0.9f), new GustLine(0.3f, 0.06f, 1f) };
+            var segments = GustGeometry.Follow(Origin, new Vector2(2f, 0f), new Vector2(2f, 0f), lines, PlayerHeight);
             Assert.AreEqual(2, segments.Length);
             Assert.AreNotEqual(segments[0].Thickness, segments[1].Thickness);
             Assert.AreNotEqual(segments[0].Start.y, segments[1].Start.y);
+            Assert.AreNotEqual(segments[0].Length, segments[1].Length);
         }
 
         [Test]
         public void DiagonalDashKeepsTheLinesParallelToTheMove()
         {
-            var segment = GustGeometry.Build(Origin, new Vector2(3f, 3f), new[] { new GustLine(0f, 0.05f, 1f, 0f) }, PlayerHeight)[0];
+            var end = new Vector2(3f, 3f);
+            var segment = GustGeometry.Follow(Origin, end, end, OneLine(), PlayerHeight)[0];
             var direction = (segment.End - segment.Start).normalized;
             Assert.AreEqual(Mathf.Sqrt(0.5f), direction.x, Tolerance);
             Assert.AreEqual(Mathf.Sqrt(0.5f), direction.y, Tolerance);
@@ -105,7 +131,7 @@ namespace DetectiveDave.Tests
         [Test]
         public void ShrinkingMovesTheTailTowardsTheHead()
         {
-            var segment = new GustSegment(Origin, new Vector2(4f, 0f), 0.1f);
+            var segment = new GustSegment(Origin, FarEnd, 0.1f);
             Assert.AreEqual(new Vector2(2f, 0f), GustGeometry.Shrunk(segment, 0.5f).Start);
             Assert.AreEqual(segment.End, GustGeometry.Shrunk(segment, 0.5f).End);
             Assert.AreEqual(0f, GustGeometry.Shrunk(segment, 1f).Length, Tolerance);

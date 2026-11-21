@@ -9,7 +9,7 @@ namespace DetectiveDave.PlayerPlay
     /// never after <see cref="CancelAllWithoutCallbacks"/>, <see cref="ShowResetAt"/>, a newer animation, or OnDisable/OnDestroy.
     /// Starting any animation cancels a running one without its callback.
     /// Breathing is a loop with no callback: <see cref="StartBreathing"/> does nothing when it already runs, and it stops (scale back to <see cref="PlayerView.BaseLocalScale"/>) on <see cref="StopBreathing"/>, <see cref="CancelAllWithoutCallbacks"/>, <see cref="ShowResetAt"/> and before any other animation.
-    /// <see cref="BumpWall"/> walks to <c>towards</c>, squashes, and ends back exactly at <c>home</c> with the base scale.
+    /// <see cref="BumpWall"/> walks to <c>towards</c>, squashes, and ends back exactly at <c>home</c> with the base scale; <c>returning</c> follows the same rules as <c>done</c> and is invoked when the way back starts.
     /// <see cref="ShowResetAt"/> and <see cref="DropFromTop"/> fully reset position, localScale (to <see cref="PlayerView.BaseLocalScale"/>), rotation (identity) and alpha (1).
     /// </summary>
     public interface IPlayerAnimations
@@ -20,7 +20,7 @@ namespace DetectiveDave.PlayerPlay
 
         void SlipBy(Vector2 worldOffset, Action done);
 
-        void BumpWall(Vector2 towards, Vector2 home, Action done);
+        void BumpWall(Vector2 towards, Vector2 home, Action returning, Action done);
 
         void FadeIntoGap(Action done);
 

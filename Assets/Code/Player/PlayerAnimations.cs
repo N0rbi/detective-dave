@@ -44,13 +44,14 @@ namespace DetectiveDave.PlayerPlay
             Run(sequence, done);
         }
 
-        public void BumpWall(Vector2 towards, Vector2 home, Action done)
+        public void BumpWall(Vector2 towards, Vector2 home, Action returning, Action done)
         {
             if (!HasSettings()) return;
             var seconds = view.Settings.WallSquashSeconds;
             var sequence = DOTween.Sequence();
             sequence.Append(transform.DOMove(WithCurrentDepth(towards), Seconds(seconds * 0.3f)).SetEase(Ease.OutQuad));
             sequence.Append(transform.DOScale(SquashedScale(towards - home), Seconds(seconds * 0.2f)).SetEase(Ease.OutQuad));
+            sequence.AppendCallback(() => returning?.Invoke());
             sequence.Append(transform.DOMove(WithCurrentDepth(home), Seconds(seconds * 0.5f)).SetEase(Ease.InOutSine));
             sequence.Join(transform.DOScale(view.BaseLocalScale, Seconds(seconds * 0.5f)).SetEase(Ease.OutElastic));
             Run(sequence, done);

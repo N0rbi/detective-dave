@@ -98,6 +98,8 @@ namespace DetectiveDave.Tests
 
         public Vector2 LastBumpHome { get; private set; }
 
+        public Action BumpReturning { get; private set; }
+
         public Vector2 LastSquashDirection => (LastBumpTarget - LastBumpHome).normalized;
 
         public bool IsBreathing { get; private set; }
@@ -133,9 +135,10 @@ namespace DetectiveDave.Tests
             pending.Add(done);
         }
 
-        public void BumpWall(Vector2 towards, Vector2 home, Action done)
+        public void BumpWall(Vector2 towards, Vector2 home, Action returning, Action done)
         {
             Calls.Add(nameof(BumpWall));
+            BumpReturning = returning;
             LastBumpTarget = towards;
             LastBumpHome = home;
             IsBreathing = false;

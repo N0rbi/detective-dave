@@ -8,18 +8,26 @@ namespace DetectiveDave.PlayerPlay
     public sealed class DashGustView : MonoBehaviour, IDashGust
     {
         const int SortingOrder = PlayerView.SortingOrder - 1;
+        const float ArrivalToleranceSquared = 0.000001f;
+        const float FollowTimeoutSeconds = 2f;
 
         readonly List<SpriteRenderer> lines = new List<SpriteRenderer>();
         readonly List<GustSegment> segments = new List<GustSegment>();
         PlayerMovementSettings settings;
+        Transform player;
         float keyScale;
         Sprite square;
         Tween fade;
+        bool following;
+        Vector2 start;
+        Vector2 limit;
+        float followStartedAt;
 
-        public void Configure(PlayerMovementSettings movementSettings, float scaleOfKeys)
+        public void Configure(PlayerMovementSettings movementSettings, float scaleOfKeys, Transform followed)
         {
             settings = movementSettings;
             keyScale = scaleOfKeys;
+            player = followed;
             square = SpriteFactory.CreateUnitSquare();
         }
 
@@ -27,27 +35,30 @@ namespace DetectiveDave.PlayerPlay
         {
             Clear();
             if (!settings.DashGustEnabled) return;
-            foreach (var segment in GustGeometry.Build(from, to, settings.GustLines, PlayerHeightInWorld))
-            {
-                if (segment.Length <= 0f) continue;
-                segments.Add(segment);
-                lines.Add(CreateLine());
-            }
-            if (lines.Count == 0) return;
-            Apply(0f);
-            fade = DOVirtual.Float(0f, 1f, settings.GustFadeSeconds, Apply)
-                .SetEase(Ease.OutQuad)
-                .SetLink(gameObject)
-                .OnComplete(Clear);
+            start = from;
+            limit = to;
+            followStartedAt = Time.time;
+            following = true;
         }
 
         public void Clear()
         {
             fade?.Kill();
             fade = null;
+            following = false;
             foreach (var line in lines) Destroy(line.gameObject);
             lines.Clear();
             segments.Clear();
+        }
+
+        void LateUpdate()
+        {
+            if (!following) return;
+            segments.Clear();
+            segments.AddRange(GustGeometry.Follow(start, limit, player.position, settings.GustLines, PlayerHeightInWorld));
+            MatchLineCount();
+            Apply(0f);
+            if (HasArrived || Time.time - followStartedAt > FollowTimeoutSeconds) FadeOut();
         }
 
         void OnDisable() => Clear();
@@ -60,7 +71,28 @@ namespace DetectiveDave.PlayerPlay
             Destroy(square);
         }
 
+        bool HasArrived => ((Vector2)player.position - limit).sqrMagnitude < ArrivalToleranceSquared;
+
         float PlayerHeightInWorld => settings.HeightInKeys * keyScale * transform.lossyScale.x;
+
+        void FadeOut()
+        {
+            following = false;
+            fade = DOVirtual.Float(0f, 1f, settings.GustFadeSeconds, Apply)
+                .SetEase(Ease.OutQuad)
+                .SetLink(gameObject)
+                .OnComplete(Clear);
+        }
+
+        void MatchLineCount()
+        {
+            while (lines.Count < segments.Count) lines.Add(CreateLine());
+            while (lines.Count > segments.Count)
+            {
+                Destroy(lines[lines.Count - 1].gameObject);
+                lines.RemoveAt(lines.Count - 1);
+            }
+        }
 
         SpriteRenderer CreateLine()
         {
@@ -78,7 +110,9 @@ namespace DetectiveDave.PlayerPlay
             color.a *= 1f - progress;
             for (int index = 0; index < lines.Count; index++)
             {
-                Place(lines[index].transform, GustGeometry.Shrunk(segments[index], progress));
+                var segment = GustGeometry.Shrunk(segments[index], progress);
+                lines[index].enabled = segment.Length > 0f;
+                Place(lines[index].transform, segment);
                 lines[index].color = color;
             }
         }

@@ -659,6 +659,29 @@ namespace DetectiveDave.Tests
         }
 
         [Test]
+        public void WallBumpShowsGustAgainOnTheWayBack()
+        {
+            level.Kinds[Next] = CellKind.Wall;
+            Begin();
+            game.OnKeyPressed(Next);
+            var leanTarget = StartWorld + Vector2.right * BumpDistanceInKeys * KeyWorldSize;
+            animations.BumpReturning();
+            Assert.AreEqual(new[] { (StartWorld, leanTarget), (leanTarget, StartWorld) }, gust.Dashes);
+        }
+
+        [Test]
+        public void WallBumpReturnAfterRestartShowsNoGust()
+        {
+            level.Kinds[Next] = CellKind.Wall;
+            Begin();
+            game.OnKeyPressed(Next);
+            var returning = animations.BumpReturning;
+            game.Restart();
+            returning();
+            Assert.AreEqual(1, gust.Dashes.Count);
+        }
+
+        [Test]
         public void SlipShowsGustBackwards()
         {
             Begin();

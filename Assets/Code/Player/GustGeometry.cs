@@ -8,30 +8,31 @@ namespace DetectiveDave.PlayerPlay
     {
         const float MinTravel = 0.0001f;
 
-        public static GustSegment[] Build(Vector2 from, Vector2 to, IReadOnlyList<GustLine> lines, float playerHeight)
+        public static GustSegment[] Follow(Vector2 start, Vector2 limit, Vector2 current, IReadOnlyList<GustLine> lines, float playerHeight)
         {
-            var travel = to - from;
-            var distance = travel.magnitude;
-            if (distance < MinTravel || lines == null) return Array.Empty<GustSegment>();
-            var direction = travel / distance;
+            var path = limit - start;
+            float reach = path.magnitude;
+            if (reach < MinTravel || lines == null) return Array.Empty<GustSegment>();
+            var direction = path / reach;
+            float travelled = Mathf.Clamp(Vector2.Dot(current - start, direction), 0f, reach);
+            if (travelled < MinTravel) return Array.Empty<GustSegment>();
             var segments = new GustSegment[lines.Count];
-            for (int index = 0; index < segments.Length; index++) segments[index] = SegmentOf(lines[index], from, direction, distance, playerHeight);
+            for (int index = 0; index < segments.Length; index++) segments[index] = SegmentOf(lines[index], start, direction, travelled, playerHeight);
             return segments;
         }
 
         public static GustSegment Shrunk(GustSegment segment, float progress)
         {
-            var start = Vector2.Lerp(segment.Start, segment.End, Mathf.Clamp01(progress));
-            return new GustSegment(start, segment.End, segment.Thickness);
+            var tail = Vector2.Lerp(segment.Start, segment.End, Mathf.Clamp01(progress));
+            return new GustSegment(tail, segment.End, segment.Thickness);
         }
 
-        static GustSegment SegmentOf(GustLine line, Vector2 from, Vector2 direction, float distance, float playerHeight)
+        static GustSegment SegmentOf(GustLine line, Vector2 start, Vector2 direction, float travelled, float playerHeight)
         {
-            var across = new Vector2(-direction.y, direction.x);
-            var startDistance = distance * line.StartShare;
-            var length = Mathf.Min(distance * line.LengthShare, distance - startDistance);
-            var start = from + direction * startDistance + across * (line.OffsetAcrossInHeights * playerHeight);
-            return new GustSegment(start, start + direction * length, line.ThicknessInHeights * playerHeight);
+            var across = new Vector2(-direction.y, direction.x) * (line.OffsetAcrossInHeights * playerHeight);
+            var head = start + direction * travelled + across;
+            float length = Mathf.Min(travelled * line.LengthShare, travelled);
+            return new GustSegment(head - direction * length, head, line.ThicknessInHeights * playerHeight);
         }
     }
 }
