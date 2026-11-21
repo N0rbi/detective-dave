@@ -21,6 +21,12 @@ namespace DetectiveDave.PlayerPlay
             return segments;
         }
 
+        public static Vector2 Lift(float bandCenterInHeights, float climbDropInHeights, bool climbing, float playerHeight)
+        {
+            float heights = climbing ? bandCenterInHeights - climbDropInHeights : bandCenterInHeights;
+            return Vector2.up * (heights * playerHeight);
+        }
+
         public static GustSegment Shrunk(GustSegment segment, float progress)
         {
             var tail = Vector2.Lerp(segment.Start, segment.End, Mathf.Clamp01(progress));

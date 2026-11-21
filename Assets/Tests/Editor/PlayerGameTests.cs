@@ -640,6 +640,25 @@ namespace DetectiveDave.Tests
         }
 
         [Test]
+        public void StepOnTheFloorShowsGustWithoutClimbPose()
+        {
+            Begin();
+            game.OnKeyPressed(Next);
+            Assert.AreEqual(new[] { false }, gust.ClimbingFlags);
+        }
+
+        [Test]
+        public void StepOntoAGutterShowsGustWithClimbPoseOnceTheClimbPoseIsDrawn()
+        {
+            level.Kinds[Next] = CellKind.Gutter;
+            Begin();
+            game.OnKeyPressed(Next);
+            animations.CompleteLast();
+            game.OnKeyPressed(Start);
+            Assert.AreEqual(true, gust.ClimbingFlags[gust.ClimbingFlags.Count - 1]);
+        }
+
+        [Test]
         public void StepOntoGapShowsGustToTheGap()
         {
             level.Kinds[Next] = CellKind.Gap;

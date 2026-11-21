@@ -196,9 +196,15 @@ namespace DetectiveDave.Tests
     {
         public readonly List<(Vector2 From, Vector2 To)> Dashes = new List<(Vector2 From, Vector2 To)>();
 
+        public readonly List<bool> ClimbingFlags = new List<bool>();
+
         public int Clears { get; private set; }
 
-        public void Show(Vector2 from, Vector2 to) => Dashes.Add((from, to));
+        public void Show(Vector2 from, Vector2 to, bool climbing)
+        {
+            Dashes.Add((from, to));
+            ClimbingFlags.Add(climbing);
+        }
 
         public void Clear() => Clears++;
     }

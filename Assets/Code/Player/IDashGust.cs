@@ -4,7 +4,7 @@ namespace DetectiveDave.PlayerPlay
 {
     public interface IDashGust
     {
-        void Show(Vector2 from, Vector2 to);
+        void Show(Vector2 from, Vector2 to, bool climbing);
 
         void Clear();
     }

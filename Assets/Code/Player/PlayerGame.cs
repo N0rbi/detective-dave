@@ -22,6 +22,7 @@ namespace DetectiveDave.PlayerPlay
         Key goalKey;
         Key currentKey;
         int generation;
+        bool climbPoseShown;
 
         public PlayerGame(IKeyboardBoard board, IPlayerLevel level, IPlayerAnimations animations, IPlayerPresentation presentation, IDashGust gust, PlayerGameSettings settings)
         {
@@ -131,7 +132,7 @@ namespace DetectiveDave.PlayerPlay
             state.Enter(during);
             FaceTowards(to);
             ShowMovePose(target);
-            gust.Show(WorldOf(currentKey), to);
+            gust.Show(WorldOf(currentKey), to, climbPoseShown);
             animations.MoveTo(to, Guard(arrived));
         }
 
@@ -151,12 +152,14 @@ namespace DetectiveDave.PlayerPlay
 
         void ShowWalkPose()
         {
+            climbPoseShown = false;
             presentation.SetClimbing(false);
             presentation.SetFrame(walk.Frame);
         }
 
         void ShowClimbPose()
         {
+            climbPoseShown = true;
             presentation.SetClimbing(true);
             presentation.SetFrame(climb.Frame);
         }
@@ -190,7 +193,7 @@ namespace DetectiveDave.PlayerPlay
             var home = WorldOf(currentKey);
             var offset = facing.BackwardsDirection() * settings.SlipDistanceInKeys * board.KeyWorldSize;
             state.Enter(PlayerState.Slipping);
-            gust.Show(home, home + offset);
+            gust.Show(home, home + offset, climbPoseShown);
             animations.SlipBy(offset, Guard(Respawn));
         }
 
@@ -203,8 +206,8 @@ namespace DetectiveDave.PlayerPlay
             ResetCycles();
             ShowCurrentPose();
             var leanTarget = home + DirectionToWall(to) * settings.BumpDistanceInKeys * board.KeyWorldSize;
-            gust.Show(home, leanTarget);
-            animations.BumpWall(leanTarget, home, Guard(() => gust.Show(leanTarget, home)), Guard(RecoverFromBump));
+            gust.Show(home, leanTarget, climbPoseShown);
+            animations.BumpWall(leanTarget, home, Guard(() => gust.Show(leanTarget, home, climbPoseShown)), Guard(RecoverFromBump));
         }
 
         void RecoverFromBump() => state.Enter(PlayerState.Idle);

@@ -172,5 +172,19 @@ namespace DetectiveDave.Tests
         {
             Assert.IsEmpty(GustGeometry.Follow(Origin, FarEnd, Origin, OneLine(), PlayerHeight, new Vector2(0f, 1.1f)));
         }
+
+        [Test]
+        public void LiftIsTheBandCentreWhenWalking()
+        {
+            var lift = GustGeometry.Lift(0.55f, 0.5f, false, 2f);
+            Assert.AreEqual(1.1f, lift.y, Tolerance);
+            Assert.AreEqual(0f, lift.x, Tolerance);
+        }
+
+        [Test]
+        public void LiftDropsWithThePlayerWhenClimbing()
+        {
+            Assert.AreEqual(0.1f, GustGeometry.Lift(0.55f, 0.5f, true, 2f).y, Tolerance);
+        }
     }
 }

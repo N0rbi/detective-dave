@@ -19,6 +19,7 @@ namespace DetectiveDave.PlayerPlay
         Sprite square;
         Tween fade;
         bool following;
+        bool climbing;
         Vector2 start;
         Vector2 limit;
         float followStartedAt;
@@ -31,10 +32,11 @@ namespace DetectiveDave.PlayerPlay
             square = SpriteFactory.CreateUnitSquare();
         }
 
-        public void Show(Vector2 from, Vector2 to)
+        public void Show(Vector2 from, Vector2 to, bool climbingPose)
         {
             Clear();
             if (!settings.DashGustEnabled) return;
+            climbing = climbingPose;
             start = from;
             limit = to;
             followStartedAt = Time.time;
@@ -73,7 +75,7 @@ namespace DetectiveDave.PlayerPlay
 
         bool HasArrived => ((Vector2)player.position - limit).sqrMagnitude < ArrivalToleranceSquared;
 
-        Vector2 BandLift => Vector2.up * (settings.GustBandCenterInHeights * PlayerHeightInWorld);
+        Vector2 BandLift => GustGeometry.Lift(settings.GustBandCenterInHeights, settings.ClimbDropInHeights, climbing, PlayerHeightInWorld);
 
         float PlayerHeightInWorld => settings.HeightInKeys * keyScale * transform.lossyScale.x;
 
