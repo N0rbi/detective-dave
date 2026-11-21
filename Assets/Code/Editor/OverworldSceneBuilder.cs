@@ -30,7 +30,7 @@ namespace DetectiveDave.EditorTools
             AssetDatabase.CopyAsset(PlayerSetupPaths.ScenePath, OverworldSetupPaths.ScenePath);
         }
 
-        public static string WireOrError(DeskLayout desk, PlayerView playerPrefab, PlayerMovementSettings magnifier, OverworldSettings settings)
+        public static string WireOrError(PlayerView playerPrefab, PlayerMovementSettings magnifier, OverworldSettings settings)
         {
             EnsureStubScene();
             if (!AssetDatabase.LoadAssetAtPath<SceneAsset>(OverworldSetupPaths.ScenePath)) return "Assets/Scenes/Game.unity is missing, so the overworld scene could not be created.";
@@ -40,7 +40,7 @@ namespace DetectiveDave.EditorTools
             {
                 var board = scene.GetRootGameObjects().Select(root => root.GetComponentInChildren<KeyboardBoard>(true)).FirstOrDefault(found => found);
                 if (!board) return "The overworld scene has no keyboard board object.";
-                Wire(board.gameObject, desk, playerPrefab, magnifier, settings);
+                Wire(board.gameObject, playerPrefab, magnifier, settings);
                 EditorSceneManager.SaveScene(scene);
                 return null;
             }
@@ -50,7 +50,7 @@ namespace DetectiveDave.EditorTools
             }
         }
 
-        static void Wire(GameObject host, DeskLayout desk, PlayerView playerPrefab, PlayerMovementSettings magnifier, OverworldSettings settings)
+        static void Wire(GameObject host, PlayerView playerPrefab, PlayerMovementSettings magnifier, OverworldSettings settings)
         {
             foreach (var name in GamePieces)
                 foreach (var piece in host.GetComponents<Component>().Where(component => component && component.GetType().Name == name))
@@ -58,7 +58,6 @@ namespace DetectiveDave.EditorTools
             var controller = host.GetComponent<OverworldController>();
             if (!controller) controller = host.AddComponent<OverworldController>();
             var serialized = new SerializedObject(controller);
-            serialized.FindProperty("deskPrefab").objectReferenceValue = desk;
             serialized.FindProperty("playerPrefab").objectReferenceValue = playerPrefab;
             serialized.FindProperty("playerSettings").objectReferenceValue = magnifier;
             serialized.FindProperty("overworldSettings").objectReferenceValue = settings;

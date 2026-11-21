@@ -15,11 +15,11 @@ namespace DetectiveDave.OverworldPlay
         const float DeskOverscan = 3f;
         const int DeskBackdropSortingOrder = -50;
 
-        [SerializeField] DeskLayout deskPrefab;
         [SerializeField] PlayerView playerPrefab;
         [SerializeField] PlayerMovementSettings playerSettings;
         [SerializeField] OverworldSettings overworldSettings;
 
+        DeskLayout deskOverride;
         readonly Dictionary<string, CaseFile> casesById = new Dictionary<string, CaseFile>();
         KeyboardBoard board;
         KeyboardKeySource keys;
@@ -40,7 +40,9 @@ namespace DetectiveDave.OverworldPlay
         string pendingReportCaseId;
         bool subscribed;
 
-        public void UseDesk(DeskLayout prefab) => deskPrefab = prefab;
+        public void UseDesk(DeskLayout prefab) => deskOverride = prefab;
+
+        DeskLayout DeskToBuild => deskOverride ? deskOverride : overworldSettings.Desk;
 
         void Awake()
         {
@@ -87,9 +89,14 @@ namespace DetectiveDave.OverworldPlay
 
         bool Build()
         {
-            if (!deskPrefab || !playerPrefab || !playerSettings || !overworldSettings)
+            if (!playerPrefab || !playerSettings || !overworldSettings)
             {
-                Debug.LogError("OverworldController needs a desk, a player prefab, player settings and overworld settings.", this);
+                Debug.LogError("OverworldController needs a player prefab, player settings and overworld settings.", this);
+                return false;
+            }
+            if (!DeskToBuild)
+            {
+                Debug.LogError("Overworld Settings has no Desk. Assign one, or run Window > Detective Dave > Set Up Overworld.", overworldSettings);
                 return false;
             }
             var missing = overworldSettings.MissingReferences;
@@ -110,7 +117,7 @@ namespace DetectiveDave.OverworldPlay
 
         void BuildDesk()
         {
-            desk = Instantiate(deskPrefab, transform, false);
+            desk = Instantiate(DeskToBuild, transform, false);
             foreach (var marker in desk.Markers.Where(candidate => candidate.CaseFile)) casesById[marker.CaseFile.Id] = marker.CaseFile;
         }
 

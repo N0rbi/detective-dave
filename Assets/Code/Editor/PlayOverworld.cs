@@ -14,13 +14,14 @@ namespace DetectiveDave.EditorTools
     {
         const string DeskKey = "DetectiveDave.PlayOverworld.Desk";
         const string LayoutKey = "DetectiveDave.PlayOverworld.Layout";
+        const string SettingsDesk = "settings";
         const string LogPrefix = "[Play Overworld]";
 
         static PlayOverworld() => EditorApplication.playModeStateChanged += OnPlayModeStateChanged;
 
         [Shortcut("Detective Dave/Play Overworld", KeyCode.F5, ShortcutModifiers.Shift)]
         [MenuItem("Window/Detective Dave/Play Overworld")]
-        static void PlayMenu() => Play(DeskToPlay() ?? OverworldSetupPaths.SampleDeskPath);
+        static void PlayMenu() => Play(DeskToPlay());
 
         /// <summary>For F5: plays the overworld when a desk is open in Prefab Mode or selected. False when there is no desk (F5 then plays a level).</summary>
         public static bool TryPlayDeskInContext()
@@ -65,7 +66,7 @@ namespace DetectiveDave.EditorTools
                 PlayerSetup.ShowProblem("Play Overworld", error);
                 return;
             }
-            SessionState.SetString(DeskKey, AssetDatabase.AssetPathToGUID(deskPath));
+            SessionState.SetString(DeskKey, deskPath == null ? SettingsDesk : AssetDatabase.AssetPathToGUID(deskPath));
             SessionState.SetString(LayoutKey, layout.Id);
             EditorSceneManager.playModeStartScene = AssetDatabase.LoadAssetAtPath<SceneAsset>(OverworldSetupPaths.ScenePath);
             EditorApplication.EnterPlaymode();
@@ -84,8 +85,8 @@ namespace DetectiveDave.EditorTools
         static void OnSceneLoaded(Scene scene, LoadSceneMode mode)
         {
             SceneManager.sceneLoaded -= OnSceneLoaded;
-            var path = AssetDatabase.GUIDToAssetPath(SessionState.GetString(DeskKey, string.Empty));
-            var deskObject = AssetDatabase.LoadAssetAtPath<GameObject>(path);
+            var key = SessionState.GetString(DeskKey, string.Empty);
+            var deskObject = key == SettingsDesk ? null : AssetDatabase.LoadAssetAtPath<GameObject>(AssetDatabase.GUIDToAssetPath(key));
             var desk = deskObject ? deskObject.GetComponent<DeskLayout>() : null;
             foreach (var root in scene.GetRootGameObjects())
             {

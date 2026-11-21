@@ -55,9 +55,10 @@ namespace DetectiveDave.EditorTools
             var magnifier = EnsureMagnifierSettings(sprites[0]);
             var sampleCase = EnsureSampleCase(level);
             var desk = EnsureSampleDesk(sampleCase, sprites[1]);
+            AssignDeskIfEmpty(settings, desk);
             AssetDatabase.SaveAssets();
             var playerPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(PlayerSetupPaths.PrefabPath).GetComponent<PlayerView>();
-            return OverworldSceneBuilder.WireOrError(desk, playerPrefab, magnifier, settings);
+            return OverworldSceneBuilder.WireOrError(playerPrefab, magnifier, settings);
         }
 
         static void EnsureFolder(string path)
@@ -87,6 +88,13 @@ namespace DetectiveDave.EditorTools
             if (property.objectReferenceValue) return;
             property.objectReferenceValue = value;
             Note("assigned " + field);
+        }
+
+        static void AssignDeskIfEmpty(OverworldSettings settings, DeskLayout desk)
+        {
+            var serialized = new SerializedObject(settings);
+            FillIfEmpty(serialized, "desk", desk);
+            serialized.ApplyModifiedPropertiesWithoutUndo();
         }
 
         static void AssignPlaceholders(OverworldSettings settings)

@@ -18,6 +18,7 @@ namespace DetectiveDave.OverworldPlay
         [SerializeField] [Tooltip("Played when Backspace takes a letter away. Leave empty for silence.")] AudioClip backspaceClip;
 
         [Header("Desk")]
+        [SerializeField] [Tooltip("The desk the game starts on.")] DeskLayout desk;
         [SerializeField, Range(0f, 1f)] [Tooltip("How dark a locked case file is. 0 shows it as it is, 1 makes it black.")] float lockedShade = 0.65f;
 
         [Header("Dwell")]
@@ -67,6 +68,7 @@ namespace DetectiveDave.OverworldPlay
         public Font TextFont => textFont;
         public AudioClip[] TypewriterClicks => typewriterClicks;
         public AudioClip BackspaceClip => backspaceClip;
+        public DeskLayout Desk => desk;
         public float LockedShade => lockedShade;
         public float DwellSeconds => dwellSeconds;
         public float RingRadiusInKeys => ringRadiusInKeys;
