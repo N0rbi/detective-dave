@@ -12,6 +12,8 @@ namespace DetectiveDave.OverworldPlay
 
         public CaseFile CaseFile => caseFile;
 
+        public bool CanBeMapped => caseFile && Art && Art.sprite;
+
         SpriteRenderer Art => art ? art : art = GetComponent<SpriteRenderer>();
 
         public DeskMarker ToDeskMarker(Transform grid)
