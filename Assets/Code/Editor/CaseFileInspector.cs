@@ -1,3 +1,5 @@
+using System.Linq;
+using DetectiveDave.Levels;
 using DetectiveDave.OverworldPlay;
 using UnityEditor;
 
@@ -9,6 +11,7 @@ namespace DetectiveDave.EditorTools
         public override void OnInspectorGUI()
         {
             DrawDefaultInspector();
+            DrawLevelPicker();
             var file = (CaseFile)target;
             EditorGUILayout.Space();
             EditorGUILayout.LabelField("Letter preview", EditorStyles.boldLabel);
@@ -18,6 +21,18 @@ namespace DetectiveDave.EditorTools
             DrawLetter("Left paper", new PaperReveal(file.ResolvedDescription, file.ResolvedFindings).Full);
             DrawLetter("Right paper (typed by the player)", file.ResolvedResponse);
             DrawProblems(file);
+        }
+
+        void DrawLevelPicker()
+        {
+            var levels = LevelTools.FindLevels();
+            var levelProperty = serializedObject.FindProperty("level");
+            var names = new[] { "None" }.Concat(levels.Select(level => level.name)).ToArray();
+            int current = levels.IndexOf(levelProperty.objectReferenceValue as Level) + 1;
+            int picked = EditorGUILayout.Popup("Pick a level", current, names);
+            if (picked == current) return;
+            levelProperty.objectReferenceValue = picked == 0 ? null : levels[picked - 1];
+            serializedObject.ApplyModifiedProperties();
         }
 
         static void DrawLetter(string title, string letter)
