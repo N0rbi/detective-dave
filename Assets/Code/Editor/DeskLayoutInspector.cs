@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Linq;
 using DetectiveDave.OverworldPlay;
 using UnityEditor;
@@ -15,6 +16,7 @@ namespace DetectiveDave.EditorTools
             DrawKeyboardPicker();
             DrawPreviewModePicker();
             DrawSummary(desk);
+            DrawCases(desk);
             DrawProblems(desk);
             DrawChainProblems(desk);
         }
@@ -52,6 +54,31 @@ namespace DetectiveDave.EditorTools
             var markers = DeskDesignInputs.AllMarkers(desk);
             int withoutCase = markers.Count(marker => !marker.CanBeMapped);
             EditorGUILayout.LabelField($"{markers.Length} case files on the desk, {withoutCase} without a case.");
+        }
+
+        static void DrawCases(DeskLayout desk)
+        {
+            EditorGUILayout.LabelField("Cases", EditorStyles.boldLabel);
+            bool editable = !EditorUtility.IsPersistent(desk);
+            if (!editable) EditorGUILayout.HelpBox("Open the desk (double-click it in the Project window) to add cases to it.", MessageType.Info);
+            var placed = new HashSet<CaseFile>(DeskDesignInputs.AllMarkers(desk).Where(marker => marker.CaseFile).Select(marker => marker.CaseFile));
+            var files = AssetDatabase.FindAssets("t:CaseFile").Select(AssetDatabase.GUIDToAssetPath).Select(AssetDatabase.LoadAssetAtPath<CaseFile>).Where(file => file).ToArray();
+            if (files.Length == 0) EditorGUILayout.HelpBox("No cases yet. Make one with Assets > Create > Detective Dave > Case.", MessageType.None);
+            foreach (var file in files) DrawCaseRow(desk, file, placed.Contains(file), editable);
+            using (new EditorGUI.DisabledScope(!editable))
+                if (GUILayout.Button("Add empty marker")) EditorApplication.delayCall += () => OverworldDeskBuilder.AddToDesk(desk, null);
+        }
+
+        static void DrawCaseRow(DeskLayout desk, CaseFile file, bool onDesk, bool editable)
+        {
+            using (new EditorGUILayout.HorizontalScope())
+            {
+                EditorGUI.DrawRect(GUILayoutUtility.GetRect(14f, 14f, GUILayout.Width(14f)), DeskCaseColors.Outline(file.Id));
+                string client = string.IsNullOrWhiteSpace(file.ClientName) ? string.Empty : " (" + file.ClientName + ")";
+                EditorGUILayout.LabelField(file.name + client + (onDesk ? " - on the desk" : " - not on the desk"));
+                using (new EditorGUI.DisabledScope(onDesk || !editable))
+                    if (GUILayout.Button("Add to desk", GUILayout.Width(90f))) EditorApplication.delayCall += () => OverworldDeskBuilder.AddToDesk(desk, file);
+            }
         }
 
         static void DrawChainProblems(DeskLayout desk)

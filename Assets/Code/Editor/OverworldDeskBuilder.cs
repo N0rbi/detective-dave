@@ -24,6 +24,25 @@ namespace DetectiveDave.EditorTools
             return marker;
         }
 
+        public static CaseMarker AddToDesk(DeskLayout desk, CaseFile caseFile, Vector2? localPosition = null)
+        {
+            var art = AssetDatabase.LoadAssetAtPath<Sprite>(OverworldSetupPaths.FolderPath);
+            float scale = CentredScale(art);
+            var position = localPosition ?? FreeSpot(desk, art, scale);
+            var marker = AddMarker(desk.transform, caseFile, art, new Vector3(position.x, position.y, 0f), scale);
+            Undo.RegisterCreatedObjectUndo(marker.gameObject, "Add Case to Desk");
+            Selection.activeGameObject = marker.gameObject;
+            return marker;
+        }
+
+        static Vector2 FreeSpot(DeskLayout desk, Sprite art, float scale)
+        {
+            var layout = KeyboardLayouts.Preview;
+            if (layout == null) return Vector2.zero;
+            var size = art ? (Vector2)art.bounds.size * scale : Vector2.one;
+            return DeskFreeSpot.Find(DeskDesignInputs.MappedMarkers(desk), DeskDesignInputs.Centres(layout), DeskDesignInputs.StartKey, size);
+        }
+
         public static GameObject SaveDesk(string path, CaseFile caseFile, Sprite art, float localScale)
         {
             var root = new GameObject(System.IO.Path.GetFileNameWithoutExtension(path));
