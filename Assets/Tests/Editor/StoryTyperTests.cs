@@ -17,21 +17,23 @@ namespace DetectiveDave.Tests
         }
 
         [Test]
-        public void CharacterUnitRevealsWhatIsTyped()
+        public void CharacterUnitShowsTheNextCharacterOnly()
         {
             var typer = new StoryTyper(Story, TypingRules.Default, RevealUnit.Character);
+            Assert.AreEqual(1, typer.CurrentUnitEnd);
             TypeRequired(typer, "hi");
-            Assert.AreEqual(2, typer.RevealedCount);
+            Assert.AreEqual(3, typer.CurrentUnitEnd);
         }
 
         [Test]
-        public void WordUnitRevealsOnTheSpaceAfterTheWord()
+        public void WordUnitEndsAfterTheSpaceFollowingTheWord()
         {
             var typer = new StoryTyper(Story, TypingRules.Default, RevealUnit.Word);
+            Assert.AreEqual(3, typer.CurrentUnitEnd);
             TypeRequired(typer, "hi");
-            Assert.AreEqual(0, typer.RevealedCount);
+            Assert.AreEqual(3, typer.CurrentUnitEnd);
             TypeRequired(typer, " ");
-            Assert.AreEqual(3, typer.RevealedCount);
+            Assert.AreEqual(10, typer.CurrentUnitEnd);
         }
 
         [Test]
@@ -39,49 +41,51 @@ namespace DetectiveDave.Tests
         {
             var typer = new StoryTyper(Story, TypingRules.Default, RevealUnit.Word);
             TypeRequired(typer, "hi there");
-            Assert.AreEqual(3, typer.RevealedCount);
+            Assert.AreEqual(9, typer.TypedCount);
+            Assert.AreEqual(10, typer.CurrentUnitEnd);
             TypeRequired(typer, " ");
-            Assert.AreEqual(10, typer.RevealedCount);
+            Assert.AreEqual(14, typer.CurrentUnitEnd);
         }
 
         [Test]
-        public void SentenceUnitRevealsAfterTheSentenceAndItsSpace()
+        public void SentenceUnitEndsAfterTheSentenceAndItsSpace()
         {
             var typer = new StoryTyper(Story, TypingRules.Default, RevealUnit.Sentence);
+            Assert.AreEqual(10, typer.CurrentUnitEnd);
             TypeRequired(typer, "hi there");
-            Assert.AreEqual(0, typer.RevealedCount);
+            Assert.AreEqual(10, typer.CurrentUnitEnd);
             TypeRequired(typer, " ");
-            Assert.AreEqual(10, typer.RevealedCount);
+            Assert.AreEqual(18, typer.CurrentUnitEnd);
         }
 
         [TestCase(RevealUnit.Character)]
         [TestCase(RevealUnit.Word)]
         [TestCase(RevealUnit.Sentence)]
-        public void TheWholeStoryIsRevealedWhenTypedFully(RevealUnit unit)
+        public void TheCurrentUnitEndsAtTheTextEndWhenTypedFully(RevealUnit unit)
         {
             var typer = new StoryTyper(Story, TypingRules.Default, unit);
             TypeRequired(typer, Story);
             Assert.IsTrue(typer.IsComplete);
-            Assert.AreEqual(Story.Length, typer.RevealedCount);
+            Assert.AreEqual(Story.Length, typer.CurrentUnitEnd);
         }
 
         [Test]
         public void TextWithoutSpacesIsOneWord()
         {
             var typer = new StoryTyper("abc", TypingRules.Default, RevealUnit.Word);
+            Assert.AreEqual(3, typer.CurrentUnitEnd);
             TypeRequired(typer, "ab");
-            Assert.AreEqual(0, typer.RevealedCount);
-            TypeRequired(typer, "c");
-            Assert.AreEqual(3, typer.RevealedCount);
+            Assert.AreEqual(3, typer.CurrentUnitEnd);
         }
 
         [Test]
-        public void BackspaceTakesBackARevealedWord()
+        public void BackspaceBringsBackTheEarlierWord()
         {
             var typer = new StoryTyper(Story, TypingRules.Default, RevealUnit.Word);
             TypeRequired(typer, "hi ");
+            Assert.AreEqual(10, typer.CurrentUnitEnd);
             typer.Backspace();
-            Assert.AreEqual(0, typer.RevealedCount);
+            Assert.AreEqual(3, typer.CurrentUnitEnd);
         }
 
         [Test]
@@ -98,7 +102,7 @@ namespace DetectiveDave.Tests
         {
             var typer = new StoryTyper(text, TypingRules.Default, RevealUnit.Sentence);
             Assert.IsTrue(typer.IsComplete);
-            Assert.AreEqual(0, typer.RevealedCount);
+            Assert.AreEqual(0, typer.CurrentUnitEnd);
         }
 
         [Test]
@@ -107,7 +111,7 @@ namespace DetectiveDave.Tests
             var typer = new StoryTyper("One.\n\nTwo.", TypingRules.Default, RevealUnit.Sentence);
             TypeRequired(typer, "one");
             Assert.AreEqual(6, typer.TypedCount);
-            Assert.AreEqual(6, typer.RevealedCount);
+            Assert.AreEqual(10, typer.CurrentUnitEnd);
         }
     }
 }

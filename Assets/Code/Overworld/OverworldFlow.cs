@@ -56,6 +56,14 @@ namespace DetectiveDave.OverworldPlay
             briefing.OpenFindings(caseId, () => briefing.Close(() => FinishFindings(completed)));
         }
 
+        void ReviewFindings(string caseId)
+        {
+            Stage = OverworldStage.Briefing;
+            briefing.OpenReview(caseId, () => briefing.Close(FinishReview));
+        }
+
+        void FinishReview() => FinishFindings(null);
+
         bool TryGetVisitableCase(Key key, out string caseId, out CaseState state)
         {
             caseId = null;
@@ -78,7 +86,7 @@ namespace DetectiveDave.OverworldPlay
             indicator.Hide();
             if (dwellState == CaseState.Solved)
             {
-                PlayFindings(caseId, null);
+                ReviewFindings(caseId);
                 return;
             }
             Stage = OverworldStage.Briefing;

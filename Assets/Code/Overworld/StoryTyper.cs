@@ -20,17 +20,15 @@ namespace DetectiveDave.OverworldPlay
 
         public bool IsComplete => typer.IsComplete;
 
-        public int RevealedCount
+        public int CurrentUnitEnd
         {
             get
             {
-                int revealed = 0;
                 foreach (var end in unitEnds)
                 {
-                    if (end > typer.TypedCount) break;
-                    revealed = end;
+                    if (end > typer.TypedCount) return end;
                 }
-                return revealed;
+                return Text.Length;
             }
         }
 

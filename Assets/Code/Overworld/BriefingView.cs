@@ -14,7 +14,8 @@ namespace DetectiveDave.OverworldPlay
         {
             None,
             Letter,
-            Findings
+            Findings,
+            Review
         }
 
         OverworldSettings settings;
@@ -33,6 +34,7 @@ namespace DetectiveDave.OverworldPlay
         FindingsPaperModel findingsModel;
         Action<LetterOutcome> letterFinished;
         Action findingsFinished;
+        Action reviewFinished;
         Mode mode;
         Vector3 deskHome;
         string description = string.Empty;
@@ -72,14 +74,31 @@ namespace DetectiveDave.OverworldPlay
             var file = findCase(caseId);
             mode = Mode.Findings;
             findingsFinished = finishedCallback;
-            var letters = PlacePapers();
-            description = TextWrap.Wrap(file.ResolvedDescription, letters.Description);
+            var letters = PrepareFindingsPapers(file);
             storyTyper = new StoryTyper(file.ResolvedFindings, settings.TypingRules, settings.FindingsUnit);
             findingsModel = new FindingsPaperModel(storyTyper.Text, letters.Letter);
-            gate = new BriefingGate(new TimedReveal(0, settings.DescriptionSecondsPerCharacter, settings.DescriptionSkipSpeedMultiplier));
-            ShowDescription(description.Length);
             RenderFindings();
             Begin();
+        }
+
+        public void OpenReview(string caseId, Action finishedCallback)
+        {
+            var file = findCase(caseId);
+            mode = Mode.Review;
+            reviewFinished = finishedCallback;
+            var letters = PrepareFindingsPapers(file);
+            findingsModel = new FindingsPaperModel(file.ResolvedFindings, letters.Letter);
+            RenderReview();
+            Begin();
+        }
+
+        (int Description, int Letter) PrepareFindingsPapers(CaseFile file)
+        {
+            var letters = PlacePapers();
+            description = TextWrap.Wrap(file.ResolvedDescription, letters.Description);
+            gate = new BriefingGate(new TimedReveal(0, settings.DescriptionSecondsPerCharacter, settings.DescriptionSkipSpeedMultiplier));
+            ShowDescription(description.Length);
+            return letters;
         }
 
         public void Close(Action done)
@@ -98,7 +117,8 @@ namespace DetectiveDave.OverworldPlay
             int revealed = gate.Tick(Time.deltaTime);
             if (revealed > 0 && mode == Mode.Letter) RevealDescription();
             if (!wasWritable && gate.IsWritable) ShowLetterPaper();
-            if (gate.IsWritable && keyboard.backspaceKey.wasPressedThisFrame) Backspace();
+            if (mode == Mode.Review && wasWritable && keyboard.anyKey.wasPressedThisFrame) FinishReview();
+            if (gate.IsWritable && mode != Mode.Review && keyboard.backspaceKey.wasPressedThisFrame) Backspace();
         }
 
         void OnDisable()
@@ -252,6 +272,12 @@ namespace DetectiveDave.OverworldPlay
             else RenderFindings();
         }
 
+        void FinishReview()
+        {
+            StopListening();
+            reviewFinished?.Invoke();
+        }
+
         void FinishAfterPause(Action report)
         {
             StopListening();
@@ -270,7 +296,9 @@ namespace DetectiveDave.OverworldPlay
 
         void RenderLetter() => letterPaper.SetText(letterModel.Render(letterTyper.TypedCount, letterTyper.Path, Hex(settings.TypedTextColor), Hex(settings.PendingTextColor)), settings.PendingTextColor);
 
-        void RenderFindings() => letterPaper.SetText(findingsModel.Render(storyTyper.RevealedCount, Hex(settings.TypedTextColor), Hex(settings.PendingTextColor)), settings.PendingTextColor);
+        void RenderFindings() => letterPaper.SetText(findingsModel.RenderTyping(storyTyper.TypedCount, storyTyper.CurrentUnitEnd, Hex(settings.TypedTextColor), Hex(settings.PendingTextColor)), settings.PendingTextColor);
+
+        void RenderReview() => letterPaper.SetText(findingsModel.RenderReview(Hex(settings.TypedTextColor)), settings.TypedTextColor);
 
         static string Hex(Color color) => ColorUtility.ToHtmlStringRGB(color);
     }

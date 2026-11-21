@@ -7,6 +7,7 @@ namespace DetectiveDave.OverworldPlay
         const string ColorOpen = "<color=#";
         const string ColorMiddle = ">";
         const string ColorClose = "</color>";
+        const string InvisibleColorHex = "00000000";
 
         readonly string plain;
 
@@ -17,12 +18,20 @@ namespace DetectiveDave.OverworldPlay
 
         public string Plain => plain;
 
-        public string Render(int revealedCount, string typedColorHex, string pendingColorHex)
+        public string RenderTyping(int typedCount, int currentUnitEnd, string typedColorHex, string pendingColorHex)
         {
-            int split = System.Math.Max(System.Math.Min(revealedCount, plain.Length), 0);
+            var display = StoryDisplay.Of(plain, typedCount, currentUnitEnd);
             var text = new StringBuilder();
-            AppendRun(text, plain.Substring(0, split), typedColorHex);
-            AppendRun(text, plain.Substring(split), pendingColorHex);
+            AppendRun(text, display.Typed, typedColorHex);
+            AppendRun(text, display.Pending, pendingColorHex);
+            AppendRun(text, display.Hidden, InvisibleColorHex);
+            return text.ToString();
+        }
+
+        public string RenderReview(string typedColorHex)
+        {
+            var text = new StringBuilder();
+            AppendRun(text, plain, typedColorHex);
             return text.ToString();
         }
 

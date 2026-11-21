@@ -107,21 +107,153 @@ namespace DetectiveDave.Tests
         }
     }
 
-    public class FindingsPaperModelTests
+    public class StoryDisplayTests
     {
         [Test]
-        public void Tints_the_revealed_part_and_leaves_the_rest_pending()
+        public void Splits_the_text_into_typed_pending_and_hidden()
         {
-            var model = new FindingsPaperModel("abc def", 100);
-            Assert.AreEqual("<color=#111>abc </color><color=#999>def</color>", model.Render(4, "111", "999"));
+            var display = StoryDisplay.Of("hello big world", 8, 10);
+            Assert.AreEqual("hello bi", display.Typed);
+            Assert.AreEqual("g ", display.Pending);
+            Assert.AreEqual("world", display.Hidden);
         }
 
         [Test]
-        public void Shows_everything_pending_at_the_start_and_everything_typed_at_the_end()
+        public void At_the_start_only_the_first_unit_is_pending()
+        {
+            var display = StoryDisplay.Of("hello big world", 0, 6);
+            Assert.AreEqual(string.Empty, display.Typed);
+            Assert.AreEqual("hello ", display.Pending);
+            Assert.AreEqual("big world", display.Hidden);
+        }
+
+        [Test]
+        public void At_the_end_everything_is_typed()
+        {
+            var display = StoryDisplay.Of("abc", 3, 3);
+            Assert.AreEqual("abc", display.Typed);
+            Assert.AreEqual(string.Empty, display.Pending);
+            Assert.AreEqual(string.Empty, display.Hidden);
+        }
+
+        [Test]
+        public void Counts_past_the_text_or_before_the_typed_part_are_clamped()
+        {
+            var display = StoryDisplay.Of("abc", 99, 1);
+            Assert.AreEqual("abc", display.Typed);
+            var early = StoryDisplay.Of("abc", -4, -2);
+            Assert.AreEqual(string.Empty, early.Typed);
+            Assert.AreEqual(string.Empty, early.Pending);
+            Assert.AreEqual("abc", early.Hidden);
+        }
+
+        [Test]
+        public void A_unit_that_is_already_typed_up_to_its_end_has_no_pending_letters()
+        {
+            var display = StoryDisplay.Of("ab cd", 3, 3);
+            Assert.AreEqual("ab ", display.Typed);
+            Assert.AreEqual(string.Empty, display.Pending);
+            Assert.AreEqual("cd", display.Hidden);
+        }
+    }
+
+    public class StoryDisplayFlowTests
+    {
+        const string Story = "Hi there. Bye now.";
+
+        static string Shown(StoryTyper typer) => StoryDisplay.Of(Story, typer.TypedCount, typer.CurrentUnitEnd).Typed + "|" +
+            StoryDisplay.Of(Story, typer.TypedCount, typer.CurrentUnitEnd).Pending + "|" +
+            StoryDisplay.Of(Story, typer.TypedCount, typer.CurrentUnitEnd).Hidden;
+
+        static void Type(StoryTyper typer, string text)
+        {
+            foreach (var character in text) Assert.IsTrue(typer.TryType(character));
+        }
+
+        [Test]
+        public void Word_unit_shows_the_typed_letters_black_and_only_the_current_word_grey()
+        {
+            var typer = new StoryTyper(Story, TypingRules.Default, RevealUnit.Word);
+            Assert.AreEqual("|Hi |there. Bye now.", Shown(typer));
+            Type(typer, "h");
+            Assert.AreEqual("H|i |there. Bye now.", Shown(typer));
+            Type(typer, "i ");
+            Assert.AreEqual("Hi |there. |Bye now.", Shown(typer));
+        }
+
+        [Test]
+        public void Auto_typed_punctuation_turns_black_at_once()
+        {
+            var typer = new StoryTyper(Story, TypingRules.Default, RevealUnit.Word);
+            Type(typer, "hi there");
+            Assert.AreEqual("Hi there.| |Bye now.", Shown(typer));
+        }
+
+        [Test]
+        public void Backspace_turns_a_typed_letter_grey_again()
+        {
+            var typer = new StoryTyper(Story, TypingRules.Default, RevealUnit.Word);
+            Type(typer, "hi t");
+            Assert.AreEqual("Hi t|here. |Bye now.", Shown(typer));
+            typer.Backspace();
+            Assert.AreEqual("Hi |there. |Bye now.", Shown(typer));
+        }
+
+        [Test]
+        public void Sentence_unit_shows_one_sentence_at_a_time()
+        {
+            var typer = new StoryTyper(Story, TypingRules.Default, RevealUnit.Sentence);
+            Assert.AreEqual("|Hi there. |Bye now.", Shown(typer));
+            Type(typer, "hi there ");
+            Assert.AreEqual("Hi there. |Bye now.|", Shown(typer));
+        }
+
+        [Test]
+        public void Character_unit_shows_the_next_character_grey()
+        {
+            var typer = new StoryTyper(Story, TypingRules.Default, RevealUnit.Character);
+            Type(typer, "hi");
+            Assert.AreEqual("Hi|" + " " + "|there. Bye now.", Shown(typer));
+        }
+
+        [Test]
+        public void The_end_of_the_text_leaves_nothing_pending_or_hidden()
+        {
+            var typer = new StoryTyper(Story, TypingRules.Default, RevealUnit.Word);
+            Type(typer, "hi there bye now");
+            Assert.IsTrue(typer.IsComplete);
+            Assert.AreEqual("Hi there. Bye now.||", Shown(typer));
+        }
+    }
+
+    public class FindingsPaperModelTests
+    {
+        [Test]
+        public void Renders_typed_pending_and_an_invisible_rest()
+        {
+            var model = new FindingsPaperModel("abc def ghi", 100);
+            Assert.AreEqual("<color=#111>abc </color><color=#999>def </color><color=#00000000>ghi</color>", model.RenderTyping(4, 8, "111", "999"));
+        }
+
+        [Test]
+        public void Typing_at_the_start_shows_only_the_first_unit_pending()
+        {
+            var model = new FindingsPaperModel("abc def", 100);
+            Assert.AreEqual("<color=#999>abc </color><color=#00000000>def</color>", model.RenderTyping(0, 4, "111", "999"));
+        }
+
+        [Test]
+        public void Typing_at_the_end_shows_everything_typed()
         {
             var model = new FindingsPaperModel("abc", 100);
-            Assert.AreEqual("<color=#999>abc</color>", model.Render(0, "111", "999"));
-            Assert.AreEqual("<color=#111>abc</color>", model.Render(99, "111", "999"));
+            Assert.AreEqual("<color=#111>abc</color>", model.RenderTyping(3, 3, "111", "999"));
+        }
+
+        [Test]
+        public void Review_shows_everything_typed()
+        {
+            var model = new FindingsPaperModel("abc def", 100);
+            Assert.AreEqual("<color=#111>abc def</color>", model.RenderReview("111"));
         }
 
         [Test]

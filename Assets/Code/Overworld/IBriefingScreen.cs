@@ -8,6 +8,8 @@ namespace DetectiveDave.OverworldPlay
 
         void OpenFindings(string caseId, Action finished);
 
+        void OpenReview(string caseId, Action finished);
+
         void Close(Action done);
     }
 }

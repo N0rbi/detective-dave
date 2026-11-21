@@ -21,11 +21,14 @@ namespace DetectiveDave.Tests
         {
             public string OpenedCase;
             public string FindingsCase;
+            public string ReviewCase;
             public Action<LetterOutcome> Finished;
             public Action FindingsFinished;
+            public Action ReviewFinished;
             public bool Closed;
             public void Open(string caseId, Action<LetterOutcome> finished) { OpenedCase = caseId; Finished = finished; }
             public void OpenFindings(string caseId, Action finished) { FindingsCase = caseId; FindingsFinished = finished; }
+            public void OpenReview(string caseId, Action finished) { ReviewCase = caseId; ReviewFinished = finished; }
             public void Close(Action done) { Closed = true; done(); }
         }
 
@@ -85,15 +88,26 @@ namespace DetectiveDave.Tests
         }
 
         [Test]
-        public void Solved_cases_dwell_and_replay_their_findings_instead_of_the_letter()
+        public void Solved_cases_dwell_and_open_a_read_only_review_instead_of_the_letter_or_typing()
         {
             state = CaseState.Solved;
             Dwell();
-            Assert.AreEqual("a", briefing.FindingsCase);
+            Assert.AreEqual("a", briefing.ReviewCase);
             Assert.IsNull(briefing.OpenedCase);
+            Assert.IsNull(briefing.FindingsCase);
             Assert.AreEqual(OverworldStage.Briefing, flow.Stage);
-            briefing.FindingsFinished();
+            Assert.IsFalse(flow.AcceptsMoves);
+        }
+
+        [Test]
+        public void Closing_the_review_returns_to_the_desk_without_launching_or_completing_anything()
+        {
+            state = CaseState.Solved;
+            Dwell();
+            briefing.ReviewFinished();
+            Assert.IsTrue(briefing.Closed);
             Assert.AreEqual(OverworldStage.Desk, flow.Stage);
+            Assert.IsTrue(flow.AcceptsMoves);
             Assert.IsNull(launcher.Launched);
         }
 
