@@ -19,6 +19,7 @@ namespace DetectiveDave.EditorTools
         static readonly Color ProblemColor = new Color(1f, 0.2f, 0.2f, 1f);
         static readonly Color OtherGuardColor = new Color(0.2f, 0.85f, 0.3f, 0.7f);
         const float MarkerRadius = 0.18f;
+        static readonly Rect PanelRect = new Rect(10f, 150f, 230f, 110f);
 
         static readonly Color WashColor = new Color(1f, 0.55f, 0.1f, 0.12f);
         static readonly GuardEditMode Mode = new GuardEditMode();
@@ -73,8 +74,9 @@ namespace DetectiveDave.EditorTools
             if (!level || layout == null) return;
             var selected = SelectedGuard(level);
             if (Event.current.type == EventType.Repaint) Draw(level, layout, selected);
-            if (selected) DrawPanel(selected);
-            if (selected && IsEditing(selected)) Interact(level, layout, selected);
+            bool editing = selected && IsEditing(selected);
+            if (selected) DrawPanel(selected, editing);
+            if (editing) Interact(level, layout, selected);
         }
 
         static Level LevelOfOpenStage()
@@ -108,23 +110,21 @@ namespace DetectiveDave.EditorTools
             Handles.EndGUI();
         }
 
-        static void DrawPanel(GuardPatrol patrol)
+        static void DrawPanel(GuardPatrol patrol, bool editing)
         {
-            bool editing = IsEditing(patrol);
             Handles.BeginGUI();
-            GUILayout.BeginArea(new Rect(10f, 150f, 230f, 130f), EditorStyles.helpBox);
-            GUILayout.Label("Guard Patrol: " + patrol.name, EditorStyles.boldLabel);
-            bool wantEdit = GUILayout.Toggle(editing, "Edit Patrol", EditorStyles.miniButton);
-            if (wantEdit && !editing) Begin(patrol);
-            if (!wantEdit && editing) End();
+            GUI.Box(PanelRect, GUIContent.none, EditorStyles.helpBox);
+            GUI.Label(new Rect(PanelRect.x + 6f, PanelRect.y + 4f, PanelRect.width - 12f, 20f), "Guard Patrol: " + patrol.name, EditorStyles.boldLabel);
+            bool wantEdit = GUI.Toggle(new Rect(PanelRect.x + 6f, PanelRect.y + 28f, PanelRect.width - 12f, 20f), editing, "Edit Patrol", EditorStyles.miniButton);
             if (editing)
             {
-                int target = GUILayout.Toolbar(Mode.Target == PatrolTarget.Start ? 0 : 1, new[] { "Start", "End" });
+                int target = GUI.Toolbar(new Rect(PanelRect.x + 6f, PanelRect.y + 54f, PanelRect.width - 12f, 20f), Mode.Target == PatrolTarget.Start ? 0 : 1, new[] { "Start", "End" });
                 Mode.ChooseTarget(target == 0 ? PatrolTarget.Start : PatrolTarget.End);
-                if (GUILayout.Button("Exit")) End();
+                if (GUI.Button(new Rect(PanelRect.x + 6f, PanelRect.y + 80f, PanelRect.width - 12f, 20f), "Exit")) wantEdit = false;
             }
-            GUILayout.EndArea();
             Handles.EndGUI();
+            if (wantEdit && !editing) EditorApplication.delayCall += () => Begin(patrol);
+            if (!wantEdit && editing) EditorApplication.delayCall += End;
         }
 
         static void DrawMarker(KeyboardLayout layout, GuardPatrol patrol)
@@ -183,9 +183,8 @@ namespace DetectiveDave.EditorTools
                 : $"{patrol.name}: press Edit Patrol (panel below, or Inspector) to place its keys" };
             lines.AddRange(GuardLayoutChecks.Describe(level, patrol));
             Handles.BeginGUI();
-            GUILayout.BeginArea(new Rect(10f, 10f, 520f, 200f));
-            foreach (var line in lines) GUILayout.Label(line, line == lines[0] ? EditorStyles.boldLabel : WarningStyle());
-            GUILayout.EndArea();
+            for (int i = 0; i < lines.Count; i++)
+                GUI.Label(new Rect(10f, 10f + i * 20f, 700f, 20f), lines[i], i == 0 ? EditorStyles.boldLabel : WarningStyle());
             Handles.EndGUI();
         }
 
@@ -200,7 +199,13 @@ namespace DetectiveDave.EditorTools
                 End();
                 return;
             }
-            if (current.type != EventType.MouseDown || current.alt || HandleUtility.nearestControl != id) return;
+            if (current.type == EventType.MouseUp && GUIUtility.hotControl == id)
+            {
+                GUIUtility.hotControl = 0;
+                current.Use();
+                return;
+            }
+            if (current.type != EventType.MouseDown || current.alt || PanelRect.Contains(current.mousePosition)) return;
             if (current.button == 1)
             {
                 current.Use();
@@ -208,8 +213,9 @@ namespace DetectiveDave.EditorTools
                 return;
             }
             if (current.button != 0) return;
-            var key = KeyUnderMouse(level, layout);
+            GUIUtility.hotControl = id;
             current.Use();
+            var key = KeyUnderMouse(level, layout);
             if (key == null || !key.InputKey.HasValue) return;
             var placed = Mode.Click(current.shift || current.control || current.command);
             if (placed.HasValue) Place(patrol, placed.Value == PatrolTarget.End, key.InputKey.Value);
