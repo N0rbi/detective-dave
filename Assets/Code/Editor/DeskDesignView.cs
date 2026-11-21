@@ -12,6 +12,7 @@ namespace DetectiveDave.EditorTools
     {
         const float SurfaceMargin = 1f;
         const float SurfaceDepth = 0.5f;
+        const float SolvedPictureLift = 0.05f;
         const string SpriteShader = "Sprites/Default";
 
         static readonly Color KeyOutline = new Color(1f, 1f, 1f, 0.55f);
@@ -101,6 +102,7 @@ namespace DetectiveDave.EditorTools
 
         static void DrawMarkers(DeskLayout desk, DeskDesign design)
         {
+            var stateOf = DeskPreview.StateFunction();
             foreach (var marker in DeskDesignInputs.AllMarkers(desk))
             {
                 if (!marker.CanBeMapped)
@@ -111,6 +113,7 @@ namespace DetectiveDave.EditorTools
                 var deskMarker = marker.ToDeskMarker(desk.transform);
                 bool coversNoKey = design.Issues.Any(issue => issue.Kind == DeskIssueKind.CoversNoKey && issue.CaseId == deskMarker.CaseId);
                 var colour = DeskCaseColors.Outline(deskMarker.CaseId);
+                DrawStateLook(desk, deskMarker, stateOf(marker.CaseFile));
                 DrawOutline(desk, deskMarker, colour);
                 string name = string.IsNullOrWhiteSpace(marker.CaseFile.ClientName) ? deskMarker.CaseId : marker.CaseFile.ClientName;
                 var warnings = MarkerWarnings(marker, coversNoKey);
@@ -121,15 +124,41 @@ namespace DetectiveDave.EditorTools
         static string[] MarkerWarnings(CaseMarker marker, bool coversNoKey) =>
             new[] { coversNoKey ? "Covers no key on this keyboard!" : null, CaseChainInputs.HasNoLevel(marker) ? "No level yet!" : null }.Where(text => text != null).ToArray();
 
-        static void DrawOutline(DeskLayout desk, DeskMarker marker, Color colour)
+        static Vector3[] Corners(DeskLayout desk, DeskMarker marker)
         {
             var half = marker.Size * 0.5f;
             var turn = Quaternion.Euler(0f, 0f, marker.RotationDegrees);
-            var corners = new[] { new Vector2(-half.x, -half.y), new Vector2(half.x, -half.y), new Vector2(half.x, half.y), new Vector2(-half.x, half.y) }
+            return new[] { new Vector2(-half.x, -half.y), new Vector2(half.x, -half.y), new Vector2(half.x, half.y), new Vector2(-half.x, half.y) }
                 .Select(corner => desk.transform.TransformPoint(marker.Centre + (Vector2)(turn * corner)))
                 .ToArray();
+        }
+
+        static void DrawOutline(DeskLayout desk, DeskMarker marker, Color colour)
+        {
+            var corners = Corners(desk, marker);
             Handles.color = colour;
             Handles.DrawAAPolyLine(3f, corners.Concat(new[] { corners[0] }).ToArray());
+        }
+
+        static void DrawStateLook(DeskLayout desk, DeskMarker marker, CaseState state)
+        {
+            var settings = AssetDatabase.LoadAssetAtPath<OverworldSettings>(OverworldSetupPaths.SettingsPath);
+            if (!settings) return;
+            if (state == CaseState.Locked) DrawLockedShade(desk, marker, settings.LockedShade);
+            if (state == CaseState.Solved) DrawSolvedPicture(desk, marker, settings.SolvedSprite);
+        }
+
+        static void DrawLockedShade(DeskLayout desk, DeskMarker marker, float shade) =>
+            Handles.DrawSolidRectangleWithOutline(Corners(desk, marker), new Color(0f, 0f, 0f, Mathf.Clamp01(shade)), Color.clear);
+
+        static void DrawSolvedPicture(DeskLayout desk, DeskMarker marker, Sprite sprite)
+        {
+            var material = SurfaceMaterial();
+            if (!sprite || !material) return;
+            material.mainTexture = sprite.texture;
+            var local = Matrix4x4.TRS(new Vector3(marker.Centre.x, marker.Centre.y, -SolvedPictureLift), Quaternion.Euler(0f, 0f, marker.RotationDegrees), new Vector3(marker.Size.x, marker.Size.y, 1f));
+            material.SetPass(0);
+            Graphics.DrawMeshNow(Resources.GetBuiltinResource<Mesh>("Quad.fbx"), desk.transform.localToWorldMatrix * local);
         }
 
         static void DrawRect(DeskLayout desk, Rect rect, Color fill, Color outline)

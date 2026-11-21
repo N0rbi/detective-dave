@@ -13,6 +13,7 @@ namespace DetectiveDave.EditorTools
             var desk = (DeskLayout)target;
             DrawRootWarning(desk);
             DrawKeyboardPicker();
+            DrawPreviewModePicker();
             DrawSummary(desk);
             DrawProblems(desk);
             DrawChainProblems(desk);
@@ -34,6 +35,15 @@ namespace DetectiveDave.EditorTools
             int picked = EditorGUILayout.Popup("Preview keyboard", current, names);
             if (picked == current) return;
             LevelPreferences.PreviewLayoutId = layouts[picked].Id;
+            SceneView.RepaintAll();
+        }
+
+        static void DrawPreviewModePicker()
+        {
+            int current = (int)DeskPreview.Mode;
+            int picked = EditorGUILayout.Popup("Preview as", current, DeskPreview.ModeNames);
+            if (picked == current) return;
+            DeskPreview.Mode = (DeskPreviewMode)picked;
             SceneView.RepaintAll();
         }
 
