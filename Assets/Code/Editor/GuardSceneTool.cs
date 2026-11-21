@@ -31,12 +31,12 @@ namespace DetectiveDave.EditorTools
             PrefabStage.prefabStageClosing += _ => Mode.Exit();
         }
 
-        public static bool IsEditing(GuardPatrol patrol) => Mode.IsActive && patrol && Mode.GuardId == patrol.GetInstanceID();
+        public static bool IsEditing(GuardPatrol patrol) => Mode.IsActive && patrol && Mode.GuardId == patrol.GetHashCode();
 
         public static void Begin(GuardPatrol patrol)
         {
             if (!patrol) return;
-            Mode.Enter(patrol.GetInstanceID(), patrol.StartKey != Key.None);
+            Mode.Enter(patrol.GetHashCode(), patrol.StartKey != Key.None);
             Selection.activeGameObject = patrol.gameObject;
             SceneView.RepaintAll();
         }
@@ -53,7 +53,7 @@ namespace DetectiveDave.EditorTools
             if (!Mode.IsActive) return;
             var selected = Selection.activeGameObject;
             var guard = selected ? selected.GetComponent<GuardPatrol>() : null;
-            if (guard) Mode.SwitchGuard(guard.GetInstanceID(), guard.StartKey != Key.None);
+            if (guard) Mode.SwitchGuard(guard.GetHashCode(), guard.StartKey != Key.None);
             else if (!IsLevelRelated(selected)) Mode.Exit();
             SceneView.RepaintAll();
         }
