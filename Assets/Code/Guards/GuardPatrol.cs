@@ -6,11 +6,11 @@ namespace DetectiveDave.GuardPlay
     [DisallowMultipleComponent]
     public sealed class GuardPatrol : MonoBehaviour
     {
-        [Tooltip("The key the guard starts on and comes back to.")]
-        [SerializeField] Key startKey = Key.A;
+        [HideInInspector]
+        [SerializeField] Key startKey = Key.None;
 
-        [Tooltip("The key where the guard turns around.")]
-        [SerializeField] Key endKey = Key.G;
+        [HideInInspector]
+        [SerializeField] Key endKey = Key.None;
 
         [Tooltip("Seconds the guard stands still on the start key before walking.")]
         [Min(0f)]
@@ -39,6 +39,10 @@ namespace DetectiveDave.GuardPlay
         public float PatrolSecondsPerKey => patrolSecondsPerKey;
 
         public float ChaseSecondsPerKey => chaseSecondsPerKey;
+
+        public void PlaceStart(Key key) => startKey = key;
+
+        public void PlaceEnd(Key key) => endKey = key;
 
         public GuardPatrolData ToData() => new GuardPatrolData(startKey, endKey, waitBeforeMoveSeconds, waitAtEndSeconds, patrolSecondsPerKey, chaseSecondsPerKey);
     }

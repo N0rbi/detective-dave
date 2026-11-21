@@ -17,11 +17,19 @@ namespace DetectiveDave.EditorTools
                 EditorUtility.DisplayDialog("Guard", "Open a level in Prefab Mode, or select a level in the scene, so the guard has a level to patrol.", "OK");
                 return;
             }
-            var guard = new GameObject("Guard");
+            Add(level);
+        }
+
+        public static GameObject Add(Level level)
+        {
+            int number = level.GetComponentsInChildren<GuardPatrol>(true).Length + 1;
+            var guard = new GameObject($"Guard {number}");
             Undo.RegisterCreatedObjectUndo(guard, "Create Guard");
             guard.transform.SetParent(level.transform, false);
             guard.AddComponent<GuardPatrol>();
             Selection.activeGameObject = guard;
+            SceneView.RepaintAll();
+            return guard;
         }
 
         static Level LevelOf(GameObject context)

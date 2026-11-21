@@ -1,6 +1,6 @@
 using DetectiveDave.GuardPlay;
+using DetectiveDave.Levels;
 using UnityEditor;
-using UnityEngine.InputSystem;
 
 namespace DetectiveDave.EditorTools
 {
@@ -9,14 +9,27 @@ namespace DetectiveDave.EditorTools
     {
         public override void OnInspectorGUI()
         {
-            DrawDefaultInspector();
             var patrol = (GuardPatrol)target;
-            if (patrol.StartKey == patrol.EndKey)
-                EditorGUILayout.HelpBox("Start and end are the same key, so this guard will stand still.", MessageType.Info);
-            if (IsShift(patrol.StartKey) || IsShift(patrol.EndKey))
-                EditorGUILayout.HelpBox("Guards cannot stand on the Shift keys the player starts from. Pick letter keys.", MessageType.Warning);
+            DrawKeys(patrol);
+            EditorGUILayout.HelpBox("Scene view: click a key = START. Shift+click a key = END.", MessageType.Info);
+            DrawDefaultInspector();
+            DrawProblems(patrol);
         }
 
-        static bool IsShift(Key key) => key == Key.LeftShift || key == Key.RightShift;
+        static void DrawKeys(GuardPatrol patrol)
+        {
+            var layout = KeyboardLayouts.Preview;
+            if (layout == null) return;
+            EditorGUILayout.LabelField("Start", GuardPlacements.LabelOf(layout, patrol.StartKey));
+            EditorGUILayout.LabelField("End", GuardPlacements.LabelOf(layout, patrol.EndKey));
+        }
+
+        static void DrawProblems(GuardPatrol patrol)
+        {
+            var level = patrol.GetComponentInParent<Level>();
+            if (!level) return;
+            foreach (var message in GuardLayoutChecks.Describe(level, patrol))
+                EditorGUILayout.HelpBox(message, MessageType.Warning);
+        }
     }
 }
