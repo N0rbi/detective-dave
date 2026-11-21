@@ -74,3 +74,12 @@ Play with F5 on a level with a Gap and a WallGutter key between the two Shifts. 
 - Then type the response on the right paper: only the current word (or sentence or character, per `responseUnit`) is visible in grey, typed letters turn black one by one, and the next words are not shown. Backspace turns a letter grey again. Only when the response is finished does the folder show the solved picture.
 - Walk onto the solved case and wait for the dwell: the left paper shows the description and the findings, the right paper the response, all in black; nothing can be typed, no typewriter sound plays, and any key slides the papers away and returns to the desk. Progress is unchanged.
 - The magnifier is on Left Shift again and twice as big; the detective shows a gust when dashing, the magnifier does not.
+
+## Desk design view
+- Open Assets/Overworld/Sample Desk.prefab: the Scene view shows the desk surface, the key outlines of the preview keyboard, a blue START on Left Shift and the sample case's keys filled in its colour with the client name.
+- Move, rotate and scale the case file: the covered keys follow live.
+- Drag a second case file over the first: the shared keys turn red and the inspector lists them.
+- Move a case file off the keyboard: its label says it covers no key.
+- Move a case file over Left Shift: START turns red and says it is covered.
+- Change the Preview keyboard dropdown: the outlines and covered keys change to that layout.
+- Remove the case from a marker: its label says No case assigned.
