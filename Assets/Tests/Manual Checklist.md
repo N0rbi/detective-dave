@@ -70,5 +70,6 @@ Play with F5 on a level with a Gap and a WallGutter key between the two Shifts. 
 - Run Set Up Overworld twice: the second dialog says nothing needed changing.
 - Dwell on a case: the description types at a steady speed with soft clicks; a key press speeds it up; the letter paper appears only afterwards and typing before that does nothing.
 - Both papers are slightly rotated on the desk; untyped text is grey, typed text black; each valid key clicks, Backspace plays the softer clip.
-- Finish a level: back in the overworld the findings type on the paper, then the folder shows the solved picture. Walk onto it again: the findings replay.
+- Finish a level: back in the overworld the findings type on the paper. Only the current word (or sentence or character, per `findingsUnit`) is visible in grey, typed letters turn black one by one, and the next words are not shown. Backspace turns a letter grey again. When finished the folder shows the solved picture.
+- Walk onto the solved case and wait for the dwell: the whole findings are shown in black, nothing can be typed, no typewriter sound plays, and any key slides the paper away and returns to the desk. Progress is unchanged.
 - The magnifier is on Left Shift again and twice as big; the detective shows a gust when dashing, the magnifier does not.
