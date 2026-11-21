@@ -75,6 +75,15 @@ Play with F5 on a level with a Gap and a WallGutter key between the two Shifts. 
 - Walk onto the solved case and wait for the dwell: the left paper shows the description and the findings, the right paper the response, all in black; nothing can be typed, no typewriter sound plays, and any key slides the papers away and returns to the desk. Progress is unchanged.
 - The magnifier is on Left Shift again and twice as big; the detective shows a gust when dashing, the magnifier does not.
 
+## Overworld desk look and hints
+- Run Set Up Overworld: it fills Shift Keycap Sprite; the second run says nothing needed changing.
+- Play the overworld: Left Shift and Right Shift show a keycap picture; the magnifier stands on Left Shift.
+- A dashed line runs along the keys from the magnifier to the nearest open case, the dashes slowly flow towards the case; it never covers the magnifier or the guards' sorting.
+- Case files bob and tilt a little, each at its own rhythm (none move in step). Dwelling on a file still works at the same keys.
+- Route Hint Visibility UntilCaseReached: move one key along the line, the line shortens from the magnifier; reach the case, the line disappears. UntilFirstMove: the line disappears at the first move.
+- Come back from a solved case: the line shows again towards the next open case; with no open case there is no line. It is hidden while a briefing is open.
+- Turn off Route Hint Enabled and Case Float Enabled: no line, the files stay still.
+
 ## Desk design view
 - Open Assets/Overworld/Sample Desk.prefab: the Scene view shows the desk surface, the key outlines of the preview keyboard, a blue START on Left Shift and the sample case's keys filled in its colour with the client name.
 - Move, rotate and scale the case file: the covered keys follow live.
