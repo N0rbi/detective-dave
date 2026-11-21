@@ -195,6 +195,8 @@ Both live in `Assets/Scenes`. They load each other through the `GameScene` enum 
 
 Making a level (Levels window, Key brush, Play This Level, live reload) is described in `Packages/com.detectivedave.levels/README.md` and checked by hand with `Assets/Tests/Manual Checklist.md`. Game code is in the `DetectiveDave.Game` assembly (`Assets/Code`), its editor tools in `DetectiveDave.Game.Editor` (`Assets/Code/Editor`); tests in `Assets/Tests`.
 
+Guards: open a level, press **Add Guard** in the Levels window, click a key in the Scene view for START, Shift+click a key for END. The path and warnings show in the Scene view and in the Levels window checks (every keyboard layout is checked).
+
 The lock lives in a static, so it is gone after leaving Play Mode, and there is no way to change it while the game runs.
 
 ## Implementation notes

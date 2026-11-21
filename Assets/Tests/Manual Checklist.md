@@ -97,3 +97,12 @@ Play with F5 on a level with a Gap and a WallGutter key between the two Shifts. 
 - Case inspector: an old case keeps its asset name as the id; a new case gets an id like case-1a2b3c4d; renaming the asset does not change the id; two cases with the same id warn.
 - Case Marker menu: in Prefab Mode with nothing selected the marker lands under the open desk; in a scene with one desk it lands under it; with no desk a dialog explains why nothing happened.
 - Move or scale the desk root: the inspector and the Scene view warn; Reset root transform puts it back at position 0 and scale 1.
+
+## Guards: placing them in the Scene view
+- Levels window with a level selected: Add Guard opens the level in Prefab Mode (if needed), adds "Guard 1" and selects it. The Scene view says "click a key = START, Shift+click = END". The Inspector has no key dropdowns, only Start and End lines.
+- Click a key: it turns green with START and the wait time. Shift+click another key: it turns orange with END. A white line with arrows shows the path in between. Nothing else gets selected by the clicks. Undo moves the key back.
+- Change the Keyboard dropdown in the Levels window: the same guard stays on the same physical key, and the labels show that keyboard's letters.
+- Click a wall, gap or gutter key as START or END: a red warning appears in the Scene view, the Inspector and the Levels window checks. Surround the START with gaps: "no way from START to END" and a red dotted line.
+- A key that exists on UK but not on another layout (for example UK's extra keys on JIS): the Levels window checks name the layouts that break the guard.
+- Select something other than a guard: every guard in the level shows a small green dot on its START key.
+- Play This Level: the guard patrols between START and END along the line shown.

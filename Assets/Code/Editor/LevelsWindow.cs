@@ -159,12 +159,21 @@ namespace DetectiveDave.EditorTools
                 using (new EditorGUI.DisabledScope(!level))
                 {
                     if (GUILayout.Button("Open", EditorStyles.toolbarButton)) Defer(() => LevelTools.Open(level));
+                    if (GUILayout.Button(new GUIContent("Add Guard", "Adds a guard to this level. Then click a key in the Scene view for START, Shift+click for END."), EditorStyles.toolbarButton))
+                        Defer(() => AddGuard(level));
                     if (GUILayout.Button(new GUIContent("Play This Level", "Plays the current level on the preview keyboard. Shortcut: F5 (Edit > Shortcuts > Detective Dave)."), EditorStyles.toolbarButton))
                         Defer(() => PlayThisLevel.Play(level));
                 }
                 GUILayout.FlexibleSpace();
                 DrawLayoutPopup();
             }
+        }
+
+        static void AddGuard(Level level)
+        {
+            if (LevelTools.OpenLevel != level) LevelTools.Open(level);
+            var open = LevelTools.OpenLevel;
+            if (open) GuardMenu.Add(open);
         }
 
         void DrawLayoutPopup()
