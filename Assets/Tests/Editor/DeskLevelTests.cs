@@ -42,7 +42,7 @@ namespace DetectiveDave.Tests
             board.Place(Key.Z, new Vector2(1f, 0f));
             board.Connect(Key.LeftShift, Key.Z);
             var animations = new FakeAnimations();
-            var game = new PlayerGame(board, level, animations, new FakePresentation(), new FakeDashGust(), new PlayerGameSettings(1, 1, 0.3f, 1f, 0.35f, true));
+            var game = new PlayerGame(board, level, animations, new FakePresentation(), new FakeDashGust(), new PlayerGameSettings(1, 1, 0.3f, 1f, true));
             int goals = 0;
             game.GoalReached += () => goals++;
             game.Restart();
