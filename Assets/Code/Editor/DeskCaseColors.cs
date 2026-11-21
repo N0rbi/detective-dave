@@ -10,6 +10,9 @@ namespace DetectiveDave.EditorTools
         const float FillAlpha = 0.35f;
 
         public static readonly Color SharedKey = new Color(1f, 0.1f, 0.1f, 0.55f);
+        public static readonly Color FreeKeyFill = new Color(1f, 1f, 1f, 0.3f);
+        public static readonly Color FreeKeyOutline = new Color(0.1f, 0.1f, 0.1f, 0.85f);
+        public static readonly Color StartKey = new Color(0.25f, 0.55f, 1f, 1f);
 
         public static Color Fill(string caseId)
         {

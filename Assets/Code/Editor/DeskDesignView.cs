@@ -14,9 +14,10 @@ namespace DetectiveDave.EditorTools
         const float SurfaceDepth = 0.5f;
         const float SolvedPictureLift = 0.05f;
         const string SpriteShader = "Sprites/Default";
+        const float KeyLabelMaxViewSize = 5f;
+        const float LegendRowHeight = 18f;
+        const float LegendSwatch = 12f;
 
-        static readonly Color KeyOutline = new Color(1f, 1f, 1f, 0.55f);
-        static readonly Color StartColor = new Color(0.25f, 0.55f, 1f, 1f);
         static readonly Color ProblemColor = new Color(1f, 0.2f, 0.2f, 1f);
         static readonly Color NoCaseColor = new Color(0.7f, 0.7f, 0.7f, 1f);
 
@@ -32,14 +33,15 @@ namespace DetectiveDave.EditorTools
             if (!desk || layout == null) return;
             var design = DeskDesignInputs.DesignOn(desk, layout);
             DrawSurface(desk, layout);
-            DrawKeys(desk, layout, design);
+            DrawKeys(desk, layout, design, sceneView);
             DrawStartKey(desk, layout, design);
             DrawMarkers(desk, design);
             DrawLayoutName(layout);
             DrawRootWarning(desk);
+            DrawLegend(sceneView);
         }
 
-        static DeskLayout CurrentDesk()
+        internal static DeskLayout CurrentDesk()
         {
             var stage = PrefabStageUtility.GetCurrentPrefabStage();
             if (stage) return stage.prefabContentsRoot.GetComponent<DeskLayout>();
@@ -80,14 +82,33 @@ namespace DetectiveDave.EditorTools
             return Rect.MinMaxRect(min.x, min.y, max.x, max.y);
         }
 
-        static void DrawKeys(DeskLayout desk, KeyboardLayout layout, DeskDesign design)
+        static void DrawKeys(DeskLayout desk, KeyboardLayout layout, DeskDesign design, SceneView sceneView)
         {
             var filled = design.Fills.ToDictionary(fill => fill.Key);
+            var centres = DeskDesignInputs.Centres(layout);
+            var labels = layout.UniqueKeys().ToDictionary(def => def.InputKey.Value, def => def.Label);
+            bool showLabels = sceneView.size <= KeyLabelMaxViewSize;
             foreach (var entry in DeskDesignInputs.Rects(layout))
             {
-                var fill = filled.TryGetValue(entry.Key, out var found) ? (Color?)(found.IsShared ? DeskCaseColors.SharedKey : DeskCaseColors.Fill(found.CaseId)) : null;
-                foreach (var rect in entry.Value) DrawRect(desk, rect, fill ?? Color.clear, KeyOutline);
+                bool covered = filled.TryGetValue(entry.Key, out var found);
+                var fill = !covered ? DeskCaseColors.FreeKeyFill : found.IsShared ? DeskCaseColors.SharedKey : DeskCaseColors.Fill(found.CaseId);
+                foreach (var rect in entry.Value) DrawRect(desk, rect, fill, DeskCaseColors.FreeKeyOutline);
+                if (showLabels && !covered) Label(desk.transform.TransformPoint(centres[entry.Key]), labels[entry.Key] ?? string.Empty, DeskCaseColors.FreeKeyOutline);
             }
+        }
+
+        static void DrawLegend(SceneView sceneView)
+        {
+            var entries = DeskLegend.Entries();
+            float top = sceneView.position.height - 30f - entries.Count * LegendRowHeight;
+            Handles.BeginGUI();
+            for (int index = 0; index < entries.Count; index++)
+            {
+                float y = top + index * LegendRowHeight;
+                EditorGUI.DrawRect(new Rect(10f, y + 3f, LegendSwatch, LegendSwatch), entries[index].Colour);
+                GUI.Label(new Rect(28f, y, 320f, LegendRowHeight), entries[index].Label, EditorStyles.boldLabel);
+            }
+            Handles.EndGUI();
         }
 
         static void DrawStartKey(DeskLayout desk, KeyboardLayout layout, DeskDesign design)
@@ -95,7 +116,7 @@ namespace DetectiveDave.EditorTools
             var key = layout.UniqueKeys().FirstOrDefault(def => def.InputKey == DeskDesignInputs.StartKey);
             if (key == null) return;
             bool covered = design.Issues.Any(issue => issue.Kind == DeskIssueKind.CoversStartKey);
-            var colour = covered ? ProblemColor : StartColor;
+            var colour = covered ? ProblemColor : DeskCaseColors.StartKey;
             foreach (var rect in KeyGeometry.Rects(layout, key)) DrawRect(desk, rect, Color.clear, colour);
             Label(desk.transform.TransformPoint(KeyGeometry.Center(layout, key)), covered ? "START (covered by a case!)" : "START", colour);
         }
