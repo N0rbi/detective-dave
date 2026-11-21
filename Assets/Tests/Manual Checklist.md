@@ -99,7 +99,10 @@ Play with F5 on a level with a Gap and a WallGutter key between the two Shifts. 
 - Move or scale the desk root: the inspector and the Scene view warn; Reset root transform puts it back at position 0 and scale 1.
 
 ## Guards: placing them in the Scene view
-- Levels window with a level selected: Add Guard opens the level in Prefab Mode (if needed), adds "Guard 1" and selects it. The Scene view says "click a key = START, Shift+click = END". The Inspector has no key dropdowns, only Start and End lines.
+- Levels window with a level selected: Add Guard opens the level in Prefab Mode (if needed), adds "Guard 1" and enters Patrol Edit mode: the Scene view gets an orange wash and the banner "PATROL EDIT: Guard 1: click a key to set START". The Inspector has an Edit Patrol button at the top and no key dropdowns.
+- In the mode: clicks never select anything. First click sets START, the next clicks set END. Start|End in the Scene panel overrides the target. Shift+click sets END. Right-click, Esc or Exit leaves (wash and banner disappear).
+- In the mode, select another guard in the Hierarchy: the banner shows that guard and clicks edit it. Select a non-guard object outside the level: the mode ends. Selecting the level or its children keeps it.
+- Enter Play mode or close Prefab Mode: the mode is off afterwards.
 - Click a key: it turns green with START and the wait time. Shift+click another key: it turns orange with END. A white line with arrows shows the path in between. Nothing else gets selected by the clicks. Undo moves the key back.
 - Change the Keyboard dropdown in the Levels window: the same guard stays on the same physical key, and the labels show that keyboard's letters.
 - Click a wall, gap or gutter key as START or END: a red warning appears in the Scene view, the Inspector and the Levels window checks. Surround the START with gaps: "no way from START to END" and a red dotted line.

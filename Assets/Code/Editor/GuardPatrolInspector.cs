@@ -1,6 +1,7 @@
 using DetectiveDave.GuardPlay;
 using DetectiveDave.Levels;
 using UnityEditor;
+using UnityEngine;
 
 namespace DetectiveDave.EditorTools
 {
@@ -10,10 +11,24 @@ namespace DetectiveDave.EditorTools
         public override void OnInspectorGUI()
         {
             var patrol = (GuardPatrol)target;
+            DrawEditButton(patrol);
             DrawKeys(patrol);
-            EditorGUILayout.HelpBox("Scene view: click a key = START. Shift+click a key = END.", MessageType.Info);
+            EditorGUILayout.HelpBox("Press Edit Patrol, then click keys in the Scene view: first click = START, next clicks = END. Right-click or Esc leaves.", MessageType.Info);
             DrawDefaultInspector();
             DrawProblems(patrol);
+        }
+
+        static void DrawEditButton(GuardPatrol patrol)
+        {
+            bool editing = GuardSceneTool.IsEditing(patrol);
+            var color = GUI.backgroundColor;
+            GUI.backgroundColor = editing ? new Color(1f, 0.6f, 0.1f) : color;
+            if (GUILayout.Button(editing ? "Stop Editing Patrol" : "Edit Patrol", GUILayout.Height(30f)))
+            {
+                if (editing) GuardSceneTool.End();
+                else GuardSceneTool.Begin(patrol);
+            }
+            GUI.backgroundColor = color;
         }
 
         static void DrawKeys(GuardPatrol patrol)

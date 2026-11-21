@@ -20,7 +20,50 @@ namespace DetectiveDave.EditorTools
         static readonly Color OtherGuardColor = new Color(0.2f, 0.85f, 0.3f, 0.7f);
         const float MarkerRadius = 0.18f;
 
-        static GuardSceneTool() => SceneView.duringSceneGui += OnSceneGui;
+        static readonly Color WashColor = new Color(1f, 0.55f, 0.1f, 0.12f);
+        static readonly GuardEditMode Mode = new GuardEditMode();
+
+        static GuardSceneTool()
+        {
+            SceneView.duringSceneGui += OnSceneGui;
+            Selection.selectionChanged += OnSelectionChanged;
+            EditorApplication.playModeStateChanged += _ => Mode.Exit();
+            PrefabStage.prefabStageClosing += _ => Mode.Exit();
+        }
+
+        public static bool IsEditing(GuardPatrol patrol) => Mode.IsActive && patrol && Mode.GuardId == patrol.GetInstanceID();
+
+        public static void Begin(GuardPatrol patrol)
+        {
+            if (!patrol) return;
+            Mode.Enter(patrol.GetInstanceID(), patrol.StartKey != Key.None);
+            Selection.activeGameObject = patrol.gameObject;
+            SceneView.RepaintAll();
+        }
+
+        public static void End()
+        {
+            Mode.Exit();
+            SceneView.RepaintAll();
+        }
+
+        // Selecting another guard switches to it; a child or parent of the level keeps the mode; anything else leaves it.
+        static void OnSelectionChanged()
+        {
+            if (!Mode.IsActive) return;
+            var selected = Selection.activeGameObject;
+            var guard = selected ? selected.GetComponent<GuardPatrol>() : null;
+            if (guard) Mode.SwitchGuard(guard.GetInstanceID(), guard.StartKey != Key.None);
+            else if (!IsLevelRelated(selected)) Mode.Exit();
+            SceneView.RepaintAll();
+        }
+
+        static bool IsLevelRelated(GameObject selected)
+        {
+            var level = LevelOfOpenStage();
+            if (!level || !selected) return false;
+            return selected.GetComponentInParent<Level>() == level || level.transform.IsChildOf(selected.transform);
+        }
 
         static void OnSceneGui(SceneView view)
         {
@@ -30,7 +73,8 @@ namespace DetectiveDave.EditorTools
             if (!level || layout == null) return;
             var selected = SelectedGuard(level);
             if (Event.current.type == EventType.Repaint) Draw(level, layout, selected);
-            if (selected) Interact(level, layout, selected);
+            if (selected) DrawPanel(selected);
+            if (selected && IsEditing(selected)) Interact(level, layout, selected);
         }
 
         static Level LevelOfOpenStage()
@@ -53,7 +97,34 @@ namespace DetectiveDave.EditorTools
                     if (patrol != selected) DrawMarker(layout, patrol);
                 if (selected) DrawSelected(level, layout, selected);
             }
+            if (selected && IsEditing(selected)) DrawWash(selected);
             if (selected) DrawHint(level, layout, selected);
+        }
+
+        static void DrawWash(GuardPatrol patrol)
+        {
+            Handles.BeginGUI();
+            EditorGUI.DrawRect(new Rect(0f, 0f, Screen.width, Screen.height), WashColor);
+            Handles.EndGUI();
+        }
+
+        static void DrawPanel(GuardPatrol patrol)
+        {
+            bool editing = IsEditing(patrol);
+            Handles.BeginGUI();
+            GUILayout.BeginArea(new Rect(10f, 150f, 230f, 130f), EditorStyles.helpBox);
+            GUILayout.Label("Guard Patrol: " + patrol.name, EditorStyles.boldLabel);
+            bool wantEdit = GUILayout.Toggle(editing, "Edit Patrol", EditorStyles.miniButton);
+            if (wantEdit && !editing) Begin(patrol);
+            if (!wantEdit && editing) End();
+            if (editing)
+            {
+                int target = GUILayout.Toolbar(Mode.Target == PatrolTarget.Start ? 0 : 1, new[] { "Start", "End" });
+                Mode.ChooseTarget(target == 0 ? PatrolTarget.Start : PatrolTarget.End);
+                if (GUILayout.Button("Exit")) End();
+            }
+            GUILayout.EndArea();
+            Handles.EndGUI();
         }
 
         static void DrawMarker(KeyboardLayout layout, GuardPatrol patrol)
@@ -107,7 +178,9 @@ namespace DetectiveDave.EditorTools
 
         static void DrawHint(Level level, KeyboardLayout layout, GuardPatrol patrol)
         {
-            var lines = new List<string> { "Guard: click a key = START, Shift+click = END" };
+            var lines = new List<string> { IsEditing(patrol)
+                ? $"PATROL EDIT: {patrol.name}: click a key to set {Mode.Target.ToString().ToUpper()}  (Shift+click = END, right-click / Esc = leave)"
+                : $"{patrol.name}: press Edit Patrol (panel below, or Inspector) to place its keys" };
             lines.AddRange(GuardLayoutChecks.Describe(level, patrol));
             Handles.BeginGUI();
             GUILayout.BeginArea(new Rect(10f, 10f, 520f, 200f));
@@ -121,12 +194,25 @@ namespace DetectiveDave.EditorTools
             var current = Event.current;
             int id = GUIUtility.GetControlID(FocusType.Passive);
             if (current.type == EventType.Layout) HandleUtility.AddDefaultControl(id);
-            if (current.type != EventType.MouseDown || current.button != 0 || current.alt || HandleUtility.nearestControl != id) return;
+            if (current.type == EventType.KeyDown && current.keyCode == KeyCode.Escape)
+            {
+                current.Use();
+                End();
+                return;
+            }
+            if (current.type != EventType.MouseDown || current.alt || HandleUtility.nearestControl != id) return;
+            if (current.button == 1)
+            {
+                current.Use();
+                End();
+                return;
+            }
+            if (current.button != 0) return;
             var key = KeyUnderMouse(level, layout);
             current.Use();
             if (key == null || !key.InputKey.HasValue) return;
-            bool isEnd = current.shift || current.control || current.command;
-            Place(patrol, isEnd, key.InputKey.Value);
+            var placed = Mode.Click(current.shift || current.control || current.command);
+            if (placed.HasValue) Place(patrol, placed.Value == PatrolTarget.End, key.InputKey.Value);
         }
 
         static KeyDef KeyUnderMouse(Level level, KeyboardLayout layout)

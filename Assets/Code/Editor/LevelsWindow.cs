@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using DetectiveDave.GuardPlay;
 using DetectiveDave.LevelPlay;
 using DetectiveDave.Levels;
 using DetectiveDave.Levels.Editor;
@@ -159,7 +160,7 @@ namespace DetectiveDave.EditorTools
                 using (new EditorGUI.DisabledScope(!level))
                 {
                     if (GUILayout.Button("Open", EditorStyles.toolbarButton)) Defer(() => LevelTools.Open(level));
-                    if (GUILayout.Button(new GUIContent("Add Guard", "Adds a guard to this level. Then click a key in the Scene view for START, Shift+click for END."), EditorStyles.toolbarButton))
+                    if (GUILayout.Button(new GUIContent("Add Guard", "Adds a guard and enters Patrol Edit mode: click keys in the Scene view."), EditorStyles.toolbarButton))
                         Defer(() => AddGuard(level));
                     if (GUILayout.Button(new GUIContent("Play This Level", "Plays the current level on the preview keyboard. Shortcut: F5 (Edit > Shortcuts > Detective Dave)."), EditorStyles.toolbarButton))
                         Defer(() => PlayThisLevel.Play(level));
@@ -173,7 +174,7 @@ namespace DetectiveDave.EditorTools
         {
             if (LevelTools.OpenLevel != level) LevelTools.Open(level);
             var open = LevelTools.OpenLevel;
-            if (open) GuardMenu.Add(open);
+            if (open) GuardSceneTool.Begin(GuardMenu.Add(open).GetComponent<GuardPatrol>());
         }
 
         void DrawLayoutPopup()
