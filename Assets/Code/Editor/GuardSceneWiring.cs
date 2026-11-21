@@ -1,4 +1,6 @@
+using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 using DetectiveDave.GuardPlay;
 using DetectiveDave.LevelPlay;
 using DetectiveDave.PlayerPlay;
@@ -17,6 +19,7 @@ namespace DetectiveDave.EditorTools
         {
             var scene = EditorSceneManager.GetSceneByPath(PlayerSetupPaths.ScenePath);
             var wasLoaded = scene.isLoaded;
+            if (!wasLoaded && LooksWired()) return null;
             if (!wasLoaded) scene = EditorSceneManager.OpenScene(PlayerSetupPaths.ScenePath, OpenSceneMode.Additive);
             try
             {
@@ -31,6 +34,16 @@ namespace DetectiveDave.EditorTools
                 if (!wasLoaded) EditorSceneManager.CloseScene(scene, true);
             }
         }
+
+        static bool LooksWired()
+        {
+            var text = File.ReadAllText(PlayerSetupPaths.ScenePath);
+            return text.Contains(ScriptGuid(typeof(GuardController))) && !Regex.IsMatch(text, @"^\s*settings: \{fileID: 0\}", RegexOptions.Multiline);
+        }
+
+        static string ScriptGuid(System.Type script) =>
+            AssetDatabase.FindAssets("t:MonoScript " + script.Name)
+                .FirstOrDefault(guid => AssetDatabase.LoadAssetAtPath<MonoScript>(AssetDatabase.GUIDToAssetPath(guid)).GetClass() == script) ?? "missing";
 
         static string WireScene(Scene scene, GuardSettings settings)
         {
