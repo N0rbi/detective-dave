@@ -10,6 +10,8 @@ namespace DetectiveDave.OverworldPlay
 
         void OpenReview(string caseId, Action finished);
 
+        void Refuse(string message, Action finished);
+
         void Close(Action done);
     }
 }

@@ -7,6 +7,7 @@ namespace DetectiveDave.OverworldPlay
 {
     public sealed class BriefingView : MonoBehaviour, IBriefingScreen
     {
+        const float RefusalHoldFactor = 4f;
         const float FallbackViewWidth = 20f;
         const float FallbackViewHeight = 11.25f;
 
@@ -100,6 +101,12 @@ namespace DetectiveDave.OverworldPlay
 
         static PaperReveal ReportReveal(CaseFile file, int lettersPerLine) =>
             new PaperReveal(TextWrap.Wrap(file.ResolvedDescription, lettersPerLine), TextWrap.Wrap(file.ResolvedFindings, lettersPerLine));
+
+        public void Refuse(string message, Action finished)
+        {
+            letterPaper.SetText(message, settings.PendingTextColor);
+            FinishAfterPause(finished, RefusalHoldFactor);
+        }
 
         public void Close(Action done)
         {
@@ -278,11 +285,11 @@ namespace DetectiveDave.OverworldPlay
             reviewFinished?.Invoke();
         }
 
-        void FinishAfterPause(Action report)
+        void FinishAfterPause(Action report, float holdFactor = 1f)
         {
             StopListening();
             int token = ++generation;
-            DOVirtual.DelayedCall(settings.FinishPauseSeconds, () => ReportIfCurrent(token, report)).SetLink(gameObject);
+            DOVirtual.DelayedCall(settings.FinishPauseSeconds * holdFactor, () => ReportIfCurrent(token, report)).SetLink(gameObject);
         }
 
         void ReportIfCurrent(int token, Action report)

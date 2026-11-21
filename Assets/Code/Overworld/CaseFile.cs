@@ -23,6 +23,7 @@ namespace DetectiveDave.OverworldPlay
         public string ClientName => clientName;
         public IReadOnlyList<SuspectEntry> Suspects => suspects;
         public Level Level => level;
+        public bool HasLevel => level;
         public IReadOnlyList<CaseFile> Requires => requires;
         public IReadOnlyList<string> RequiredIds => requires.Where(required => required).Select(required => required.Id).ToArray();
 

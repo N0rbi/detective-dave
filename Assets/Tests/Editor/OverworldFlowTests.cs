@@ -26,15 +26,19 @@ namespace DetectiveDave.Tests
             public Action ReportFinished;
             public Action ReviewFinished;
             public bool Closed;
+            public string Refusal;
             public void Open(string caseId, Action<LetterOutcome> finished) { OpenedCase = caseId; Finished = finished; }
             public void OpenReport(string caseId, Action finished) { ReportCase = caseId; ReportFinished = finished; }
             public void OpenReview(string caseId, Action finished) { ReviewCase = caseId; ReviewFinished = finished; }
+            public void Refuse(string message, Action finished) { Refusal = message; finished(); }
             public void Close(Action done) { Closed = true; done(); }
         }
 
         sealed class FakeLauncher : ICaseLauncher
         {
             public string Launched;
+            public bool Launchable = true;
+            public bool CanLaunch(string caseId) => Launchable;
             public void Launch(string caseId) => Launched = caseId;
         }
 
@@ -162,6 +166,27 @@ namespace DetectiveDave.Tests
             briefing.Finished(LetterOutcome.Accepted);
             Assert.AreEqual(OverworldStage.Leaving, flow.Stage);
             Assert.AreEqual("a", launcher.Launched);
+        }
+
+        [Test]
+        public void Accepting_a_case_without_a_level_refuses_and_returns_to_the_desk()
+        {
+            launcher.Launchable = false;
+            Dwell();
+            briefing.Finished(LetterOutcome.Accepted);
+            Assert.AreEqual(OverworldFlow.NoLevelMessage, briefing.Refusal);
+            Assert.IsNull(launcher.Launched);
+            Assert.AreEqual(OverworldStage.Desk, flow.Stage);
+            Assert.IsTrue(flow.AcceptsMoves);
+        }
+
+        [Test]
+        public void Declining_a_case_without_a_level_is_not_refused()
+        {
+            launcher.Launchable = false;
+            Dwell();
+            briefing.Finished(LetterOutcome.Declined);
+            Assert.IsNull(briefing.Refusal);
         }
     }
 }

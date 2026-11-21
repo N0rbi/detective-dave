@@ -81,6 +81,8 @@ namespace DetectiveDave.OverworldPlay
             if (backdrop) Destroy(backdrop.gameObject);
         }
 
+        public bool CanLaunch(string caseId) => casesById.TryGetValue(caseId, out var file) && file.HasLevel;
+
         public void Launch(string caseId)
         {
             CaseSession.Begin(casesById[caseId]);

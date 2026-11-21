@@ -6,6 +6,8 @@ namespace DetectiveDave.OverworldPlay
 {
     public sealed class OverworldFlow
     {
+        public const string NoLevelMessage = "This case has no level yet";
+
         readonly DeskCases cases;
         readonly DwellTimer dwell;
         readonly IDwellIndicator indicator;
@@ -102,8 +104,15 @@ namespace DetectiveDave.OverworldPlay
         void FinishLetter(string caseId, LetterOutcome outcome)
         {
             if (Stage != OverworldStage.Briefing) return;
+            if (outcome == LetterOutcome.Accepted && !launcher.CanLaunch(caseId))
+            {
+                briefing.Refuse(NoLevelMessage, () => briefing.Close(ReturnToDesk));
+                return;
+            }
             briefing.Close(() => LeaveBriefing(caseId, outcome));
         }
+
+        void ReturnToDesk() => Stage = OverworldStage.Desk;
 
         void LeaveBriefing(string caseId, LetterOutcome outcome)
         {
