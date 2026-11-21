@@ -13,6 +13,7 @@ namespace DetectiveDave.OverworldPlay
         [SerializeField] [Tooltip("The sheet of paper under the case description.")] Sprite descriptionPaperSprite;
         [SerializeField] [Tooltip("The sheet of paper the letter and the response are typed on.")] Sprite letterPaperSprite;
         [SerializeField] [Tooltip("The hollow ring drawn around the magnifying glass while the dwell timer runs. White is tinted by the ring track colour.")] Sprite ringSprite;
+        [SerializeField] [Tooltip("The keycap picture drawn under Left Shift and Right Shift so the desk reads as a keyboard. It is stretched to the size of the key.")] Sprite shiftKeycapSprite;
         [SerializeField] [Tooltip("The typewriter font used for the description, the findings, the letter and the response.")] Font textFont;
         [SerializeField] [Tooltip("Typewriter clicks. One is picked at random for every valid key.")] AudioClip[] typewriterClicks = new AudioClip[0];
         [SerializeField] [Tooltip("Played when Backspace takes a letter away. Leave empty for silence.")] AudioClip backspaceClip;
@@ -20,6 +21,27 @@ namespace DetectiveDave.OverworldPlay
         [Header("Desk")]
         [SerializeField] [Tooltip("The desk the game starts on.")] DeskLayout desk;
         [SerializeField, Range(0f, 1f)] [Tooltip("How dark a locked case file is. 0 shows it as it is, 1 makes it black.")] float lockedShade = 0.65f;
+
+        [Header("Keyboard look")]
+        [SerializeField] [Tooltip("Colour the keycap picture is tinted with.")] Color shiftKeycapColor = Color.white;
+        [SerializeField, Range(0.5f, 1.2f)] [Tooltip("Size of the keycap picture as a share of the key it sits on.")] float shiftKeycapSizeShare = 0.95f;
+
+        [Header("Floating case files")]
+        [SerializeField] [Tooltip("Case files drift gently. Every file has its own random timing, so they never move together.")] bool caseFloatEnabled = true;
+        [SerializeField, Min(0f)] [Tooltip("Smallest drift distance of a file, in key widths. Every file picks its own between the two.")] float caseFloatAmplitudeMinInKeys = 0.03f;
+        [SerializeField, Min(0f)] [Tooltip("Largest drift distance of a file, in key widths.")] float caseFloatAmplitudeMaxInKeys = 0.08f;
+        [SerializeField, Min(0.1f)] [Tooltip("Shortest time a file takes for one bob up and down, in seconds.")] float caseFloatSecondsPerCycleMin = 2.5f;
+        [SerializeField, Min(0.1f)] [Tooltip("Longest time a file takes for one bob up and down, in seconds.")] float caseFloatSecondsPerCycleMax = 4.5f;
+        [SerializeField, Range(0f, 10f)] [Tooltip("Largest slow tilt of a file in degrees. 0 keeps the files straight.")] float caseFloatSwayDegreesMax = 1.2f;
+
+        [Header("Route hint")]
+        [SerializeField] [Tooltip("Shows a dashed line along the keys from the magnifying glass to the nearest open case, so a new player sees that the desk is a keyboard.")] bool routeHintEnabled = true;
+        [SerializeField] [Tooltip("UntilFirstMove hides the line when the player first moves. UntilCaseReached keeps it, shortening from where the player stands, until the player reaches an open case.")] RouteHintVisibility routeHintVisibility = RouteHintVisibility.UntilCaseReached;
+        [SerializeField, Min(0.05f)] [Tooltip("Length of one dash, in key widths.")] float routeDashLengthInKeys = 0.2f;
+        [SerializeField, Min(0f)] [Tooltip("Gap between two dashes, in key widths.")] float routeGapLengthInKeys = 0.15f;
+        [SerializeField, Range(0.01f, 0.3f)] [Tooltip("Thickness of the line, in key widths.")] float routeWidthInKeys = 0.07f;
+        [SerializeField, Tooltip("How fast the dashes run towards the case, in key widths per second. 0 keeps them still.")] float routeFlowKeysPerSecond = 0.6f;
+        [SerializeField] [Tooltip("Colour of the dashes.")] Color routeColor = new Color(1f, 0.85f, 0.2f, 0.9f);
 
         [Header("Dwell")]
         [SerializeField, Min(0.1f)] [Tooltip("Seconds the magnifying glass has to stay on a case before the briefing opens.")] float dwellSeconds = 2f;
@@ -68,6 +90,17 @@ namespace DetectiveDave.OverworldPlay
         public Sprite DescriptionPaperSprite => descriptionPaperSprite;
         public Sprite LetterPaperSprite => letterPaperSprite;
         public Sprite RingSprite => ringSprite;
+        public Sprite ShiftKeycapSprite => shiftKeycapSprite;
+        public Color ShiftKeycapColor => shiftKeycapColor;
+        public float ShiftKeycapSizeShare => shiftKeycapSizeShare;
+        public CaseFloatSettings CaseFloat => new CaseFloatSettings(caseFloatEnabled, Mathf.Min(caseFloatAmplitudeMinInKeys, caseFloatAmplitudeMaxInKeys), Mathf.Max(caseFloatAmplitudeMinInKeys, caseFloatAmplitudeMaxInKeys), Mathf.Min(caseFloatSecondsPerCycleMin, caseFloatSecondsPerCycleMax), Mathf.Max(caseFloatSecondsPerCycleMin, caseFloatSecondsPerCycleMax), caseFloatSwayDegreesMax);
+        public bool RouteHintEnabled => routeHintEnabled;
+        public RouteHintVisibility RouteHintVisibility => routeHintVisibility;
+        public float RouteDashLengthInKeys => routeDashLengthInKeys;
+        public float RouteGapLengthInKeys => routeGapLengthInKeys;
+        public float RouteWidthInKeys => routeWidthInKeys;
+        public float RouteFlowKeysPerSecond => routeFlowKeysPerSecond;
+        public Color RouteColor => routeColor;
         public Font TextFont => textFont;
         public AudioClip[] TypewriterClicks => typewriterClicks;
         public AudioClip BackspaceClip => backspaceClip;
@@ -116,6 +149,7 @@ namespace DetectiveDave.OverworldPlay
                 if (!descriptionPaperSprite) missing.Add("descriptionPaperSprite");
                 if (!letterPaperSprite) missing.Add("letterPaperSprite");
                 if (!ringSprite) missing.Add("ringSprite");
+                if (!shiftKeycapSprite) missing.Add("shiftKeycapSprite");
                 if (!textFont) missing.Add("textFont");
                 if (typewriterClicks == null || typewriterClicks.Length == 0 || System.Array.TrueForAll(typewriterClicks, clip => !clip)) missing.Add("typewriterClicks");
                 return string.Join(", ", missing);

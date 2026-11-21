@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using DetectiveDave.KeyboardGrid;
+using DetectiveDave.GuardPlay;
 using DetectiveDave.KeyboardInput;
 using DetectiveDave.PlayerPlay;
 using UnityEngine;
@@ -36,6 +37,8 @@ namespace DetectiveDave.OverworldPlay
         CameraZoomView zoomView;
         ZoomFocus focus;
         DwellRingView ringView;
+        RouteHint routeHint;
+        RouteHintView routeView;
         SpriteRenderer backdrop;
         string pendingReportCaseId;
         bool subscribed;
@@ -63,7 +66,11 @@ namespace DetectiveDave.OverworldPlay
             intro.Begin(StartPlaying);
         }
 
-        void Update() => flow?.Tick(Time.deltaTime);
+        void Update()
+        {
+            flow?.Tick(Time.deltaTime);
+            UpdateRouteHint();
+        }
 
         void LateUpdate() => FitBackdrop();
 
@@ -111,6 +118,8 @@ namespace DetectiveDave.OverworldPlay
             BuildBackdrop();
             BuildDesk();
             BuildProgress();
+            BuildKeyboardLook();
+            BuildFloating();
             BuildPlayer();
             BuildScreenEffects();
             BuildFlow();
@@ -157,6 +166,8 @@ namespace DetectiveDave.OverworldPlay
             var keyCentres = gridView.Cells.ToDictionary(cell => cell.Key, cell => (Vector2)cell.Value.Center);
             var map = new DeskKeyMap(desk.Markers.Where(marker => marker.CaseFile).Select(marker => marker.ToDeskMarker(transform)).ToArray(), keyCentres);
             deskCases = new DeskCases(map, StateOf);
+            var caseIdsInDeskOrder = desk.Markers.Where(marker => marker.CaseFile).Select(marker => marker.CaseFile.Id).ToArray();
+            routeHint = new RouteHint(new DeskRoute(new KeyPathfinder(board, key => true), map, caseIdsInDeskOrder, StateOf), overworldSettings.RouteHintVisibility);
             ReportDeskIssues(map);
             ShowCaseStates();
         }
@@ -174,6 +185,22 @@ namespace DetectiveDave.OverworldPlay
             level = new DeskLevel();
             level.TryGetEnds(out var startKey, out _);
             foreach (var issue in map.Issues(startKey)) Debug.LogWarning($"Desk: {issue.Kind} (case {issue.CaseId}, other {issue.OtherCaseId}, key {issue.Key}).", desk);
+        }
+
+        void BuildKeyboardLook()
+        {
+            var keycaps = new GameObject("Shift Keycaps").AddComponent<ShiftKeycapsView>();
+            keycaps.transform.SetParent(transform, false);
+            keycaps.Configure(gridView, overworldSettings.ShiftKeycapSprite, overworldSettings.ShiftKeycapColor, overworldSettings.ShiftKeycapSizeShare);
+        }
+
+        void BuildFloating()
+        {
+            var floating = overworldSettings.CaseFloat;
+            if (!floating.Enabled) return;
+            var random = new UnityRandomSource();
+            foreach (var marker in desk.Markers.Where(candidate => candidate.CaseFile))
+                marker.gameObject.AddComponent<CaseFloatView>().Configure(FloatDrift.Roll(floating, random), board.KeyWorldSize);
         }
 
         void BuildPlayer()
@@ -204,6 +231,9 @@ namespace DetectiveDave.OverworldPlay
             ringView = new GameObject("Dwell Ring").AddComponent<DwellRingView>();
             ringView.transform.SetParent(transform, false);
             ringView.Configure(view.transform, overworldSettings.RingSprite, overworldSettings.RingRadiusInKeys * board.KeyWorldSize, overworldSettings.RingWidthInKeys * board.KeyWorldSize, overworldSettings.RingTrackColor, overworldSettings.RingFillColor);
+            routeView = new GameObject("Route Hint").AddComponent<RouteHintView>();
+            routeView.transform.SetParent(transform, false);
+            routeView.Configure(gridView, overworldSettings, board.KeyWorldSize);
             var sound = new GameObject("Typewriter Sound").AddComponent<TypewriterSound>();
             sound.transform.SetParent(transform, false);
             sound.Configure(overworldSettings);
@@ -226,6 +256,7 @@ namespace DetectiveDave.OverworldPlay
         void StartPlaying()
         {
             if (level.TryGetEnds(out var startKey, out _)) game.OnKeyPressed(startKey);
+            BeginRouteHint();
             PlayPendingReport();
         }
 
@@ -247,6 +278,19 @@ namespace DetectiveDave.OverworldPlay
         {
             progress.MarkSolved(caseId);
             ShowCaseStates();
+            BeginRouteHint();
+        }
+
+        void BeginRouteHint()
+        {
+            if (level.TryGetEnds(out var startKey, out _)) routeHint.Begin(startKey);
+        }
+
+        void UpdateRouteHint()
+        {
+            if (!routeView) return;
+            if (overworldSettings.RouteHintEnabled && flow != null && flow.Stage == OverworldStage.Desk && routeHint.HasLine) routeView.Show(routeHint.Keys);
+            else routeView.Hide();
         }
 
         void Subscribe()
@@ -255,6 +299,7 @@ namespace DetectiveDave.OverworldPlay
             subscribed = true;
             keys.KeyPressed += OnKeyPressed;
             game.Moved += flow.OnMoved;
+            game.Moved += routeHint.OnMoved;
             game.StateChanged += flow.OnPlayerStateChanged;
         }
 
@@ -264,6 +309,7 @@ namespace DetectiveDave.OverworldPlay
             subscribed = false;
             keys.KeyPressed -= OnKeyPressed;
             game.Moved -= flow.OnMoved;
+            game.Moved -= routeHint.OnMoved;
             game.StateChanged -= flow.OnPlayerStateChanged;
         }
 

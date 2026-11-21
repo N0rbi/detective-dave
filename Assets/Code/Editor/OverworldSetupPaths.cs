@@ -21,6 +21,7 @@ namespace DetectiveDave.EditorTools
         public const string DescriptionPaperPath = ArtFolder + "/placeholder_paper_description.png";
         public const string LetterPaperPath = ArtFolder + "/placeholder_paper_letter.png";
         public const string RingPath = ArtFolder + "/placeholder_ring.png";
+        public const string KeycapPath = ArtFolder + "/placeholder_keycap.png";
         public const string BackspacePath = AudioFolder + "/placeholder_typewriter_backspace.wav";
         public const string FontPath = FontFolder + "/placeholder_typewriter_font.ttf";
 
@@ -33,7 +34,7 @@ namespace DetectiveDave.EditorTools
 
         public static readonly string[] PlaceholderPaths =
         {
-            DeskTopPath, DescriptionPaperPath, LetterPaperPath, RingPath, BackspacePath, FontPath,
+            DeskTopPath, DescriptionPaperPath, LetterPaperPath, RingPath, KeycapPath, BackspacePath, FontPath,
             ClickPaths[0], ClickPaths[1], ClickPaths[2],
         };
 
