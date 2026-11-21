@@ -8,6 +8,7 @@ namespace DetectiveDave.PlayerPlay
         Slipping,
         BumpingWall,
         FallingInGap,
+        Caught,
         Respawning,
         Goal
     }

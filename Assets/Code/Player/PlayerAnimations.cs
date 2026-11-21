@@ -81,23 +81,15 @@ namespace DetectiveDave.PlayerPlay
             Run(sequence, done);
         }
 
-        public void DropFromTop(Vector2 target, float marginWorld, Action done)
+        public void FallForward(Vector2 forward, Action done)
         {
             if (!HasSettings()) return;
-            Cancel();
-            view.ResetVisual(target);
-            var height = GetComponent<Renderer>().bounds.size.y;
-            var start = transform.position;
-            start.y = TopEdgeY(target.y) + marginWorld + height;
-            transform.position = start;
-            Run(transform.DOMoveY(target.y, Seconds(view.Settings.DropSeconds)).SetEase(Ease.OutBounce), done);
-        }
-
-        static float TopEdgeY(float fallbackY)
-        {
-            var camera = Camera.main;
-            if (!camera || !camera.orthographic) return fallbackY;
-            return camera.transform.position.y + camera.orthographicSize;
+            var settings = view.Settings;
+            var tipDirection = forward.x >= 0f ? -1f : 1f;
+            var sequence = DOTween.Sequence();
+            sequence.Append(transform.DORotate(new Vector3(0f, 0f, tipDirection * settings.FallForwardDegrees), Seconds(settings.FallForwardSeconds)).SetEase(Ease.InQuad));
+            sequence.AppendInterval(settings.FallForwardHoldSeconds);
+            Run(sequence, done);
         }
 
         Vector3 SquashedScale(Vector2 direction)

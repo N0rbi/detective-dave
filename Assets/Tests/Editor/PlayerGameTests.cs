@@ -18,7 +18,6 @@ namespace DetectiveDave.Tests
         const Key Unplaced = Key.W;
         const float KeyWorldSize = 2f;
         const float SlipDistanceInKeys = 0.3f;
-        const float DropMarginInKeys = 1f;
         const float BumpDistanceInKeys = 0.35f;
 
         static readonly Vector2 StartWorld = new Vector2(0f, 0f);
@@ -57,7 +56,7 @@ namespace DetectiveDave.Tests
             animations = new FakeAnimations();
             presentation = new FakePresentation();
             gust = new FakeDashGust();
-            game = new PlayerGame(board, level, animations, presentation, gust, new PlayerGameSettings(3, 3, SlipDistanceInKeys, DropMarginInKeys, BumpDistanceInKeys));
+            game = new PlayerGame(board, level, animations, presentation, gust, new PlayerGameSettings(3, 3, SlipDistanceInKeys, BumpDistanceInKeys));
             moved = new List<Key>();
             failed = 0;
             goalReached = 0;
@@ -225,7 +224,6 @@ namespace DetectiveDave.Tests
             game.OnKeyPressed(Next);
             animations.CompleteLast();
             Assert.AreEqual(0, failed);
-            Assert.AreEqual(0, CountCalls(nameof(FakeAnimations.DropFromTop)));
             Assert.AreEqual(0, moved.Count);
         }
 
@@ -328,7 +326,7 @@ namespace DetectiveDave.Tests
             game.OnKeyPressed(Far);
             animations.CompleteLast();
             AssertRespawning();
-            animations.CompleteLast();
+            game.CompleteRespawn();
             Assert.AreEqual(PlayerState.Idle, game.State);
             Assert.AreEqual(1, failed);
         }
@@ -346,7 +344,7 @@ namespace DetectiveDave.Tests
             Assert.AreEqual(PlayerState.FallingInGap, game.State);
             animations.CompleteLast();
             AssertRespawning();
-            animations.CompleteLast();
+            game.CompleteRespawn();
             Assert.AreEqual(PlayerState.Idle, game.State);
             Assert.AreEqual(1, failed);
         }
@@ -361,10 +359,11 @@ namespace DetectiveDave.Tests
             Assert.IsTrue(presentation.Climbing);
             game.OnKeyPressed(Far);
             animations.CompleteLast();
+            game.CompleteRespawn();
             Assert.AreEqual(0, presentation.Frame);
             Assert.AreEqual(Facing.Right, presentation.Facing);
             Assert.IsFalse(presentation.Climbing);
-            animations.CompleteLast();
+            Assert.AreEqual(StartWorld, animations.LastShownAt);
             game.OnKeyPressed(Next);
             Assert.AreEqual(PlayerState.Moving, game.State);
         }
@@ -378,7 +377,87 @@ namespace DetectiveDave.Tests
             Assert.AreEqual(Facing.Left, presentation.Facing);
             game.OnKeyPressed(Far);
             animations.CompleteLast();
+            game.CompleteRespawn();
             Assert.AreEqual(Facing.Right, presentation.Facing);
+        }
+
+        [Test]
+        public void GetCaughtFallsForwardThenRespawns()
+        {
+            Begin();
+            game.GetCaught();
+            Assert.AreEqual(PlayerState.Caught, game.State);
+            Assert.AreEqual(Vector2.right, animations.LastFallForward);
+            AssertPressesAreIgnored();
+            animations.CompleteLast();
+            AssertRespawning();
+            game.CompleteRespawn();
+            Assert.AreEqual(PlayerState.Idle, game.State);
+        }
+
+        [Test]
+        public void GetCaughtInTheMiddleOfAStepCancelsTheStep()
+        {
+            animations.KeepsPendingOnCancel = true;
+            Begin();
+            game.OnKeyPressed(Next);
+            game.GetCaught();
+            Assert.AreEqual(PlayerState.Caught, game.State);
+            animations.CompleteAll();
+            Assert.AreEqual(1, failed);
+            CollectionAssert.IsEmpty(moved);
+        }
+
+        [Test]
+        public void GetCaughtIsIgnoredBeforeTheStartKeyIsPressed()
+        {
+            game.Restart();
+            game.GetCaught();
+            Assert.AreEqual(PlayerState.NotStarted, game.State);
+            Assert.AreEqual(0, CountCalls(nameof(FakeAnimations.FallForward)));
+        }
+
+        [Test]
+        public void GetCaughtIsIgnoredOnceTheGoalIsReached()
+        {
+            Begin();
+            game.OnKeyPressed(Next);
+            animations.CompleteAll();
+            game.OnKeyPressed(Goal);
+            animations.CompleteAll();
+            game.GetCaught();
+            Assert.AreEqual(PlayerState.Goal, game.State);
+            Assert.AreEqual(0, CountCalls(nameof(FakeAnimations.FallForward)));
+        }
+
+        [Test]
+        public void GetCaughtIsIgnoredWhileFallingIntoAGap()
+        {
+            level.Kinds[Next] = CellKind.Gap;
+            Begin();
+            game.OnKeyPressed(Next);
+            game.GetCaught();
+            Assert.AreEqual(PlayerState.FallingInGap, game.State);
+            Assert.AreEqual(0, CountCalls(nameof(FakeAnimations.FallForward)));
+        }
+
+        [Test]
+        public void CompleteRespawnDoesNothingUnlessRespawning()
+        {
+            Begin();
+            game.CompleteRespawn();
+            Assert.AreEqual(1, CountCalls(nameof(FakeAnimations.ShowResetAt)));
+            Assert.AreEqual(PlayerState.Idle, game.State);
+        }
+
+        [Test]
+        public void CurrentKeyFollowsTheWalk()
+        {
+            Begin();
+            Assert.AreEqual(Start, game.CurrentKey);
+            game.OnKeyPressed(Next);
+            animations.CompleteLast();
+            Assert.AreEqual(Next, game.CurrentKey);
         }
 
         [Test]
@@ -503,7 +582,6 @@ namespace DetectiveDave.Tests
             animations.CompleteAll();
             Assert.AreEqual(0, failed);
             Assert.AreEqual(PlayerState.NotStarted, game.State);
-            Assert.AreEqual(0, CountCalls(nameof(FakeAnimations.DropFromTop)));
         }
 
         [Test]
@@ -527,7 +605,6 @@ namespace DetectiveDave.Tests
             animations.CompleteAll();
             Assert.IsFalse(game.IsActive);
             Assert.AreEqual(0, failed);
-            Assert.AreEqual(0, CountCalls(nameof(FakeAnimations.DropFromTop)));
             int calls = animations.Calls.Count;
             game.OnKeyPressed(Next);
             Assert.AreEqual(calls, animations.Calls.Count);
@@ -739,9 +816,7 @@ namespace DetectiveDave.Tests
         void AssertRespawning()
         {
             Assert.AreEqual(PlayerState.Respawning, game.State);
-            Assert.AreEqual(1, CountCalls(nameof(FakeAnimations.DropFromTop)));
-            Assert.AreEqual(StartWorld, animations.LastDropTarget);
-            Assert.AreEqual(DropMarginInKeys * KeyWorldSize, animations.LastDropMargin, 0.0001f);
+            Assert.AreEqual(1, failed);
         }
 
         void AssertPressesAreIgnored()
@@ -796,7 +871,7 @@ namespace DetectiveDave.Tests
         [Test]
         public void ForgivingMovesIgnoreAKeyThatIsNotANeighbour()
         {
-            game = new PlayerGame(board, level, animations, presentation, gust, new PlayerGameSettings(3, 3, SlipDistanceInKeys, DropMarginInKeys, BumpDistanceInKeys, true));
+            game = new PlayerGame(board, level, animations, presentation, gust, new PlayerGameSettings(3, 3, SlipDistanceInKeys, BumpDistanceInKeys, true));
             Begin();
             game.OnKeyPressed(Far);
             Assert.AreEqual(PlayerState.Idle, game.State);
@@ -807,7 +882,7 @@ namespace DetectiveDave.Tests
         [Test]
         public void ForgivingMovesStillWalkToANeighbour()
         {
-            game = new PlayerGame(board, level, animations, presentation, gust, new PlayerGameSettings(3, 3, SlipDistanceInKeys, DropMarginInKeys, BumpDistanceInKeys, true));
+            game = new PlayerGame(board, level, animations, presentation, gust, new PlayerGameSettings(3, 3, SlipDistanceInKeys, BumpDistanceInKeys, true));
             Begin();
             game.OnKeyPressed(Next);
             Assert.AreEqual(PlayerState.Moving, game.State);

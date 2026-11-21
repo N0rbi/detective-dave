@@ -185,7 +185,8 @@ namespace DetectiveDave.OverworldPlay
             gust.transform.SetParent(transform, false);
             gust.Configure(playerSettings, gridView.Scale, view.transform);
             var animations = view.GetComponent<IPlayerAnimations>();
-            game = new PlayerGame(board, level, animations, view, gust, new PlayerGameSettings(playerSettings.WalkFrames.Length, playerSettings.ClimbFrames.Length, playerSettings.SlipDistanceInKeys, playerSettings.DropMarginInKeys, playerSettings.BumpDistanceInKeys, playerSettings.ForgivingMoves));
+            game = new PlayerGame(board, level, animations, view, gust, new PlayerGameSettings(playerSettings.WalkFrames.Length, playerSettings.ClimbFrames.Length, playerSettings.SlipDistanceInKeys, playerSettings.BumpDistanceInKeys, playerSettings.ForgivingMoves));
+            game.Failed += game.CompleteRespawn;
         }
 
         void BuildScreenEffects()

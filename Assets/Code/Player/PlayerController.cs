@@ -29,11 +29,24 @@ namespace DetectiveDave.PlayerPlay
         EndDecorationsDirector decorations;
         GoalSequence goalSequence;
         IntroSequence introSequence;
+        RestartSequence restartSequence;
         SpiralScreenWipe wipeView;
         CameraZoomView zoomView;
         bool subscribed;
 
         public event Action GoalReached;
+        public event Action WorldReset;
+
+        public bool GuardsMayMove => game != null && restartSequence != null && game.IsActive && !SequenceRunning && game.IsVulnerable;
+
+        public Key PlayerKey => game.CurrentKey;
+
+        bool SequenceRunning => goalSequence.IsRunning || introSequence.IsRunning || restartSequence.IsRunning;
+
+        public void CatchPlayer()
+        {
+            if (!SequenceRunning) game.GetCaught();
+        }
 
         void Awake()
         {
@@ -64,6 +77,7 @@ namespace DetectiveDave.PlayerPlay
         {
             Unsubscribe();
             goalSequence?.Cancel();
+            restartSequence?.Cancel();
             game?.Stop();
             decorations?.Clear();
         }
@@ -77,9 +91,11 @@ namespace DetectiveDave.PlayerPlay
         void RestartGame()
         {
             Subscribe();
+            restartSequence.Cancel();
             game.Restart();
             decorations.Refresh(game.IsActive);
             UpdateMessage();
+            WorldReset?.Invoke();
             introSequence.Begin();
         }
 
@@ -143,8 +159,9 @@ namespace DetectiveDave.PlayerPlay
 
         void BuildGame()
         {
-            game = new PlayerGame(board, level, animations, view, gustView, new PlayerGameSettings(settings.WalkFrames.Length, settings.ClimbFrames.Length, settings.SlipDistanceInKeys, settings.DropMarginInKeys, settings.BumpDistanceInKeys, settings.ForgivingMoves));
+            game = new PlayerGame(board, level, animations, view, gustView, new PlayerGameSettings(settings.WalkFrames.Length, settings.ClimbFrames.Length, settings.SlipDistanceInKeys, settings.BumpDistanceInKeys, settings.ForgivingMoves));
             game.GoalReached += ForwardGoalReached;
+            game.Failed += BeginRestart;
         }
 
         void BuildDecorations()
@@ -166,6 +183,7 @@ namespace DetectiveDave.PlayerPlay
             wipeView.Configure(settings, zoomView);
             var focus = new ZoomFocus(board, settings.EvidenceHandRiseInKeys, settings.ZoomFocusHandShare);
             introSequence = new IntroSequence(board, level, wipeView, zoomView, focus);
+            restartSequence = new RestartSequence(wipeView, introSequence, ResetAfterFail);
             goalSequence = new GoalSequence(board, level, decorations, evidenceView, zoomView, focus, wipeView, CaseSession.IsActive ? (ILevelAdvance)new OverworldReturn() : new LoaderAdvance(GetComponent<LevelLoader>()), introSequence, settings.EvidenceHandRiseInKeys);
         }
 
@@ -187,21 +205,31 @@ namespace DetectiveDave.PlayerPlay
 
         void OnKeyPressed(Key key)
         {
-            if (!goalSequence.IsRunning && !introSequence.IsRunning) game.OnKeyPressed(key);
+            if (!SequenceRunning) game.OnKeyPressed(key);
         }
 
         void OnLevelChanged()
         {
             goalSequence.HandleLevelChanged();
+            restartSequence.Cancel();
             game.Restart();
             decorations.Refresh(game.IsActive);
             UpdateMessage();
+            WorldReset?.Invoke();
             if (!goalSequence.IsAdvancing) introSequence.Begin();
         }
 
         void UpdateMessage()
         {
             if (messages) messages.PlayerMessage = game.EndsMissing ? EndsMissingMessage : null;
+        }
+
+        void BeginRestart() => restartSequence.Begin(view.transform.position);
+
+        void ResetAfterFail()
+        {
+            game.CompleteRespawn();
+            WorldReset?.Invoke();
         }
 
         void ForwardGoalReached()

@@ -10,7 +10,7 @@ namespace DetectiveDave.PlayerPlay
     /// Starting any animation cancels a running one without its callback.
     /// Breathing is a loop with no callback: <see cref="StartBreathing"/> does nothing when it already runs, and it stops (scale back to <see cref="PlayerView.BaseLocalScale"/>) on <see cref="StopBreathing"/>, <see cref="CancelAllWithoutCallbacks"/>, <see cref="ShowResetAt"/> and before any other animation.
     /// <see cref="BumpWall"/> walks to <c>towards</c>, squashes, and ends back exactly at <c>home</c> with the base scale; <c>returning</c> follows the same rules as <c>done</c> and is invoked when the way back starts.
-    /// <see cref="ShowResetAt"/> and <see cref="DropFromTop"/> fully reset position, localScale (to <see cref="PlayerView.BaseLocalScale"/>), rotation (identity) and alpha (1).
+    /// <see cref="ShowResetAt"/> fully resets position, localScale (to <see cref="PlayerView.BaseLocalScale"/>), rotation (identity) and alpha (1).
     /// </summary>
     public interface IPlayerAnimations
     {
@@ -24,7 +24,7 @@ namespace DetectiveDave.PlayerPlay
 
         void FadeIntoGap(Action done);
 
-        void DropFromTop(Vector2 target, float marginWorld, Action done);
+        void FallForward(Vector2 forward, Action done);
 
         void StartBreathing();
 

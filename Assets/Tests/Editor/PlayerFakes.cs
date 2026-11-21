@@ -106,9 +106,7 @@ namespace DetectiveDave.Tests
 
         public int BreathingStarts { get; private set; }
 
-        public Vector2 LastDropTarget { get; private set; }
-
-        public float LastDropMargin { get; private set; }
+        public Vector2 LastFallForward { get; private set; }
 
         public Vector2 LastShownAt { get; private set; }
 
@@ -161,12 +159,11 @@ namespace DetectiveDave.Tests
             pending.Add(done);
         }
 
-        public void DropFromTop(Vector2 target, float marginWorld, Action done)
+        public void FallForward(Vector2 forward, Action done)
         {
-            Calls.Add(nameof(DropFromTop));
+            Calls.Add(nameof(FallForward));
             IsBreathing = false;
-            LastDropTarget = target;
-            LastDropMargin = marginWorld;
+            LastFallForward = forward;
             pending.Add(done);
         }
 

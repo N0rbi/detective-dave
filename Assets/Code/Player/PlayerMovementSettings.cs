@@ -21,12 +21,13 @@ namespace DetectiveDave.PlayerPlay
         [SerializeField, Min(0.01f)] [Tooltip("Seconds of the backwards wobble after pressing a key that is not a neighbour.")] float slipSeconds = 0.4f;
         [SerializeField, Min(0.01f)] [Tooltip("Seconds of the whole bump when walking into a wall: lean in, squash, return.")] float wallSquashSeconds = 0.5f;
         [SerializeField, Min(0.01f)] [Tooltip("Seconds the player takes to fade away in a gap.")] float gapFadeSeconds = 0.8f;
-        [SerializeField, Min(0.01f)] [Tooltip("Seconds the respawn drop from the top of the screen takes.")] float dropSeconds = 0.6f;
+        [SerializeField, Min(0.01f)] [Tooltip("Seconds the player takes to fall flat on the face when a guard catches them.")] float fallForwardSeconds = 0.45f;
+        [SerializeField, Min(0f)] [Tooltip("Seconds the player lies there before the screen spirals away.")] float fallForwardHoldSeconds = 0.4f;
 
         [Header("Distances")]
         [SerializeField, Min(0f)] [FormerlySerializedAs("slipDistance")] [Tooltip("Key sizes the player is thrown backwards when slipping.")] float slipDistanceInKeys = 0.3f;
-        [SerializeField, Min(0f)] [FormerlySerializedAs("dropStartHeight")] [Tooltip("Key sizes above the camera top edge where the respawn drop starts.")] float dropMarginInKeys = 1f;
         [SerializeField, Min(0f)] [Tooltip("Key sizes the player leans towards a wall before squashing against it.")] float bumpDistanceInKeys = 0.35f;
+        [SerializeField, Range(30f, 100f)] [Tooltip("Degrees the player tips over when a guard catches them.")] float fallForwardDegrees = 90f;
         [SerializeField, Range(0.2f, 1f)] [Tooltip("Scale factor the player is squashed to when walking into a wall.")] float squashScale = 0.6f;
         [SerializeField, Min(0f)] [Tooltip("Degrees the player tilts backwards when slipping.")] float slipTiltDegrees = 15f;
 
@@ -85,9 +86,10 @@ namespace DetectiveDave.PlayerPlay
         public float SlipSeconds => slipSeconds;
         public float WallSquashSeconds => wallSquashSeconds;
         public float GapFadeSeconds => gapFadeSeconds;
-        public float DropSeconds => dropSeconds;
+        public float FallForwardSeconds => fallForwardSeconds;
+        public float FallForwardHoldSeconds => fallForwardHoldSeconds;
+        public float FallForwardDegrees => fallForwardDegrees;
         public float SlipDistanceInKeys => slipDistanceInKeys;
-        public float DropMarginInKeys => dropMarginInKeys;
         public float BumpDistanceInKeys => bumpDistanceInKeys;
         public bool DashGustEnabled => dashGustEnabled;
         public float GustBandCenterInHeights => gustBandCenterInHeights;

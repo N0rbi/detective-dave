@@ -44,6 +44,8 @@ namespace DetectiveDave.PlayerPlay
 
         public PlayerState State => state.State;
 
+        public Key CurrentKey => currentKey;
+
         public bool IsActive { get; private set; }
 
         public bool EndsMissing { get; private set; }
@@ -231,12 +233,30 @@ namespace DetectiveDave.PlayerPlay
             return facing.ForwardDirection();
         }
 
+        public void GetCaught()
+        {
+            if (!IsActive || !IsVulnerable) return;
+            generation++;
+            animations.CancelAllWithoutCallbacks();
+            gust.Clear();
+            state.Enter(PlayerState.Caught);
+            animations.FallForward(facing.ForwardDirection(), Guard(Respawn));
+        }
+
+        public void CompleteRespawn()
+        {
+            if (!IsActive || state.State != PlayerState.Respawning) return;
+            ResetToStart();
+            animations.ShowResetAt(WorldOf(startKey));
+            state.Enter(PlayerState.Idle);
+        }
+
+        public bool IsVulnerable => state.State == PlayerState.Idle || state.State == PlayerState.Moving || state.State == PlayerState.Slipping || state.State == PlayerState.BumpingWall;
+
         void Respawn()
         {
-            Failed?.Invoke();
             state.Enter(PlayerState.Respawning);
-            ResetToStart();
-            animations.DropFromTop(WorldOf(startKey), settings.DropMarginInKeys * board.KeyWorldSize, Guard(() => state.Enter(PlayerState.Idle)));
+            Failed?.Invoke();
         }
 
         void ResetToStart()
