@@ -35,11 +35,12 @@ namespace DetectiveDave.PlayerPlay
 
         [Header("Dash gust")]
         [SerializeField] [Tooltip("Turns the whole dash gust on or off. The detective dashes, the magnifying glass does not.")] bool dashGustEnabled = true;
+        [SerializeField, Range(0f, 1f)] [Tooltip("Height of the middle of the gust above the player's feet, as a share of the player height. 0.55 puts the band between the shoulders (about 0.77) and the upper legs (about 0.33).")] float gustBandCenterInHeights = 0.55f;
         [SerializeField] [Tooltip("The wind lines drawn behind the player when it dashes to a key. Each one has its own offset, thickness, length and start. Remove all to turn the gust off.")] GustLine[] gustLines =
         {
-            new GustLine(-0.25f, 0.03f, 0.9f),
-            new GustLine(0.05f, 0.06f, 0.7f),
-            new GustLine(0.3f, 0.04f, 1f)
+            new GustLine(-0.19f, 0.03f, 0.9f),
+            new GustLine(0f, 0.06f, 0.7f),
+            new GustLine(0.19f, 0.04f, 1f)
         };
         [SerializeField] [Tooltip("Colour of the gust lines. Its alpha is the starting opacity.")] Color gustColor = new Color(0.2f, 0.23f, 0.34f, 0.7f);
         [SerializeField, Min(0.01f)] [Tooltip("Seconds the gust lines take to shorten and fade away.")] float gustFadeSeconds = 0.25f;
@@ -89,6 +90,7 @@ namespace DetectiveDave.PlayerPlay
         public float DropMarginInKeys => dropMarginInKeys;
         public float BumpDistanceInKeys => bumpDistanceInKeys;
         public bool DashGustEnabled => dashGustEnabled;
+        public float GustBandCenterInHeights => gustBandCenterInHeights;
         public GustLine[] GustLines => gustLines;
         public Color GustColor => gustColor;
         public float GustFadeSeconds => gustFadeSeconds;

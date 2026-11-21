@@ -137,5 +137,40 @@ namespace DetectiveDave.Tests
             Assert.AreEqual(0f, GustGeometry.Shrunk(segment, 1f).Length, Tolerance);
             Assert.AreEqual(segment.Length, GustGeometry.Shrunk(segment, 0f).Length, Tolerance);
         }
+
+        [Test]
+        public void LiftMovesTheWholeSegmentUp()
+        {
+            var plain = GustGeometry.Follow(Origin, FarEnd, FarEnd, OneLine(), PlayerHeight)[0];
+            var lifted = GustGeometry.Follow(Origin, FarEnd, FarEnd, OneLine(), PlayerHeight, new Vector2(0f, 1.1f))[0];
+            Assert.AreEqual(plain.Start.y + 1.1f, lifted.Start.y, Tolerance);
+            Assert.AreEqual(plain.End.y + 1.1f, lifted.End.y, Tolerance);
+            Assert.AreEqual(plain.End.x, lifted.End.x, Tolerance);
+        }
+
+        [Test]
+        public void OffsetsAreRelativeToTheLiftedBandCentre()
+        {
+            var lines = new[] { new GustLine(-0.19f, 0.03f, 1f), new GustLine(0f, 0.06f, 1f), new GustLine(0.19f, 0.04f, 1f) };
+            var segments = GustGeometry.Follow(Origin, FarEnd, FarEnd, lines, PlayerHeight, new Vector2(0f, 1.1f));
+            Assert.AreEqual(1.1f - 0.38f, segments[0].End.y, Tolerance);
+            Assert.AreEqual(1.1f, segments[1].End.y, Tolerance);
+            Assert.AreEqual(1.1f + 0.38f, segments[2].End.y, Tolerance);
+        }
+
+        [Test]
+        public void LiftAppliesToVerticalMovesToo()
+        {
+            var upEnd = new Vector2(0f, 4f);
+            var segment = GustGeometry.Follow(Origin, upEnd, upEnd, OneLine(), PlayerHeight, new Vector2(0f, 1.1f))[0];
+            Assert.AreEqual(0f, segment.End.x, Tolerance);
+            Assert.AreEqual(5.1f, segment.End.y, Tolerance);
+        }
+
+        [Test]
+        public void LiftDoesNotCreateSegmentsWithoutTravel()
+        {
+            Assert.IsEmpty(GustGeometry.Follow(Origin, FarEnd, Origin, OneLine(), PlayerHeight, new Vector2(0f, 1.1f)));
+        }
     }
 }

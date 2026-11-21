@@ -55,7 +55,7 @@ namespace DetectiveDave.PlayerPlay
         {
             if (!following) return;
             segments.Clear();
-            segments.AddRange(GustGeometry.Follow(start, limit, player.position, settings.GustLines, PlayerHeightInWorld));
+            segments.AddRange(GustGeometry.Follow(start, limit, player.position, settings.GustLines, PlayerHeightInWorld, BandLift));
             MatchLineCount();
             Apply(0f);
             if (HasArrived || Time.time - followStartedAt > FollowTimeoutSeconds) FadeOut();
@@ -72,6 +72,8 @@ namespace DetectiveDave.PlayerPlay
         }
 
         bool HasArrived => ((Vector2)player.position - limit).sqrMagnitude < ArrivalToleranceSquared;
+
+        Vector2 BandLift => Vector2.up * (settings.GustBandCenterInHeights * PlayerHeightInWorld);
 
         float PlayerHeightInWorld => settings.HeightInKeys * keyScale * transform.lossyScale.x;
 

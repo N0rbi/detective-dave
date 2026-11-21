@@ -8,7 +8,7 @@ namespace DetectiveDave.PlayerPlay
     {
         const float MinTravel = 0.0001f;
 
-        public static GustSegment[] Follow(Vector2 start, Vector2 limit, Vector2 current, IReadOnlyList<GustLine> lines, float playerHeight)
+        public static GustSegment[] Follow(Vector2 start, Vector2 limit, Vector2 current, IReadOnlyList<GustLine> lines, float playerHeight, Vector2 lift = default)
         {
             var path = limit - start;
             float reach = path.magnitude;
@@ -17,7 +17,7 @@ namespace DetectiveDave.PlayerPlay
             float travelled = Mathf.Clamp(Vector2.Dot(current - start, direction), 0f, reach);
             if (travelled < MinTravel) return Array.Empty<GustSegment>();
             var segments = new GustSegment[lines.Count];
-            for (int index = 0; index < segments.Length; index++) segments[index] = SegmentOf(lines[index], start, direction, travelled, playerHeight);
+            for (int index = 0; index < segments.Length; index++) segments[index] = SegmentOf(lines[index], start, direction, travelled, playerHeight, lift);
             return segments;
         }
 
@@ -27,10 +27,10 @@ namespace DetectiveDave.PlayerPlay
             return new GustSegment(tail, segment.End, segment.Thickness);
         }
 
-        static GustSegment SegmentOf(GustLine line, Vector2 start, Vector2 direction, float travelled, float playerHeight)
+        static GustSegment SegmentOf(GustLine line, Vector2 start, Vector2 direction, float travelled, float playerHeight, Vector2 lift)
         {
             var across = new Vector2(-direction.y, direction.x) * (line.OffsetAcrossInHeights * playerHeight);
-            var head = start + direction * travelled + across;
+            var head = start + lift + direction * travelled + across;
             float length = Mathf.Min(travelled * line.LengthShare, travelled);
             return new GustSegment(head - direction * length, head, line.ThicknessInHeights * playerHeight);
         }
