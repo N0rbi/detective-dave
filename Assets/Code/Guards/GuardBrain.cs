@@ -35,6 +35,8 @@ namespace DetectiveDave.GuardPlay
 
         public GuardMode Mode { get; private set; }
 
+        public bool IsMoving => moving;
+
         public GuardAction Tick(float deltaSeconds, Key playerKey)
         {
             if (Mode == GuardMode.Catching) return GuardAction.Stay();

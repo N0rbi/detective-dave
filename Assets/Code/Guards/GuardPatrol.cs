@@ -39,5 +39,7 @@ namespace DetectiveDave.GuardPlay
         public float PatrolSecondsPerKey => patrolSecondsPerKey;
 
         public float ChaseSecondsPerKey => chaseSecondsPerKey;
+
+        public GuardPatrolData ToData() => new GuardPatrolData(startKey, endKey, waitBeforeMoveSeconds, waitAtEndSeconds, patrolSecondsPerKey, chaseSecondsPerKey);
     }
 }
