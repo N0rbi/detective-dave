@@ -115,7 +115,7 @@ namespace DetectiveDave.OverworldPlay
             if (keyboard.anyKey.wasPressedThisFrame) gate.OnAnyKey();
             bool wasWritable = gate.IsWritable;
             int revealed = gate.Tick(Time.deltaTime);
-            if (revealed > 0 && mode == Mode.Letter) RevealDescription();
+            if (revealed > 0 && mode == Mode.Letter) RevealDescriptionWithSound();
             if (!wasWritable && gate.IsWritable) ShowLetterPaper();
             if (mode == Mode.Review && wasWritable && keyboard.anyKey.wasPressedThisFrame) FinishReview();
             if (gate.IsWritable && mode != Mode.Review && keyboard.backspaceKey.wasPressedThisFrame) Backspace();
@@ -290,7 +290,11 @@ namespace DetectiveDave.OverworldPlay
             if (token == generation) report();
         }
 
-        void RevealDescription() => ShowDescription(gate.VisibleCount);
+        void RevealDescriptionWithSound()
+        {
+            ShowDescription(gate.VisibleCount);
+            sound.PlayDescriptionKey();
+        }
 
         void ShowDescription(int visibleCount) => descriptionPaper.SetText(description.Substring(0, Mathf.Min(visibleCount, description.Length)), settings.DescriptionTextColor);
 

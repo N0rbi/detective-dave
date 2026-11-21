@@ -47,6 +47,9 @@ namespace DetectiveDave.OverworldPlay
         [SerializeField, Range(0f, 1f)] [Tooltip("Volume of the typewriter clicks.")] float clickVolume = 0.8f;
         [SerializeField, Range(0.5f, 1.5f)] [Tooltip("Lowest pitch of a click.")] float clickPitchMin = 0.94f;
         [SerializeField, Range(0.5f, 1.5f)] [Tooltip("Highest pitch of a click.")] float clickPitchMax = 1.06f;
+        [SerializeField, Range(0f, 1f)] [Tooltip("Quietest strike as a share of the click volume. Every strike picks a random volume between the two shares.")] float clickVolumeShareMin = 0.85f;
+        [SerializeField, Range(0f, 1f)] [Tooltip("Loudest strike as a share of the click volume.")] float clickVolumeShareMax = 1f;
+        [SerializeField, Min(0f)] [Tooltip("Fewest seconds between two clicks of the description typing, so skipping sounds like fast typing and not a buzz.")] float minSecondsBetweenClicks = 0.03f;
         [SerializeField] [Tooltip("Plays a click for every letter of the description as it types in.")] bool descriptionClicks = true;
         [SerializeField, Range(0f, 1f)] [Tooltip("Volume of the description clicks as a share of the normal click volume.")] float descriptionClickShare = 0.5f;
 
@@ -82,6 +85,9 @@ namespace DetectiveDave.OverworldPlay
         public float ClickVolume => clickVolume;
         public float ClickPitchMin => Mathf.Min(clickPitchMin, clickPitchMax);
         public float ClickPitchMax => Mathf.Max(clickPitchMin, clickPitchMax);
+        public float ClickVolumeShareMin => Mathf.Min(clickVolumeShareMin, clickVolumeShareMax);
+        public float ClickVolumeShareMax => Mathf.Max(clickVolumeShareMin, clickVolumeShareMax);
+        public float MinSecondsBetweenClicks => minSecondsBetweenClicks;
         public bool DescriptionClicks => descriptionClicks;
         public float DescriptionClickShare => descriptionClickShare;
         public TypingRules TypingRules => new TypingRules(autoTypeFreeCharacters);
