@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace DetectiveDave.OverworldPlay
 {
@@ -10,9 +11,9 @@ namespace DetectiveDave.OverworldPlay
         [SerializeField] [Tooltip("Picture of a case that is solved.")] Sprite solvedSprite;
         [SerializeField] [Tooltip("The desk surface drawn behind everything in the overworld and behind the briefing.")] Sprite deskTopSprite;
         [SerializeField] [Tooltip("The sheet of paper under the case description.")] Sprite descriptionPaperSprite;
-        [SerializeField] [Tooltip("The sheet of paper the letter and the findings are typed on.")] Sprite letterPaperSprite;
+        [SerializeField] [Tooltip("The sheet of paper the letter and the response are typed on.")] Sprite letterPaperSprite;
         [SerializeField] [Tooltip("The hollow ring drawn around the magnifying glass while the dwell timer runs. White is tinted by the ring track colour.")] Sprite ringSprite;
-        [SerializeField] [Tooltip("The typewriter font used for the description, the letter and the findings.")] Font textFont;
+        [SerializeField] [Tooltip("The typewriter font used for the description, the findings, the letter and the response.")] Font textFont;
         [SerializeField] [Tooltip("Typewriter clicks. One is picked at random for every valid key.")] AudioClip[] typewriterClicks = new AudioClip[0];
         [SerializeField] [Tooltip("Played when Backspace takes a letter away. Leave empty for silence.")] AudioClip backspaceClip;
 
@@ -55,7 +56,7 @@ namespace DetectiveDave.OverworldPlay
 
         [Header("Typing")]
         [SerializeField] [Tooltip("Newlines and punctuation type themselves, so nobody needs special symbols on a foreign keyboard.")] bool autoTypeFreeCharacters = true;
-        [SerializeField] [Tooltip("How much of the findings one correct word, sentence or letter reveals.")] RevealUnit findingsUnit = RevealUnit.Word;
+        [SerializeField] [FormerlySerializedAs("findingsUnit")] [Tooltip("How much of the response one correct word, sentence or letter reveals.")] RevealUnit responseUnit = RevealUnit.Word;
 
         public Sprite FolderSprite => folderSprite;
         public Sprite SolvedSprite => solvedSprite;
@@ -91,7 +92,7 @@ namespace DetectiveDave.OverworldPlay
         public bool DescriptionClicks => descriptionClicks;
         public float DescriptionClickShare => descriptionClickShare;
         public TypingRules TypingRules => new TypingRules(autoTypeFreeCharacters);
-        public RevealUnit FindingsUnit => findingsUnit;
+        public RevealUnit ResponseUnit => responseUnit;
         public float DescriptionSecondsPerCharacter => descriptionSecondsPerCharacter;
         public float DescriptionSkipSpeedMultiplier => descriptionSkipSpeedMultiplier;
         public float LetterAppearSeconds => letterAppearSeconds;

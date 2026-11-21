@@ -20,14 +20,14 @@ namespace DetectiveDave.Tests
         sealed class FakeBriefing : IBriefingScreen
         {
             public string OpenedCase;
-            public string FindingsCase;
+            public string ReportCase;
             public string ReviewCase;
             public Action<LetterOutcome> Finished;
-            public Action FindingsFinished;
+            public Action ReportFinished;
             public Action ReviewFinished;
             public bool Closed;
             public void Open(string caseId, Action<LetterOutcome> finished) { OpenedCase = caseId; Finished = finished; }
-            public void OpenFindings(string caseId, Action finished) { FindingsCase = caseId; FindingsFinished = finished; }
+            public void OpenReport(string caseId, Action finished) { ReportCase = caseId; ReportFinished = finished; }
             public void OpenReview(string caseId, Action finished) { ReviewCase = caseId; ReviewFinished = finished; }
             public void Close(Action done) { Closed = true; done(); }
         }
@@ -94,7 +94,7 @@ namespace DetectiveDave.Tests
             Dwell();
             Assert.AreEqual("a", briefing.ReviewCase);
             Assert.IsNull(briefing.OpenedCase);
-            Assert.IsNull(briefing.FindingsCase);
+            Assert.IsNull(briefing.ReportCase);
             Assert.AreEqual(OverworldStage.Briefing, flow.Stage);
             Assert.IsFalse(flow.AcceptsMoves);
         }
@@ -112,14 +112,14 @@ namespace DetectiveDave.Tests
         }
 
         [Test]
-        public void Playing_findings_blocks_moves_and_reports_completion_after_the_briefing_closes()
+        public void Playing_the_report_blocks_moves_and_reports_completion_only_after_the_response_is_typed_and_the_briefing_closes()
         {
             bool completed = false;
-            flow.PlayFindings("a", () => completed = true);
-            Assert.AreEqual("a", briefing.FindingsCase);
+            flow.PlayReport("a", () => completed = true);
+            Assert.AreEqual("a", briefing.ReportCase);
             Assert.IsFalse(flow.AcceptsMoves);
             Assert.IsFalse(completed);
-            briefing.FindingsFinished();
+            briefing.ReportFinished();
             Assert.IsTrue(briefing.Closed);
             Assert.IsTrue(completed);
             Assert.IsTrue(flow.AcceptsMoves);

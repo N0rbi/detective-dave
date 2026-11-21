@@ -14,7 +14,7 @@ namespace DetectiveDave.OverworldPlay
         {
             None,
             Letter,
-            Findings,
+            Report,
             Review
         }
 
@@ -30,14 +30,14 @@ namespace DetectiveDave.OverworldPlay
         BriefingGate gate;
         DivergingTyper letterTyper;
         LetterPaperModel letterModel;
-        StoryTyper storyTyper;
-        FindingsPaperModel findingsModel;
+        StoryTyper responseTyper;
+        ResponsePaperModel responseModel;
+        PaperReveal leftReveal;
         Action<LetterOutcome> letterFinished;
-        Action findingsFinished;
+        Action reportFinished;
         Action reviewFinished;
         Mode mode;
         Vector3 deskHome;
-        string description = string.Empty;
         float slide;
         float letterHidden = 1f;
         float viewWidth;
@@ -60,24 +60,27 @@ namespace DetectiveDave.OverworldPlay
             mode = Mode.Letter;
             letterFinished = finishedCallback;
             var letters = PlacePapers();
-            description = TextWrap.Wrap(file.ResolvedDescription, letters.Description);
+            leftReveal = new PaperReveal(string.Empty, TextWrap.Wrap(file.ResolvedDescription, letters.Description));
             letterTyper = new DivergingTyper(file.ResolvedAcceptLetter, file.ResolvedDeclineLetter, settings.TypingRules);
             letterModel = new LetterPaperModel(file.ClientName, file.ResolvedAcceptMessage, file.ResolvedDeclineMessage, letters.Letter);
-            gate = new BriefingGate(new TimedReveal(description.Length, settings.DescriptionSecondsPerCharacter, settings.DescriptionSkipSpeedMultiplier));
-            ShowDescription(0);
+            gate = new BriefingGate(new TimedReveal(leftReveal.RevealedLength, settings.DescriptionSecondsPerCharacter, settings.DescriptionSkipSpeedMultiplier));
+            ShowLeft(0);
             RenderLetter();
             Begin();
         }
 
-        public void OpenFindings(string caseId, Action finishedCallback)
+        public void OpenReport(string caseId, Action finishedCallback)
         {
             var file = findCase(caseId);
-            mode = Mode.Findings;
-            findingsFinished = finishedCallback;
-            var letters = PrepareFindingsPapers(file);
-            storyTyper = new StoryTyper(file.ResolvedFindings, settings.TypingRules, settings.FindingsUnit);
-            findingsModel = new FindingsPaperModel(storyTyper.Text, letters.Letter);
-            RenderFindings();
+            mode = Mode.Report;
+            reportFinished = finishedCallback;
+            var letters = PlacePapers();
+            leftReveal = ReportReveal(file, letters.Description);
+            gate = new BriefingGate(new TimedReveal(leftReveal.RevealedLength, settings.DescriptionSecondsPerCharacter, settings.DescriptionSkipSpeedMultiplier));
+            responseTyper = new StoryTyper(file.ResolvedResponse, settings.TypingRules, settings.ResponseUnit);
+            responseModel = new ResponsePaperModel(responseTyper.Text, letters.Letter);
+            ShowLeft(0);
+            RenderResponse();
             Begin();
         }
 
@@ -86,20 +89,17 @@ namespace DetectiveDave.OverworldPlay
             var file = findCase(caseId);
             mode = Mode.Review;
             reviewFinished = finishedCallback;
-            var letters = PrepareFindingsPapers(file);
-            findingsModel = new FindingsPaperModel(file.ResolvedFindings, letters.Letter);
+            var letters = PlacePapers();
+            leftReveal = ReportReveal(file, letters.Description);
+            gate = new BriefingGate(new TimedReveal(0, settings.DescriptionSecondsPerCharacter, settings.DescriptionSkipSpeedMultiplier));
+            responseModel = new ResponsePaperModel(file.ResolvedResponse, letters.Letter);
+            ShowLeft(leftReveal.RevealedLength);
             RenderReview();
             Begin();
         }
 
-        (int Description, int Letter) PrepareFindingsPapers(CaseFile file)
-        {
-            var letters = PlacePapers();
-            description = TextWrap.Wrap(file.ResolvedDescription, letters.Description);
-            gate = new BriefingGate(new TimedReveal(0, settings.DescriptionSecondsPerCharacter, settings.DescriptionSkipSpeedMultiplier));
-            ShowDescription(description.Length);
-            return letters;
-        }
+        static PaperReveal ReportReveal(CaseFile file, int lettersPerLine) =>
+            new PaperReveal(TextWrap.Wrap(file.ResolvedDescription, lettersPerLine), TextWrap.Wrap(file.ResolvedFindings, lettersPerLine));
 
         public void Close(Action done)
         {
@@ -115,7 +115,7 @@ namespace DetectiveDave.OverworldPlay
             if (keyboard.anyKey.wasPressedThisFrame) gate.OnAnyKey();
             bool wasWritable = gate.IsWritable;
             int revealed = gate.Tick(Time.deltaTime);
-            if (revealed > 0 && mode == Mode.Letter) RevealDescriptionWithSound();
+            if (revealed > 0) RevealLeftWithSound();
             if (!wasWritable && gate.IsWritable) ShowLetterPaper();
             if (mode == Mode.Review && wasWritable && keyboard.anyKey.wasPressedThisFrame) FinishReview();
             if (gate.IsWritable && mode != Mode.Review && keyboard.backspaceKey.wasPressedThisFrame) Backspace();
@@ -242,7 +242,7 @@ namespace DetectiveDave.OverworldPlay
         {
             if (!listening || !gate.IsWritable) return;
             if (mode == Mode.Letter) TypeLetter(character);
-            else if (mode == Mode.Findings) TypeFindings(character);
+            else if (mode == Mode.Report) TypeResponse(character);
         }
 
         void TypeLetter(char character)
@@ -255,21 +255,21 @@ namespace DetectiveDave.OverworldPlay
             FinishAfterPause(() => letterFinished?.Invoke(outcome));
         }
 
-        void TypeFindings(char character)
+        void TypeResponse(char character)
         {
-            if (!storyTyper.TryType(character)) return;
+            if (!responseTyper.TryType(character)) return;
             sound.PlayKey();
-            RenderFindings();
-            if (storyTyper.IsComplete) FinishAfterPause(() => findingsFinished?.Invoke());
+            RenderResponse();
+            if (responseTyper.IsComplete) FinishAfterPause(() => reportFinished?.Invoke());
         }
 
         void Backspace()
         {
-            bool removed = mode == Mode.Letter ? letterTyper.Backspace() : storyTyper.Backspace();
+            bool removed = mode == Mode.Letter ? letterTyper.Backspace() : responseTyper.Backspace();
             if (!removed) return;
             sound.PlayBackspace();
             if (mode == Mode.Letter) RenderLetter();
-            else RenderFindings();
+            else RenderResponse();
         }
 
         void FinishReview()
@@ -290,19 +290,19 @@ namespace DetectiveDave.OverworldPlay
             if (token == generation) report();
         }
 
-        void RevealDescriptionWithSound()
+        void RevealLeftWithSound()
         {
-            ShowDescription(gate.VisibleCount);
+            ShowLeft(gate.VisibleCount);
             sound.PlayDescriptionKey();
         }
 
-        void ShowDescription(int visibleCount) => descriptionPaper.SetText(description.Substring(0, Mathf.Min(visibleCount, description.Length)), settings.DescriptionTextColor);
+        void ShowLeft(int revealedCount) => descriptionPaper.SetText(leftReveal.Shown(revealedCount), settings.DescriptionTextColor);
 
         void RenderLetter() => letterPaper.SetText(letterModel.Render(letterTyper.TypedCount, letterTyper.Path, Hex(settings.TypedTextColor), Hex(settings.PendingTextColor)), settings.PendingTextColor);
 
-        void RenderFindings() => letterPaper.SetText(findingsModel.RenderTyping(storyTyper.TypedCount, storyTyper.CurrentUnitEnd, Hex(settings.TypedTextColor), Hex(settings.PendingTextColor)), settings.PendingTextColor);
+        void RenderResponse() => letterPaper.SetText(responseModel.RenderTyping(responseTyper.TypedCount, responseTyper.CurrentUnitEnd, Hex(settings.TypedTextColor), Hex(settings.PendingTextColor)), settings.PendingTextColor);
 
-        void RenderReview() => letterPaper.SetText(findingsModel.RenderReview(Hex(settings.TypedTextColor)), settings.TypedTextColor);
+        void RenderReview() => letterPaper.SetText(responseModel.RenderReview(Hex(settings.TypedTextColor)), settings.TypedTextColor);
 
         static string Hex(Color color) => ColorUtility.ToHtmlStringRGB(color);
     }

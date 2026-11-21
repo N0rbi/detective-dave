@@ -37,7 +37,7 @@ namespace DetectiveDave.OverworldPlay
         ZoomFocus focus;
         DwellRingView ringView;
         SpriteRenderer backdrop;
-        string pendingFindingsCaseId;
+        string pendingReportCaseId;
         bool subscribed;
 
         public void UseDesk(DeskLayout prefab) => deskPrefab = prefab;
@@ -144,7 +144,7 @@ namespace DetectiveDave.OverworldPlay
         void BuildProgress()
         {
             progress = new CaseProgress(JsonProgressStore.AtDefaultPath());
-            if (CaseSession.TryTakeSolved(out var solvedId)) pendingFindingsCaseId = solvedId;
+            if (CaseSession.TryTakeSolved(out var solvedId)) pendingReportCaseId = solvedId;
             var keyCentres = gridView.Cells.ToDictionary(cell => cell.Key, cell => (Vector2)cell.Value.Center);
             var map = new DeskKeyMap(desk.Markers.Where(marker => marker.CaseFile).Select(marker => marker.ToDeskMarker(transform)).ToArray(), keyCentres);
             deskCases = new DeskCases(map, StateOf);
@@ -216,13 +216,13 @@ namespace DetectiveDave.OverworldPlay
         void StartPlaying()
         {
             if (level.TryGetEnds(out var startKey, out _)) game.OnKeyPressed(startKey);
-            PlayPendingFindings();
+            PlayPendingReport();
         }
 
-        void PlayPendingFindings()
+        void PlayPendingReport()
         {
-            var caseId = pendingFindingsCaseId;
-            pendingFindingsCaseId = null;
+            var caseId = pendingReportCaseId;
+            pendingReportCaseId = null;
             if (string.IsNullOrEmpty(caseId)) return;
             if (!casesById.ContainsKey(caseId))
             {
@@ -230,7 +230,7 @@ namespace DetectiveDave.OverworldPlay
                 ShowCaseStates();
                 return;
             }
-            flow.PlayFindings(caseId, () => CompleteCase(caseId));
+            flow.PlayReport(caseId, () => CompleteCase(caseId));
         }
 
         void CompleteCase(string caseId)

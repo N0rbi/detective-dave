@@ -87,6 +87,62 @@ namespace DetectiveDave.Tests
         }
     }
 
+    public class PaperRevealTests
+    {
+        [Test]
+        public void Revealing_nothing_shows_only_the_settled_text_and_its_divider()
+        {
+            var reveal = new PaperReveal("desc", "found");
+            Assert.AreEqual("desc" + PaperReveal.Separator, reveal.Shown(0));
+        }
+
+        [Test]
+        public void Revealing_adds_characters_of_the_findings_below_the_description()
+        {
+            var reveal = new PaperReveal("desc", "found");
+            Assert.AreEqual("desc" + PaperReveal.Separator + "fou", reveal.Shown(3));
+        }
+
+        [Test]
+        public void Revealing_more_than_there_is_shows_everything_and_less_than_nothing_shows_nothing_extra()
+        {
+            var reveal = new PaperReveal("desc", "found");
+            Assert.AreEqual(reveal.Full, reveal.Shown(99));
+            Assert.AreEqual(reveal.Shown(0), reveal.Shown(-4));
+        }
+
+        [Test]
+        public void Without_settled_text_there_is_no_divider()
+        {
+            var reveal = new PaperReveal(string.Empty, "intro");
+            Assert.AreEqual("in", reveal.Shown(2));
+            Assert.AreEqual("intro", reveal.Full);
+            Assert.AreEqual(5, reveal.RevealedLength);
+        }
+
+        [Test]
+        public void Without_findings_the_description_stands_alone()
+        {
+            var reveal = new PaperReveal("desc", string.Empty);
+            Assert.AreEqual("desc", reveal.Full);
+            Assert.AreEqual("desc", reveal.Shown(0));
+            Assert.AreEqual(0, reveal.RevealedLength);
+        }
+
+        [Test]
+        public void The_response_paper_stays_closed_until_the_findings_are_fully_typed_in()
+        {
+            var reveal = new PaperReveal("desc", "0123456789");
+            var gate = new BriefingGate(new TimedReveal(reveal.RevealedLength, 0.25f, 3f));
+            gate.Tick(2f);
+            Assert.IsFalse(gate.IsWritable);
+            Assert.AreEqual("desc" + PaperReveal.Separator + "01234567", reveal.Shown(gate.VisibleCount));
+            gate.Tick(1f);
+            Assert.IsTrue(gate.IsWritable);
+            Assert.AreEqual(reveal.Full, reveal.Shown(gate.VisibleCount));
+        }
+    }
+
     public class BriefingLayoutTests
     {
         [Test]
@@ -226,40 +282,40 @@ namespace DetectiveDave.Tests
         }
     }
 
-    public class FindingsPaperModelTests
+    public class ResponsePaperModelTests
     {
         [Test]
         public void Renders_typed_pending_and_an_invisible_rest()
         {
-            var model = new FindingsPaperModel("abc def ghi", 100);
+            var model = new ResponsePaperModel("abc def ghi", 100);
             Assert.AreEqual("<color=#111>abc </color><color=#999>def </color><color=#00000000>ghi</color>", model.RenderTyping(4, 8, "111", "999"));
         }
 
         [Test]
         public void Typing_at_the_start_shows_only_the_first_unit_pending()
         {
-            var model = new FindingsPaperModel("abc def", 100);
+            var model = new ResponsePaperModel("abc def", 100);
             Assert.AreEqual("<color=#999>abc </color><color=#00000000>def</color>", model.RenderTyping(0, 4, "111", "999"));
         }
 
         [Test]
         public void Typing_at_the_end_shows_everything_typed()
         {
-            var model = new FindingsPaperModel("abc", 100);
+            var model = new ResponsePaperModel("abc", 100);
             Assert.AreEqual("<color=#111>abc</color>", model.RenderTyping(3, 3, "111", "999"));
         }
 
         [Test]
         public void Review_shows_everything_typed()
         {
-            var model = new FindingsPaperModel("abc def", 100);
+            var model = new ResponsePaperModel("abc def", 100);
             Assert.AreEqual("<color=#111>abc def</color>", model.RenderReview("111"));
         }
 
         [Test]
         public void Wrapping_keeps_the_length_so_typed_counts_still_line_up()
         {
-            var model = new FindingsPaperModel("aaa bbb ccc", 7);
+            var model = new ResponsePaperModel("aaa bbb ccc", 7);
             Assert.AreEqual(11, model.Plain.Length);
         }
     }

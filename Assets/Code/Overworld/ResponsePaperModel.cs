@@ -2,7 +2,7 @@ using System.Text;
 
 namespace DetectiveDave.OverworldPlay
 {
-    public sealed class FindingsPaperModel
+    public sealed class ResponsePaperModel
     {
         const string ColorOpen = "<color=#";
         const string ColorMiddle = ">";
@@ -11,7 +11,7 @@ namespace DetectiveDave.OverworldPlay
 
         readonly string plain;
 
-        public FindingsPaperModel(string text, int lettersPerLine)
+        public ResponsePaperModel(string text, int lettersPerLine)
         {
             plain = TextWrap.Wrap(text, lettersPerLine);
         }
