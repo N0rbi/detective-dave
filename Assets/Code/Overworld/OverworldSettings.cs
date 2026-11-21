@@ -3,7 +3,7 @@ using UnityEngine.Serialization;
 
 namespace DetectiveDave.OverworldPlay
 {
-    [CreateAssetMenu(menuName = "Detective Dave/Overworld Settings", fileName = "Overworld Settings.config")]
+    [CreateAssetMenu(menuName = "Detective Dave/Overworld Settings", fileName = "Overworld Settings.config.asset")]
     public sealed class OverworldSettings : ScriptableObject
     {
         [Header("Art and audio (swap these for the final files)")]

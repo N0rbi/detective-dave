@@ -8,7 +8,7 @@ namespace DetectiveDave.LevelPlay
     /// The levels of the game, in the order they are played. Edited in Window > Detective Dave > Levels (drag to reorder).
     /// The game finds it through the <see cref="LevelLoader"/> in the game scene, so it ships with the build.
     /// </summary>
-    [CreateAssetMenu(menuName = "Detective Dave/Level Sequence", fileName = "Level Sequence.config", order = 2)]
+    [CreateAssetMenu(menuName = "Detective Dave/Level Sequence", fileName = "Level Sequence.config.asset", order = 2)]
     public sealed class LevelSequence : ScriptableObject
     {
         [Tooltip("Level prefabs in play order. Empty entries are skipped.")]

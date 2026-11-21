@@ -3,7 +3,7 @@ using UnityEngine.Serialization;
 
 namespace DetectiveDave.PlayerPlay
 {
-    [CreateAssetMenu(menuName = "Detective Dave/Player Movement Settings", fileName = "Player Movement Settings.config")]
+    [CreateAssetMenu(menuName = "Detective Dave/Player Movement Settings", fileName = "Player Movement Settings.config.asset")]
     public sealed class PlayerMovementSettings : ScriptableObject
     {
         [Header("Look")]

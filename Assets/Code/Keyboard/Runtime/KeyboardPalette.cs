@@ -4,7 +4,7 @@ using UnityEngine;
 namespace DetectiveDave.KeyboardGrid
 {
     /// <summary>The five colors of the keyboard glyphs. Create via Assets > Create > Game > Keyboard > Palette.</summary>
-    [CreateAssetMenu(menuName = "Game/Keyboard/Palette", fileName = "KeyboardPalette.config")]
+    [CreateAssetMenu(menuName = "Game/Keyboard/Palette", fileName = "KeyboardPalette.config.asset")]
     public class KeyboardPalette : ScriptableObject
     {
         public Color panel = new Color32(20, 23, 32, 255);    // background behind the keys and the header

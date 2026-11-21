@@ -9,7 +9,7 @@ namespace DetectiveDave.Levels
     /// A <see cref="Level"/> references one Key Art; to give a level a different look, duplicate the Key Art and point the level at the copy.
     /// Lives in Assets/Key Art (Assets > Create > Detective Dave > Key Art).
     /// </summary>
-    [CreateAssetMenu(menuName = "Detective Dave/Key Art", fileName = "New Key Art.config", order = 2)]
+    [CreateAssetMenu(menuName = "Detective Dave/Key Art", fileName = "New Key Art.config.asset", order = 2)]
     [HelpURL(LevelsDocs.GuideUrl)]
     public sealed class KeyArt : ScriptableObject
     {

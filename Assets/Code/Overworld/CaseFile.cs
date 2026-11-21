@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace DetectiveDave.OverworldPlay
 {
-    [CreateAssetMenu(menuName = "Detective Dave/Case", fileName = "New Case.case")]
+    [CreateAssetMenu(menuName = "Detective Dave/Case", fileName = "New Case.case.asset")]
     public sealed class CaseFile : ScriptableObject
     {
         [SerializeField] [Tooltip("Stable name used in the save file. Leave empty to use the asset name. Do not change it once players have progress.")] string caseId;
