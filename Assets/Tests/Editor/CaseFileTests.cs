@@ -65,8 +65,10 @@ namespace DetectiveDave.Tests
             AddSuspect("husband", "Bob");
             Set("description", "{client} doubts {husband}.");
             Set("findings", "{husband} was at the club.");
+            Set("response", "{client}, {husband} was faithful.");
             Assert.AreEqual("Ann doubts Bob.", file.ResolvedDescription);
             Assert.AreEqual("Bob was at the club.", file.ResolvedFindings);
+            Assert.AreEqual("Ann, Bob was faithful.", file.ResolvedResponse);
         }
 
         [Test]

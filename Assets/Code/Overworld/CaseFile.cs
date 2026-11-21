@@ -14,7 +14,8 @@ namespace DetectiveDave.OverworldPlay
         [SerializeField, TextArea(3, 8)] [Tooltip("Typed in real time on the left of the screen when the player stays on the case file.")] string description;
         [SerializeField, TextArea(2, 4)] [Tooltip("The answer when the detective takes the case. It must start differently from the decline message.")] string acceptMessage;
         [SerializeField, TextArea(2, 4)] [Tooltip("The answer when the detective turns the case down. It must start differently from the accept message.")] string declineMessage;
-        [SerializeField, TextArea(4, 12)] [Tooltip("The story the player types after solving the level.")] string findings;
+        [SerializeField, TextArea(4, 12)] [Tooltip("What the detective found. Appears under the description on the left after the level is solved, typed in at the same speed.")] string findings;
+        [SerializeField, TextArea(2, 8)] [Tooltip("The answer the player types on the right paper after reading the findings. Completing it solves the case.")] string response;
         [SerializeField] [Tooltip("The level played when the case is accepted.")] Level level;
         [SerializeField] [Tooltip("Cases that must be solved before this one opens.")] CaseFile[] requires = new CaseFile[0];
 
@@ -27,6 +28,7 @@ namespace DetectiveDave.OverworldPlay
 
         public string ResolvedDescription => Resolve(description);
         public string ResolvedFindings => Resolve(findings);
+        public string ResolvedResponse => Resolve(response);
         public string ResolvedAcceptMessage => Resolve(acceptMessage);
         public string ResolvedDeclineMessage => Resolve(declineMessage);
         public string ResolvedAcceptLetter => LetterText.Compose(clientName, Resolve(acceptMessage));
