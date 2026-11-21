@@ -5,6 +5,19 @@ using UnityEngine;
 
 namespace DetectiveDave.Tests
 {
+    static class LegacyCaseFiles
+    {
+        public static CaseFile Named(string name)
+        {
+            var file = ScriptableObject.CreateInstance<CaseFile>();
+            file.name = name;
+            var serialized = new SerializedObject(file);
+            serialized.FindProperty("caseId").stringValue = "";
+            serialized.ApplyModifiedPropertiesWithoutUndo();
+            return file;
+        }
+    }
+
     public class CaseFileTests
     {
         CaseFile file;
@@ -13,8 +26,7 @@ namespace DetectiveDave.Tests
         [SetUp]
         public void SetUp()
         {
-            file = ScriptableObject.CreateInstance<CaseFile>();
-            file.name = "Jealous Wife";
+            file = LegacyCaseFiles.Named("Jealous Wife");
             serialized = new SerializedObject(file);
         }
 
@@ -74,8 +86,7 @@ namespace DetectiveDave.Tests
         [Test]
         public void RequiredIdsSkipEmptySlots()
         {
-            var other = ScriptableObject.CreateInstance<CaseFile>();
-            other.name = "First";
+            var other = LegacyCaseFiles.Named("First");
             var list = serialized.FindProperty("requires");
             list.arraySize = 2;
             list.GetArrayElementAtIndex(0).objectReferenceValue = other;

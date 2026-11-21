@@ -80,8 +80,7 @@ namespace DetectiveDave.Tests
         [Test]
         public void Solved_id_is_taken_once_and_clears_the_session()
         {
-            var file = UnityEngine.ScriptableObject.CreateInstance<CaseFile>();
-            file.name = "case-a";
+            var file = LegacyCaseFiles.Named("case-a");
             CaseSession.Begin(file);
             Assert.IsTrue(CaseSession.IsActive);
             CaseSession.MarkLevelSolved();
