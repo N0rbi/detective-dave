@@ -34,7 +34,10 @@ namespace DetectiveDave.OverworldPlay
         [SerializeField] [Tooltip("Where the case description paper lies on the screen.")] PaperPlacement descriptionPlacement = new PaperPlacement(-0.25f, 0.02f, 0.4f, -2f);
         [SerializeField] [Tooltip("Where the letter paper lies on the screen.")] PaperPlacement letterPlacement = new PaperPlacement(0.25f, -0.01f, 0.4f, 1.5f);
         [SerializeField, Range(0f, 0.3f)] [Tooltip("Empty border of the paper picture, as a share of its width. Text starts inside it.")] float paperPaddingShare = 0.09f;
-        [SerializeField, Range(0.01f, 0.08f)] [Tooltip("Text size as a share of the screen height.")] float textHeightShare = 0.034f;
+        [SerializeField, Range(0.01f, 0.08f)] [Tooltip("Largest text size, as a share of the screen height. Long texts shrink from here until they fit the paper.")] float textHeightShare = 0.034f;
+        [SerializeField, Range(0.005f, 0.08f)] [Tooltip("Smallest text size, as a share of the screen height. Below this the text is left as is and a warning is logged.")] float minTextHeightShare = 0.016f;
+        [SerializeField, Range(0.001f, 0.01f)] [Tooltip("How much the text size shrinks per try, as a share of the screen height.")] float textFitStepShare = 0.002f;
+        [SerializeField, Range(0.8f, 2f)] [Tooltip("Height of one text row divided by the text size. Raise it if text still runs past the bottom of the paper.")] float textLineHeightRatio = 1.1f;
         [SerializeField, Range(0.3f, 1f)] [Tooltip("Width of one letter divided by the text size. 0.6 fits typewriter fonts. Raise it if lines run past the paper edge.")] float textAdvanceRatio = 0.6f;
         [SerializeField] [Tooltip("Colour of the case description.")] Color descriptionTextColor = new Color(0.1f, 0.1f, 0.12f, 1f);
         [SerializeField] [Tooltip("Colour of the letter that is not typed yet.")] Color pendingTextColor = new Color(0.55f, 0.55f, 0.55f, 1f);
@@ -81,6 +84,9 @@ namespace DetectiveDave.OverworldPlay
         public PaperPlacement LetterPlacement => letterPlacement;
         public float PaperPaddingShare => paperPaddingShare;
         public float TextHeightShare => textHeightShare;
+        public float MinTextHeightShare => minTextHeightShare;
+        public float TextFitStepShare => textFitStepShare;
+        public float TextLineHeightRatio => textLineHeightRatio;
         public float TextAdvanceRatio => textAdvanceRatio;
         public Color DescriptionTextColor => descriptionTextColor;
         public Color PendingTextColor => pendingTextColor;

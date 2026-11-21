@@ -28,6 +28,9 @@ namespace DetectiveDave.OverworldPlay
 
         public string Plain => plain;
 
+        public static string Unwrapped(string client, string acceptMessage, string declineMessage) =>
+            LetterText.Head(client) + (acceptMessage ?? string.Empty) + "\n" + (declineMessage ?? string.Empty) + LetterText.Tail;
+
         public string Render(int typedCount, LetterPath path, string typedColorHex, string pendingColorHex)
         {
             var typed = TypedMask(typedCount, path);

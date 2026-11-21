@@ -60,7 +60,8 @@ namespace DetectiveDave.OverworldPlay
             var file = findCase(caseId);
             mode = Mode.Letter;
             letterFinished = finishedCallback;
-            var letters = PlacePapers();
+            var leftText = new PaperReveal(string.Empty, file.ResolvedDescription).Full;
+            var letters = PlacePapers(leftText, LetterPaperModel.Unwrapped(file.ClientName, file.ResolvedAcceptMessage, file.ResolvedDeclineMessage));
             leftReveal = new PaperReveal(string.Empty, TextWrap.Wrap(file.ResolvedDescription, letters.Description));
             letterTyper = new DivergingTyper(file.ResolvedAcceptLetter, file.ResolvedDeclineLetter, settings.TypingRules);
             letterModel = new LetterPaperModel(file.ClientName, file.ResolvedAcceptMessage, file.ResolvedDeclineMessage, letters.Letter);
@@ -75,7 +76,7 @@ namespace DetectiveDave.OverworldPlay
             var file = findCase(caseId);
             mode = Mode.Report;
             reportFinished = finishedCallback;
-            var letters = PlacePapers();
+            var letters = PlacePapers(ReportText(file), file.ResolvedResponse);
             leftReveal = ReportReveal(file, letters.Description);
             gate = new BriefingGate(new TimedReveal(leftReveal.RevealedLength, settings.DescriptionSecondsPerCharacter, settings.DescriptionSkipSpeedMultiplier));
             responseTyper = new StoryTyper(file.ResolvedResponse, settings.TypingRules, settings.ResponseUnit);
@@ -90,7 +91,7 @@ namespace DetectiveDave.OverworldPlay
             var file = findCase(caseId);
             mode = Mode.Review;
             reviewFinished = finishedCallback;
-            var letters = PlacePapers();
+            var letters = PlacePapers(ReportText(file), file.ResolvedResponse);
             leftReveal = ReportReveal(file, letters.Description);
             gate = new BriefingGate(new TimedReveal(0, settings.DescriptionSecondsPerCharacter, settings.DescriptionSkipSpeedMultiplier));
             responseModel = new ResponsePaperModel(file.ResolvedResponse, letters.Letter);
@@ -98,6 +99,8 @@ namespace DetectiveDave.OverworldPlay
             RenderReview();
             Begin();
         }
+
+        static string ReportText(CaseFile file) => new PaperReveal(file.ResolvedDescription, file.ResolvedFindings).Full;
 
         static PaperReveal ReportReveal(CaseFile file, int lettersPerLine) =>
             new PaperReveal(TextWrap.Wrap(file.ResolvedDescription, lettersPerLine), TextWrap.Wrap(file.ResolvedFindings, lettersPerLine));
@@ -143,20 +146,27 @@ namespace DetectiveDave.OverworldPlay
             return paper;
         }
 
-        (int Description, int Letter) PlacePapers()
+        (int Description, int Letter) PlacePapers(string leftText, string rightText)
         {
             var view = ViewSize();
             var centre = ViewCentre();
             viewWidth = view.x;
-            float lineHeight = view.y * settings.TextHeightShare;
             var descriptionSpot = BriefingLayout.Place(settings.DescriptionPlacement, centre, view);
             var letterSpot = BriefingLayout.Place(settings.LetterPlacement, centre, view);
-            descriptionPaper.Place(descriptionSpot, lineHeight, settings.PaperPaddingShare);
-            letterPaper.Place(letterSpot, lineHeight, settings.PaperPaddingShare);
-            return (LettersPerLine(descriptionSpot, lineHeight), LettersPerLine(letterSpot, lineHeight));
+            var left = FitText(descriptionPaper, descriptionSpot, leftText, view.y);
+            var right = FitText(letterPaper, letterSpot, rightText, view.y);
+            descriptionPaper.Place(descriptionSpot, left.LineHeight, settings.PaperPaddingShare);
+            letterPaper.Place(letterSpot, right.LineHeight, settings.PaperPaddingShare);
+            return (left.LettersPerLine, right.LettersPerLine);
         }
 
-        int LettersPerLine(PaperSpot spot, float lineHeight) => BriefingLayout.LettersPerLine(spot.Width, settings.PaperPaddingShare, lineHeight, settings.TextAdvanceRatio);
+        TextFitResult FitText(PaperView paper, PaperSpot spot, string text, float viewHeight)
+        {
+            var area = paper.TextArea(spot.Width, settings.PaperPaddingShare);
+            var result = TextFit.Fit(text, area, viewHeight * settings.TextHeightShare, viewHeight * settings.MinTextHeightShare, viewHeight * settings.TextFitStepShare, settings.TextAdvanceRatio, settings.TextLineHeightRatio);
+            if (!result.Fits) Debug.LogWarning("Text does not fit the paper even at the smallest size. Shorten it or make the paper bigger: " + paper.name);
+            return result;
+        }
 
         void Begin()
         {

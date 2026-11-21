@@ -33,6 +33,13 @@ namespace DetectiveDave.OverworldPlay
             gameObject.SetActive(false);
         }
 
+        public Vector2 TextArea(float paperWidth, float paddingShare)
+        {
+            float aspect = sheet.sprite.bounds.size.y / sheet.sprite.bounds.size.x;
+            float inset = paperWidth * paddingShare * 2f;
+            return new Vector2(paperWidth - inset, paperWidth * aspect - inset);
+        }
+
         public void Place(PaperSpot spot, float lineHeight, float paddingShare)
         {
             rest = spot.Centre;
