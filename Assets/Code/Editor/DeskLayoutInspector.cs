@@ -13,6 +13,7 @@ namespace DetectiveDave.EditorTools
             DrawKeyboardPicker();
             DrawSummary(desk);
             DrawProblems(desk);
+            DrawChainProblems(desk);
         }
 
         static void DrawKeyboardPicker()
@@ -32,6 +33,13 @@ namespace DetectiveDave.EditorTools
             var markers = DeskDesignInputs.AllMarkers(desk);
             int withoutCase = markers.Count(marker => !marker.CanBeMapped);
             EditorGUILayout.LabelField($"{markers.Length} case files on the desk, {withoutCase} without a case.");
+        }
+
+        static void DrawChainProblems(DeskLayout desk)
+        {
+            var issues = CaseChainChecks.Run(CaseChainInputs.NodesOn(desk));
+            if (issues.Count == 0) return;
+            EditorGUILayout.HelpBox("Case chain:\n" + string.Join("\n", issues.Select(CaseChainChecks.Describe)), MessageType.Warning);
         }
 
         static void DrawProblems(DeskLayout desk)

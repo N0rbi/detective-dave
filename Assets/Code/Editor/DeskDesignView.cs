@@ -112,9 +112,13 @@ namespace DetectiveDave.EditorTools
                 var colour = DeskCaseColors.Outline(deskMarker.CaseId);
                 DrawOutline(desk, deskMarker, colour);
                 string name = string.IsNullOrWhiteSpace(marker.CaseFile.ClientName) ? deskMarker.CaseId : marker.CaseFile.ClientName;
-                Label(marker.transform.position, coversNoKey ? name + "\nCovers no key on this keyboard!" : name, coversNoKey ? ProblemColor : colour);
+                var warnings = MarkerWarnings(marker, coversNoKey);
+                Label(marker.transform.position, string.Join("\n", new[] { name }.Concat(warnings)), warnings.Length > 0 ? ProblemColor : colour);
             }
         }
+
+        static string[] MarkerWarnings(CaseMarker marker, bool coversNoKey) =>
+            new[] { coversNoKey ? "Covers no key on this keyboard!" : null, CaseChainInputs.HasNoLevel(marker) ? "No level yet!" : null }.Where(text => text != null).ToArray();
 
         static void DrawOutline(DeskLayout desk, DeskMarker marker, Color colour)
         {
