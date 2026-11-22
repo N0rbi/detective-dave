@@ -254,13 +254,13 @@ Desk look and hints (sections `Keyboard look`, `Floating case files` and `Route 
 
 Fonts (section `Fonts` on `Overworld Settings.config.asset`, files in `Assets/Overworld/Fonts`):
 
-1. `Request Font` (`1942_report.ttf`) is used for the request: the client's message on the left paper, on every screen.
+1. `Request Font` (`jmh_typewriter.ttf`) is used for the request: the client's message on the left paper, on every screen. A case can set `Description Font Override` (for example `1942_report.ttf` on the Kidnapped case) to draw its own description in another font; the findings are never affected.
 2. `Placeholder Font` (`jmh_typewriter.ttf`) is used for the grey text that waits to be typed.
 3. `Typed Font` (`moms_typewriter.ttf`) is used for the black text the player has typed, so a typed letter replaces its grey placeholder in a different font.
-4. `Findings Font` (`moms_typewriter.ttf`) is used for the investigation findings on the left paper, after the level and in the solved case review.
+4. `Findings Font` (`jmh_typewriter.ttf`) is used for the investigation findings on the left paper, after the level and in the solved case review.
 5. `Notice Font` (`1942_report.ttf`) is used for the notice shown on the paper when a case has no level yet.
 
-Text fit: the left paper is fitted as a whole (description plus findings) before anything is typed, so the size never changes while the findings type in. The findings are drawn at `Findings Size Share` (default 0.85) of the description size. Text shrinks down to `Hard Min Text Height Share`; a word longer than a line also forces a smaller size. If it still does not fit at that size, one warning naming the case is logged. `Set Up Overworld` fills the empty font fields; the old `Client And Placeholder Font` value moves to `Placeholder Font` by itself. A `Findings Font` set earlier to the 1942 report must be reassigned to `moms_typewriter.ttf`.
+Text fit: the left paper is fitted as a whole (description plus findings) before anything is typed, so the size never changes while the findings type in. The findings are drawn at `Findings Size Share` (default 0.85) of the description size. Text shrinks down to `Hard Min Text Height Share`; a word longer than a line also forces a smaller size. If it still does not fit at that size, one warning naming the case is logged. `Set Up Overworld` fills the empty font fields; the old `Client And Placeholder Font` value moves to `Placeholder Font` by itself. `Set Up Overworld` only fills empty fields: a `Request Font` or `Findings Font` set earlier to another font must be reassigned to `jmh_typewriter.ttf`.
 
 Use monospaced fonts. Every letter is placed on the grid set by `Text Advance Ratio`; each font is scaled to that letter width and every line is placed by `Text Line Height Ratio`, so lines and the placeholder-to-typed swap never shift. Licences: JMH Typewriter is free for personal use only (buy a licence before selling the game), Mom's Typewriter and 1942 report need their readme or text file kept with them. The unused weights stay in `Assets/Staging`.
 
