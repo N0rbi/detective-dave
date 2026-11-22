@@ -12,7 +12,8 @@ namespace DetectiveDave.MusicPlay
         [SerializeField, Min(0f)] [Tooltip("Seconds the loop takes to fade in when the game starts. 0 starts it at full volume.")] float fadeInSeconds = 2f;
 
         [Header("Piano notes")]
-        [SerializeField] [Tooltip("One of these plays at random on every move of the player and of the magnifying glass. The same one never plays twice in a row.")] AudioClip[] pianoClips = new AudioClip[0];
+        [SerializeField] [Tooltip("One of these plays on every move of the player and of the magnifying glass. The order they are listed in does not matter: In Order sorts them by name.")] AudioClip[] pianoClips = new AudioClip[0];
+        [SerializeField] [Tooltip("In Order plays the clips sorted by name (Piano 2 before Piano 10), each move taking the next clip and going back to the first after the last. A move that does not move the player also takes the next clip. Random picks any clip, never the same one twice in a row.")] PianoOrder pianoOrder = PianoOrder.InOrder;
         [SerializeField, Range(0f, 1f)] [Tooltip("Volume of a piano note for a move that moves the player.")] float pianoVolume = 0.8f;
         [SerializeField, Range(0f, 0.5f)] [Tooltip("How much the volume of a note changes at random, as a share of its volume. 0.1 means plus or minus 10%.")] float pianoVolumeVariance = 0.1f;
         [SerializeField, Range(0f, 1f)] [Tooltip("Volume share of a note for a move that does not move the player (a wall, a key that is not next to the player). 0.5 halves the volume.")] float blockedMoveVolumeShare = 0.5f;
@@ -26,6 +27,8 @@ namespace DetectiveDave.MusicPlay
         public float FadeInSeconds => fadeInSeconds;
 
         public AudioClip[] PianoClips => pianoClips;
+
+        public PianoOrder PianoOrder => pianoOrder;
 
         public float PianoVolume => pianoVolume;
 

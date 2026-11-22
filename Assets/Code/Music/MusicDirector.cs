@@ -41,7 +41,7 @@ namespace DetectiveDave.MusicPlay
         void Configure(MusicSettings musicSettings)
         {
             settings = musicSettings;
-            pianoClips = settings.PianoClips.Where(clip => clip).ToArray();
+            pianoClips = NaturalNameOrder.Sorted(settings.PianoClips.Where(clip => clip), clip => clip.name).ToArray();
             voices = Enumerable.Range(0, settings.PianoPoolSize).Select(_ => NewVoice()).ToArray();
             Reaction = BuildReaction();
             StartLoop();
@@ -52,7 +52,7 @@ namespace DetectiveDave.MusicPlay
         {
             var random = new UnityRandomSource();
             return new PianoReaction(
-                new PianoPicker(random, pianoClips.Length),
+                PianoSequences.For(settings.PianoOrder, random, pianoClips.Length),
                 new PianoNoteVolume(random, settings.PianoVolume, settings.PianoVolumeVariance, settings.BlockedMoveVolumeShare),
                 new ClickGate(settings.MinSecondsBetweenPianoNotes),
                 this,
