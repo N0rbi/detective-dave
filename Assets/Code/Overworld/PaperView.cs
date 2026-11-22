@@ -25,6 +25,7 @@ namespace DetectiveDave.OverworldPlay
         Vector2 rest;
         Vector3 textOrigin;
         TextGrid grid;
+        TextColorSet colors;
 
         public void Configure(Sprite paper, OverworldSettings overworldSettings)
         {
@@ -33,6 +34,7 @@ namespace DetectiveDave.OverworldPlay
             sheet.transform.SetParent(transform, false);
             sheet.sprite = paper;
             sheet.sortingOrder = SheetSortingOrder;
+            colors = settings.TextColors;
             settingsRequestFont = settings.FontFor(FontSlot.Request);
             foreach (var slot in AllSlots) AddFont(slot, settings.FontFor(slot));
             gameObject.SetActive(false);
@@ -59,12 +61,14 @@ namespace DetectiveDave.OverworldPlay
 
         public void SlideFromRight(float distance) => transform.position = new Vector3(rest.x + distance, rest.y, transform.position.z);
 
-        public void SetText(string richText, FontSlot[] slots, Color baseColor) => SetText(richText, slots, baseColor, LineScales.Uniform);
+        public void UseColors(TextColorSet textColors) => colors = textColors;
 
-        public void SetText(string richText, FontSlot[] slots, Color baseColor, LineScales scales)
+        public void SetText(string richText, FontSlot[] slots) => SetText(richText, slots, LineScales.Uniform);
+
+        public void SetText(string richText, FontSlot[] slots, LineScales scales)
         {
             var glyphs = GlyphPlan.Build(RichRuns.Parse(richText), slots);
-            for (int index = 0; index < glyphs.Count; index++) DrawGlyph(MeshAt(index), glyphs[index], baseColor, scales);
+            for (int index = 0; index < glyphs.Count; index++) DrawGlyph(MeshAt(index), glyphs[index], scales);
             for (int index = glyphs.Count; index < glyphMeshes.Count; index++) glyphMeshes[index].Hide();
         }
 
@@ -124,9 +128,9 @@ namespace DetectiveDave.OverworldPlay
             return new GlyphMesh(mesh);
         }
 
-        void DrawGlyph(GlyphMesh glyphMesh, Glyph glyph, Color baseColor, LineScales scales)
+        void DrawGlyph(GlyphMesh glyphMesh, Glyph glyph, LineScales scales)
         {
-            var color = ColorOf(glyph.ColorHex, baseColor);
+            var color = ColorOf(glyph.ColorHex, colors.ForSlot(glyph.Slot));
             if (color.a <= 0f)
             {
                 glyphMesh.Hide();
@@ -140,9 +144,9 @@ namespace DetectiveDave.OverworldPlay
             glyphMesh.Show(glyph.Character, fonts[glyph.Slot], color, characterSize, GlyphCell.HorizontalScale(glyphWidth, cellWidth), new Vector3(x, y, textOrigin.z));
         }
 
-        static Color ColorOf(string hex, Color baseColor)
+        static Color ColorOf(string hex, Color slotColor)
         {
-            if (hex == null) return baseColor;
+            if (hex == null) return slotColor;
             if (!ColorUtility.TryParseHtmlString("#" + hex, out var color)) throw new FormatException("Not a colour: " + hex);
             return color;
         }

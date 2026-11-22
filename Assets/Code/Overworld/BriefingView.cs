@@ -25,6 +25,7 @@ namespace DetectiveDave.OverworldPlay
         TypewriterSound sound;
         PaperView descriptionPaper;
         PaperView letterPaper;
+        TextColorSet colors;
         Tween slideTween;
         Tween appearTween;
         Tween fadeTween;
@@ -67,7 +68,7 @@ namespace DetectiveDave.OverworldPlay
             mode = Mode.Letter;
             letterFinished = finishedCallback;
             UseRoles(PaperScreen.Letter);
-            descriptionPaper.UseRequestFont(file.DescriptionFontOverride);
+            UseLook(file);
             var leftBlocks = new[] { new TextBlock(file.ResolvedDescription, 1f) };
             var letters = PlacePapers(file.name, leftBlocks, LetterPaperModel.Unwrapped(file.ClientName, file.ResolvedAcceptMessage, file.ResolvedDeclineMessage));
             leftReveal = new PaperReveal(string.Empty, TextWrap.Wrap(file.ResolvedDescription, letters.Description));
@@ -87,7 +88,7 @@ namespace DetectiveDave.OverworldPlay
             mode = Mode.Report;
             reportFinished = finishedCallback;
             UseRoles(PaperScreen.Report);
-            descriptionPaper.UseRequestFont(file.DescriptionFontOverride);
+            UseLook(file);
             var letters = PlacePapers(file.name, ReportBlocks(file), file.ResolvedResponse);
             UseReportReveal(file, letters);
             gate = new BriefingGate(new TimedReveal(leftReveal.RevealedLength, settings.DescriptionSecondsPerCharacter, settings.DescriptionSkipSpeedMultiplier));
@@ -104,7 +105,7 @@ namespace DetectiveDave.OverworldPlay
             mode = Mode.Review;
             reviewFinished = finishedCallback;
             UseRoles(PaperScreen.Review);
-            descriptionPaper.UseRequestFont(file.DescriptionFontOverride);
+            UseLook(file);
             var letters = PlacePapers(file.name, ReportBlocks(file), file.ResolvedResponse);
             UseReportReveal(file, letters);
             gate = new BriefingGate(new TimedReveal(0, settings.DescriptionSecondsPerCharacter, settings.DescriptionSkipSpeedMultiplier));
@@ -112,6 +113,14 @@ namespace DetectiveDave.OverworldPlay
             ShowLeft(leftReveal.RevealedLength);
             RenderReview();
             Begin();
+        }
+
+        void UseLook(CaseFile file)
+        {
+            colors = file.Look.Resolve(settings.TextColors);
+            descriptionPaper.UseRequestFont(file.DescriptionFontOverride);
+            descriptionPaper.UseColors(colors);
+            letterPaper.UseColors(colors);
         }
 
         void UseRoles(PaperScreen screen)
@@ -133,7 +142,8 @@ namespace DetectiveDave.OverworldPlay
 
         public void Refuse(string message, Action finished)
         {
-            letterPaper.SetText(message, FontRoles.Fill(message.Length, TextRole.Notice), settings.PendingTextColor);
+            letterPaper.UseColors(settings.TextColors);
+            letterPaper.SetText(message, FontRoles.Fill(message.Length, TextRole.Notice));
             FinishAfterPause(finished, RefusalHoldFactor);
         }
 
@@ -361,7 +371,7 @@ namespace DetectiveDave.OverworldPlay
             sound.PlayDescriptionKey();
         }
 
-        void ShowLeft(int revealedCount) => descriptionPaper.SetText(leftReveal.Shown(revealedCount), leftReveal.Slots(revealedCount, leftSettledRole, leftRevealedRole), settings.DescriptionTextColor, leftScales);
+        void ShowLeft(int revealedCount) => descriptionPaper.SetText(leftReveal.Shown(revealedCount), leftReveal.Slots(revealedCount, leftSettledRole, leftRevealedRole), leftScales);
 
         void RenderLetter()
         {
@@ -369,7 +379,7 @@ namespace DetectiveDave.OverworldPlay
             DrawLetter();
         }
 
-        void DrawLetter() => letterPaper.SetText(letterModel.Render(letterTyper.TypedCount, letterTyper.Path, LetterColors(), unchosenAlpha), letterModel.Slots(letterTyper.TypedCount, letterTyper.Path), settings.PendingTextColor);
+        void DrawLetter() => letterPaper.SetText(letterModel.Render(letterTyper.TypedCount, letterTyper.Path, LetterColors(), unchosenAlpha), letterModel.Slots(letterTyper.TypedCount, letterTyper.Path));
 
         void FadeUnchosenAnswer()
         {
@@ -393,11 +403,11 @@ namespace DetectiveDave.OverworldPlay
             fadeTarget = 1f;
         }
 
-        LetterPalette LetterColors() => new LetterPalette(Hex(settings.TypedTextColor), Hex(settings.PendingTextColor), Hex(settings.AcceptPendingTextColor), Hex(settings.DeclinePendingTextColor));
+        LetterPalette LetterColors() => new LetterPalette(Hex(colors.Typed), Hex(colors.Placeholder), Hex(colors.AcceptPending), Hex(colors.DeclinePending));
 
-        void RenderResponse() => letterPaper.SetText(responseModel.RenderTyping(responseTyper.TypedCount, responseTyper.CurrentUnitEnd, Hex(settings.TypedTextColor), Hex(settings.PendingTextColor)), responseModel.TypingSlots(responseTyper.TypedCount, responseTyper.CurrentUnitEnd), settings.PendingTextColor);
+        void RenderResponse() => letterPaper.SetText(responseModel.RenderTyping(responseTyper.TypedCount, responseTyper.CurrentUnitEnd, Hex(colors.Typed), Hex(colors.Placeholder)), responseModel.TypingSlots(responseTyper.TypedCount, responseTyper.CurrentUnitEnd));
 
-        void RenderReview() => letterPaper.SetText(responseModel.RenderReview(Hex(settings.TypedTextColor)), responseModel.ReviewSlots(), settings.TypedTextColor);
+        void RenderReview() => letterPaper.SetText(responseModel.RenderReview(Hex(colors.Typed)), responseModel.ReviewSlots());
 
         static string Hex(Color color) => ColorUtility.ToHtmlStringRGB(color);
     }

@@ -70,11 +70,14 @@ namespace DetectiveDave.OverworldPlay
         [SerializeField, Range(0.001f, 0.01f)] [Tooltip("How much the text size shrinks per try, as a share of the screen height.")] float textFitStepShare = 0.002f;
         [SerializeField, Range(0.8f, 2f)] [Tooltip("Height of one text row divided by the text size. Raise it if text still runs past the bottom of the paper.")] float textLineHeightRatio = 1.1f;
         [SerializeField, Range(0.3f, 1f)] [Tooltip("Width of one letter divided by the text size. 0.6 fits typewriter fonts. Raise it if lines run past the paper edge.")] float textAdvanceRatio = 0.6f;
-        [SerializeField] [Tooltip("Colour of the case description.")] Color descriptionTextColor = new Color(0.1f, 0.1f, 0.12f, 1f);
+        [SerializeField] [Tooltip("Colour of the case description. A case can set its own in its Look section.")] Color descriptionTextColor = new Color(0.1f, 0.1f, 0.12f, 1f);
+        [SerializeField] [Tooltip("Colour of the investigation findings on the left paper. A case can set its own in its Look section.")] Color findingsTextColor = new Color(0.1f, 0.1f, 0.12f, 1f);
         [SerializeField] [Tooltip("Colour of the letter that is not typed yet.")] Color pendingTextColor = new Color(0.55f, 0.55f, 0.55f, 1f);
         [SerializeField] [Tooltip("Colour of the letter that is typed.")] Color typedTextColor = Color.black;
         [SerializeField] [Tooltip("Colour of the accept answer that is not typed yet, while the player has not chosen.")] Color acceptPendingTextColor = new Color(0.2f, 0.6f, 0.28f, 1f);
         [SerializeField] [Tooltip("Colour of the decline answer that is not typed yet, while the player has not chosen.")] Color declinePendingTextColor = new Color(0.75f, 0.22f, 0.22f, 1f);
+        [SerializeField] [Tooltip("Colour of the paper, only used by the case inspector to preview a case's text colours and to warn when one is hard to read. It does not change the paper picture.")] Color paperReferenceColor = new Color(0.93f, 0.92f, 0.87f, 1f);
+        [SerializeField, Min(1f)] [Tooltip("Smallest contrast between a text colour and the paper reference colour before the case inspector warns that it is hard to read. 3 is the usual limit for large text, 4.5 for small text.")] float minimumTextContrast = 3f;
         [SerializeField, Min(0f)] [Tooltip("Seconds the answer that was not chosen takes to fade out. It keeps its space on the paper.")] float unchosenFadeSeconds = 0.4f;
 
         [Header("Description typing")]
@@ -157,6 +160,10 @@ namespace DetectiveDave.OverworldPlay
         public float TextLineHeightRatio => textLineHeightRatio;
         public float TextAdvanceRatio => textAdvanceRatio;
         public Color DescriptionTextColor => descriptionTextColor;
+        public Color FindingsTextColor => findingsTextColor;
+        public Color PaperReferenceColor => paperReferenceColor;
+        public float MinimumTextContrast => minimumTextContrast;
+        public TextColorSet TextColors => new TextColorSet(descriptionTextColor, findingsTextColor, typedTextColor, pendingTextColor, acceptPendingTextColor, declinePendingTextColor);
         public Color PendingTextColor => pendingTextColor;
         public Color TypedTextColor => typedTextColor;
         public Color AcceptPendingTextColor => acceptPendingTextColor;
