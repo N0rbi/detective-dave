@@ -39,6 +39,8 @@ namespace DetectiveDave.EditorTools
             if (missing.Length > 0) return "Nothing was changed. Missing assets:\n" + string.Join("\n", missing);
             MusicLoopImport.MakeGapless(MusicSetupPaths.LoopPath);
             var settings = EnsureSettings(pianoPaths);
+            var chartError = ChordChartSetup.ApplyOrError(settings, false);
+            if (chartError != null) return chartError;
             AssetDatabase.SaveAssets();
             return WireScene(PlayerSetupPaths.ScenePath, settings) ?? WireScene(OverworldSetupPaths.ScenePath, settings);
         }
