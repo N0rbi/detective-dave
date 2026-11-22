@@ -29,11 +29,13 @@ namespace DetectiveDave.OverworldPlay
             return !string.IsNullOrEmpty(caseId);
         }
 
-        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-        static void Reset()
+        public static void Clear()
         {
             Current = null;
             SolvedCaseId = null;
         }
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        static void Reset() => Clear();
     }
 }
