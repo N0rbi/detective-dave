@@ -39,6 +39,7 @@ namespace DetectiveDave.PlayerPlay
 
         public event Action<PlayerState> StateChanged { add => state.Changed += value; remove => state.Changed -= value; }
         public event Action<Key> Moved;
+        public event Action<MoveAttempt> MoveAttempted;
         public event Action Failed;
         public event Action GoalReached;
 
@@ -116,6 +117,7 @@ namespace DetectiveDave.PlayerPlay
 
         void PerformOutcome(MoveOutcome outcome, Key target)
         {
+            MoveAttempted?.Invoke(AttemptOf(outcome));
             if (outcome == MoveOutcome.Slip && settings.ForgivingMoves) return;
             switch (outcome)
             {
@@ -126,6 +128,13 @@ namespace DetectiveDave.PlayerPlay
                 case MoveOutcome.Slip: Slip(); break;
                 case MoveOutcome.BumpWall: BumpInto(target); break;
             }
+        }
+
+        MoveAttempt AttemptOf(MoveOutcome outcome)
+        {
+            if (outcome == MoveOutcome.Ignored || outcome == MoveOutcome.BumpWall) return MoveAttempt.Blocked;
+            if (outcome == MoveOutcome.Slip && settings.ForgivingMoves) return MoveAttempt.Blocked;
+            return MoveAttempt.Moved;
         }
 
         void Walk(Key target, PlayerState during, Action arrived)
