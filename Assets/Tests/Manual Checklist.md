@@ -122,3 +122,4 @@ Play with F5 on a level with a Gap and a WallGutter key between the two Shifts. 
 - A key that exists on UK but not on another layout (for example UK's extra keys on JIS): the Levels window checks name the layouts that break the guard.
 - Select something other than a guard: every guard in the level shows a small green dot on its START key.
 - Play This Level: the guard patrols between START and END along the line shown.
+- Step next to a guard while it is between two keys (not only when it reaches a key): it switches to the chase animation at once, finishes the step smoothly (turning back to the key it left when it had walked less than half of it) and then follows the shortest key path to you. No jump in its position. Step onto either key it is between: you are caught. Step onto a gutter key mid-chase: it finishes its step, then goes back to patrolling from where it stands.
