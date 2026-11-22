@@ -35,6 +35,17 @@ namespace DetectiveDave.OverworldPlay
             return text.ToString();
         }
 
+        public FontSlot[] TypingSlots(int typedCount, int currentUnitEnd)
+        {
+            var display = StoryDisplay.Of(plain, typedCount, currentUnitEnd);
+            var slots = new FontSlot[plain.Length];
+            FontRoles.FillRange(slots, 0, display.Typed.Length, TextRole.Typed);
+            FontRoles.FillRange(slots, display.Typed.Length, plain.Length - display.Typed.Length, TextRole.Placeholder);
+            return slots;
+        }
+
+        public FontSlot[] ReviewSlots() => FontRoles.Fill(plain.Length, TextRole.Typed);
+
         static void AppendRun(StringBuilder text, string run, string colorHex)
         {
             if (run.Length == 0) return;

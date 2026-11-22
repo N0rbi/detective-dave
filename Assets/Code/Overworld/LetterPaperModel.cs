@@ -57,6 +57,15 @@ namespace DetectiveDave.OverworldPlay
             return text.ToString();
         }
 
+        public FontSlot[] Slots(int typedCount, LetterPath path)
+        {
+            var typed = TypedMask(typedCount, path);
+            var slots = new FontSlot[plain.Length];
+            for (int position = 0; position < slots.Length; position++)
+                slots[position] = FontRoles.SlotOf(typed[position] ? TextRole.Typed : TextRole.Placeholder);
+            return slots;
+        }
+
         string ColorAt(int position, bool isTyped, LetterPath path, LetterPalette palette, string alphaHex)
         {
             var line = LineAt(position);
