@@ -18,6 +18,7 @@ namespace DetectiveDave.GuardPlay
         bool moving;
         Key arrivalKey;
         float movingRemaining;
+        float movingTotal;
 
         public GuardBrain(IKeyboardBoard board, KeyPathfinder pathfinder, IReadOnlyList<Key> route, GuardBrainSettings settings)
         {
@@ -40,7 +41,7 @@ namespace DetectiveDave.GuardPlay
         public GuardAction Tick(float deltaSeconds, Key playerKey)
         {
             if (Mode == GuardMode.Catching) return GuardAction.Stay();
-            if (!ArriveIfDone(deltaSeconds)) return GuardAction.Stay();
+            if (!ArriveIfDone(deltaSeconds)) return TickMidMove(playerKey);
 
             if (Current == playerKey) return CatchPlayer();
             if (ShouldStartChase(playerKey)) Mode = GuardMode.Chasing;
@@ -57,6 +58,37 @@ namespace DetectiveDave.GuardPlay
             moving = false;
             Current = arrivalKey;
             return true;
+        }
+
+        GuardAction TickMidMove(Key playerKey)
+        {
+            if (playerKey == Current || playerKey == arrivalKey) return CatchPlayer();
+            if (!ShouldStartChaseMidMove(playerKey)) return GuardAction.Stay();
+            Mode = GuardMode.Chasing;
+            return RedirectToNearestEnd();
+        }
+
+        bool ShouldStartChaseMidMove(Key playerKey)
+        {
+            if (Mode == GuardMode.Chasing) return false;
+            bool nearAnEnd = board.IsNeighbour(Current, playerKey) || board.IsNeighbour(arrivalKey, playerKey);
+            return nearAnEnd && pathfinder.HasPath(NearestEnd(), playerKey);
+        }
+
+        float MovingProgress() => movingTotal > 0f ? 1f - movingRemaining / movingTotal : 1f;
+
+        Key NearestEnd() => MovingProgress() < 0.5f ? Current : arrivalKey;
+
+        GuardAction RedirectToNearestEnd()
+        {
+            float progress = MovingProgress();
+            bool turnBack = progress < 0.5f;
+            float share = turnBack ? progress : 1f - progress;
+            float seconds = share * settings.ChaseSecondsPerKey;
+            if (turnBack) arrivalKey = Current;
+            movingRemaining = seconds;
+            movingTotal = seconds;
+            return GuardAction.Redirect(arrivalKey, seconds, true);
         }
 
         bool ShouldStartChase(Key playerKey)
@@ -145,6 +177,7 @@ namespace DetectiveDave.GuardPlay
             moving = true;
             arrivalKey = target;
             movingRemaining = seconds;
+            movingTotal = seconds;
             return GuardAction.StepTo(target, seconds, chasing);
         }
     }

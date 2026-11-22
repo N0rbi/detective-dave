@@ -145,6 +145,118 @@ namespace DetectiveDave.Tests
             Assert.That(action.Kind, Is.EqualTo(GuardActionKind.StepTo));
         }
 
+        static void AssertRedirect(GuardAction action, Key target, float seconds)
+        {
+            Assert.That(action.Kind, Is.EqualTo(GuardActionKind.Redirect));
+            Assert.That(action.IsChasing, Is.True);
+            Assert.That(action.Target, Is.EqualTo(target));
+            Assert.That(action.Seconds, Is.EqualTo(seconds).Within(0.0001f));
+        }
+
+        [Test]
+        public void NeighbourAppearingEarlyInAStep_TurnsTheGuardBackToTheKeyItLeft()
+        {
+            brain.Tick(1f, Key.Z);
+            var action = brain.Tick(0.2f, Key.D);
+            Assert.That(brain.Mode, Is.EqualTo(GuardMode.Chasing));
+            AssertRedirect(action, Key.A, 0.1f);
+        }
+
+        [Test]
+        public void NeighbourAppearingLateInAStep_SendsTheGuardOnToTheKeyItIsHeadingFor()
+        {
+            brain.Tick(1f, Key.Z);
+            var action = brain.Tick(0.8f, Key.D);
+            Assert.That(brain.Mode, Is.EqualTo(GuardMode.Chasing));
+            AssertRedirect(action, Key.S, 0.1f);
+        }
+
+        [Test]
+        public void NeighbourOfTheKeyBeingLeft_AlsoStartsAChase()
+        {
+            brain.Tick(1f, Key.Z);
+            brain.Tick(1f, Key.Z);
+            var action = brain.Tick(0.3f, Key.A);
+            Assert.That(brain.Mode, Is.EqualTo(GuardMode.Chasing));
+            AssertRedirect(action, Key.S, 0.15f);
+        }
+
+        [Test]
+        public void TurnedBackGuard_ArrivesOnItsFromKeyAndChasesFromThere()
+        {
+            brain.Tick(1f, Key.Z);
+            var redirect = brain.Tick(0.2f, Key.D);
+            var action = brain.Tick(redirect.Seconds, Key.D);
+            Assert.That(brain.Current, Is.EqualTo(Key.A));
+            AssertStep(action, Key.S, 0.5f);
+            Assert.That(action.IsChasing, Is.True);
+        }
+
+        [Test]
+        public void ForwardedGuard_ArrivesOnItsToKeyAndChasesFromThere()
+        {
+            brain.Tick(1f, Key.Z);
+            var redirect = brain.Tick(0.8f, Key.D);
+            var action = brain.Tick(redirect.Seconds, Key.D);
+            Assert.That(brain.Current, Is.EqualTo(Key.S));
+            AssertStep(action, Key.D, 0.5f);
+        }
+
+        [Test]
+        public void ChasingGuardMidMove_IsNotRedirectedAgain()
+        {
+            brain.Tick(1f, Key.Z);
+            var first = brain.Tick(0.8f, Key.D);
+            Assert.That(first.Kind, Is.EqualTo(GuardActionKind.Redirect));
+            Assert.That(brain.Tick(0.01f, Key.D).Kind, Is.EqualTo(GuardActionKind.Stay));
+        }
+
+        [Test]
+        public void PlayerTwoKeysFromBothEnds_DoesNotStartAChaseMidMove()
+        {
+            brain.Tick(1f, Key.Z);
+            Assert.That(brain.Tick(0.5f, Key.G).Kind, Is.EqualTo(GuardActionKind.Stay));
+            Assert.That(brain.Mode, Is.EqualTo(GuardMode.Patrolling));
+        }
+
+        [Test]
+        public void PlayerOnAGutterNextToTheGuardMidMove_DoesNotStartAChase()
+        {
+            level.Kinds[Key.D] = CellKind.Gutter;
+            brain.Tick(1f, Key.Z);
+            Assert.That(brain.Tick(0.8f, Key.D).Kind, Is.EqualTo(GuardActionKind.Stay));
+            Assert.That(brain.Mode, Is.EqualTo(GuardMode.Patrolling));
+        }
+
+        [Test]
+        public void PlayerSteppingOntoTheKeyTheGuardIsHeadingFor_MidMove_IsCaught()
+        {
+            brain.Tick(1f, Key.Z);
+            Assert.That(brain.Tick(0.3f, Key.S).Kind, Is.EqualTo(GuardActionKind.Catch));
+            Assert.That(brain.Mode, Is.EqualTo(GuardMode.Catching));
+        }
+
+        [Test]
+        public void PlayerSteppingOntoTheKeyTheGuardLeft_MidMove_IsCaught()
+        {
+            brain.Tick(1f, Key.Z);
+            Assert.That(brain.Tick(0.3f, Key.A).Kind, Is.EqualTo(GuardActionKind.Catch));
+        }
+
+        [Test]
+        public void PlayerEscapingOntoAGutterMidChase_LetsTheGuardFinishItsStepThenPatrolFromThere()
+        {
+            brain.Tick(1f, Key.Z);
+            var redirect = brain.Tick(0.8f, Key.D);
+            level.Kinds[Key.D] = CellKind.Gutter;
+            Assert.That(brain.Tick(0.05f, Key.D).Kind, Is.EqualTo(GuardActionKind.Stay));
+            var action = brain.Tick(redirect.Seconds, Key.D);
+            Assert.That(brain.Current, Is.EqualTo(Key.S));
+            Assert.That(brain.Mode, Is.EqualTo(GuardMode.Patrolling));
+            Assert.That(action.IsChasing, Is.False);
+            AssertStep(action, Key.D, 1f);
+        }
+
         [Test]
         public void LosingThePathFarFromTheRoute_WalksBackToTheNearestRouteKey()
         {

@@ -57,6 +57,7 @@ namespace DetectiveDave.GuardPlay
             actor.Elapsed += deltaSeconds;
             var action = actor.Brain.Tick(deltaSeconds, playerKey);
             if (action.Kind == GuardActionKind.StepTo) actor.BeginStep(WorldOf(actor.Brain.Current), WorldOf(action.Target), action.Seconds);
+            if (action.Kind == GuardActionKind.Redirect) actor.BeginStep(PositionOf(actor), WorldOf(action.Target), action.Seconds);
             Draw(actor);
             if (action.Kind != GuardActionKind.Catch) return false;
             caught = true;
@@ -75,6 +76,12 @@ namespace DetectiveDave.GuardPlay
             float progress = actor.Seconds > 0f ? Mathf.Clamp01(actor.Elapsed / actor.Seconds) : 1f;
             int frame = GuardFrames.At(progress, actor.View.FrameCount(chasing));
             actor.View.Show(Vector2.Lerp(actor.From, actor.To, progress), chasing, frame, actor.FacesRight);
+        }
+
+        static Vector2 PositionOf(Actor actor)
+        {
+            float progress = actor.Seconds > 0f ? Mathf.Clamp01(actor.Elapsed / actor.Seconds) : 1f;
+            return Vector2.Lerp(actor.From, actor.To, progress);
         }
 
         Vector2 WorldOf(Key key)

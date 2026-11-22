@@ -6,6 +6,7 @@ namespace DetectiveDave.GuardPlay
     {
         Stay,
         StepTo,
+        Redirect,
         Catch
     }
 
@@ -30,6 +31,8 @@ namespace DetectiveDave.GuardPlay
         public static GuardAction Stay() => new GuardAction(GuardActionKind.Stay, default, 0f, false);
 
         public static GuardAction StepTo(Key target, float seconds, bool isChasing) => new GuardAction(GuardActionKind.StepTo, target, seconds, isChasing);
+
+        public static GuardAction Redirect(Key target, float seconds, bool isChasing) => new GuardAction(GuardActionKind.Redirect, target, seconds, isChasing);
 
         public static GuardAction Catch() => new GuardAction(GuardActionKind.Catch, default, 0f, true);
     }

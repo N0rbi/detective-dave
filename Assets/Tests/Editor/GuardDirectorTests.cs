@@ -113,6 +113,31 @@ namespace DetectiveDave.Tests
         }
 
         [Test]
+        public void ANeighbourAppearingMidStepRedirectsTheGuardFromWhereItIsWithoutAPop()
+        {
+            director.Spawn(new[] { Spawn(Key.A, Key.S) });
+            director.Tick(0f, Key.Z);
+            director.Tick(0.5f, Key.Z);
+            director.Tick(0.1f, Key.D);
+            Assert.AreEqual(1.2f, views[0].World.x, 0.001f);
+            Assert.IsTrue(views[0].Chasing);
+            director.Tick(0.1f, Key.D);
+            Assert.AreEqual(1.6f, views[0].World.x, 0.001f);
+        }
+
+        [Test]
+        public void ANeighbourAppearingEarlyInAStepTurnsTheGuardBackSmoothly()
+        {
+            director.Spawn(new[] { Spawn(Key.A, Key.S) });
+            director.Tick(0f, Key.Z);
+            director.Tick(0.2f, Key.D);
+            Assert.AreEqual(0.4f, views[0].World.x, 0.001f);
+            director.Tick(0.025f, Key.D);
+            Assert.AreEqual(0.3f, views[0].World.x, 0.001f);
+            Assert.IsFalse(views[0].FacesRight);
+        }
+
+        [Test]
         public void CatchingThePlayerRaisesCaughtOnce()
         {
             director.Spawn(new[] { Spawn(Key.A) });
