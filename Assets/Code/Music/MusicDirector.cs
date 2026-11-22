@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using DG.Tweening;
@@ -30,15 +31,14 @@ namespace DetectiveDave.MusicPlay
             return instance;
         }
 
-        public void Play(int clipIndex, float volume, double delaySeconds)
+        public void Play(int clipIndex, float volume)
         {
             var voice = voices[nextVoice];
             nextVoice = (nextVoice + 1) % voices.Length;
             voice.Stop();
             voice.clip = pianoClips[clipIndex];
             voice.volume = Mathf.Clamp01(volume);
-            if (delaySeconds <= 0.0) voice.Play();
-            else voice.PlayScheduled(AudioSettings.dspTime + delaySeconds);
+            voice.Play();
         }
 
         void Configure(MusicSettings musicSettings)
@@ -46,26 +46,38 @@ namespace DetectiveDave.MusicPlay
             settings = musicSettings;
             pianoClips = NaturalNameOrder.Sorted(settings.PianoClips.Where(clip => clip), clip => clip.name).ToArray();
             voices = Enumerable.Range(0, settings.PianoPoolSize).Select(_ => NewVoice()).ToArray();
-            Reaction = settings.ChordChart ? (IMusicReaction)BuildReaction(settings.ChordChart) : new NoPianoReaction();
+            Reaction = BuildReaction();
             StartLoop();
             WarnIfSilent();
             WarnAboutChart();
         }
 
-        PianoReaction BuildReaction(ChordChart chart)
+        PianoReaction BuildReaction()
         {
             var random = new UnityRandomSource();
-            var clock = chart.CreateClock();
-            var palette = new ChordPalette(chart.Segments, pianoClips.Select(clip => PitchesOf(chart, clip)).ToList());
-            var picker = new WarnOnSilentChordPicker(PianoPickers.For(settings.PianoOrder, random, palette, settings.ChordToneWeight), palette, message => Debug.LogWarning($"{LogPrefix} {message}", chart));
-            var quantizer = new NoteQuantizer(clock, settings.QuantizeGrid, settings.MaxDelaySeconds, settings.LookAheadSeconds, settings.DropExtraNotesInSlot);
+            var chart = settings.ChordChart;
+            var hasChords = chart && chart.Segments.Count > 0;
             return new PianoReaction(
-                picker,
+                hasChords ? BuildChordPicker(chart, random) : new AnyClipPicker(settings.PianoOrder, random, pianoClips.Length),
                 new PianoNoteVolume(random, settings.PianoVolume, settings.PianoVolumeVariance, settings.BlockedMoveVolumeShare),
                 new ClickGate(settings.MinSecondsBetweenPianoNotes),
                 this,
                 () => Time.unscaledTime,
-                new ChordNoteTiming(clock, quantizer, LoopSeconds));
+                hasChords ? ChordMomentNow(chart) : () => ChordMoment.Outside);
+        }
+
+        IPianoPicker BuildChordPicker(ChordChart chart, UnityRandomSource random)
+        {
+            var palette = new ChordPalette(chart.Segments, pianoClips.Select(clip => PitchesOf(chart, clip)).ToList());
+            var fitting = PianoPickers.For(settings.PianoOrder, random, palette, settings.ChordToneWeight);
+            var warning = new WarnOnSilentChordPicker(fitting, palette, message => Debug.LogWarning($"{LogPrefix} {message}", chart));
+            return new GuaranteedClipPicker(warning, palette, settings.WhenNoClipFits);
+        }
+
+        Func<ChordMoment> ChordMomentNow(ChordChart chart)
+        {
+            var clock = chart.CreateClock();
+            return () => clock.MomentAt(LoopSeconds());
         }
 
         static PitchClassSet PitchesOf(ChordChart chart, AudioClip clip)
@@ -102,8 +114,8 @@ namespace DetectiveDave.MusicPlay
         void WarnIfSilent()
         {
             if (!settings.LoopClip) Debug.LogWarning($"{LogPrefix} Music Settings has no Loop Clip: there is no background music. Run Window > Detective Dave > Set Up Music.", settings);
-            if (pianoClips.Length == 0) Debug.LogWarning($"{LogPrefix} Music Settings has no Piano Clips: moves are silent. Run Window > Detective Dave > Set Up Music.", settings);
-            if (!settings.ChordChart) Debug.LogWarning($"{LogPrefix} Music Settings has no Chord Chart: moves are silent. Run Window > Detective Dave > Set Up Chord Chart.", settings);
+            if (pianoClips.Length == 0) Debug.LogWarning($"{LogPrefix} Music Settings has no Piano Clips: moves are silent, because there is nothing to play. Run Window > Detective Dave > Set Up Music.", settings);
+            if (!settings.ChordChart || settings.ChordChart.Segments.Count == 0) Debug.LogWarning($"{LogPrefix} Music Settings has no Chord Chart with chords: piano notes ignore the chords and follow Piano Order over all clips. Run Window > Detective Dave > Set Up Chord Chart.", settings);
             if (!FindAnyObjectByType<AudioListener>()) Debug.LogWarning($"{LogPrefix} The scene has no Audio Listener: nothing can be heard. Add one to the main camera.");
         }
 

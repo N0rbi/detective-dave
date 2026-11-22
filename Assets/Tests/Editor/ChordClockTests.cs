@@ -5,14 +5,13 @@ namespace DetectiveDave.Tests
 {
     public class ChordClockTests
     {
-        const double Precision = 1e-4;
-
         [Test]
-        public void At_75_bpm_a_beat_lasts_0_8_seconds_and_the_loop_25_6()
+        public void At_75_bpm_a_beat_lasts_0_8_seconds()
         {
             var clock = ChordFixtures.Clock();
-            Assert.AreEqual(0.8, clock.SecondsPerBeat, Precision);
-            Assert.AreEqual(25.6, clock.LoopSeconds, Precision);
+            Assert.AreEqual(0, clock.MomentAt(0.79).BeatInBar);
+            Assert.AreEqual(1, clock.MomentAt(0.81).BeatInBar);
+            Assert.AreEqual(3, clock.MomentAt(3.19).BeatInBar);
         }
 
         [Test]
@@ -82,30 +81,6 @@ namespace DetectiveDave.Tests
             var clock = new ChordClock(75f, 4, 8, 0f, new[] { new ChordSegment("Am7", 0f, 4f, new[] { 9 }, new[] { 9 }) });
             Assert.IsFalse(clock.MomentAt(5.0).IsInsideChart);
             Assert.AreEqual(ChordMoment.NoSegment, clock.MomentAt(5.0).SegmentIndex);
-        }
-
-        [Test]
-        public void The_next_eighth_note_slot_is_found_with_its_delay()
-        {
-            var slot = ChordFixtures.Clock().NextSlot(0.1, 0.5f);
-            Assert.AreEqual(1, slot.Index);
-            Assert.AreEqual(0.3, slot.DelaySeconds, Precision);
-        }
-
-        [Test]
-        public void A_position_exactly_on_a_slot_has_no_delay()
-        {
-            var slot = ChordFixtures.Clock().NextSlot(0.4, 0.5f);
-            Assert.AreEqual(1, slot.Index);
-            Assert.Less(slot.DelaySeconds, 1e-5);
-        }
-
-        [Test]
-        public void Triplet_eighths_are_a_third_of_a_beat_apart()
-        {
-            var slot = ChordFixtures.Clock().NextSlot(0.1, 1f / 3f);
-            Assert.AreEqual(1, slot.Index);
-            Assert.AreEqual(0.16667, slot.DelaySeconds, Precision);
         }
     }
 }

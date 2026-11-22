@@ -11,25 +11,24 @@ namespace DetectiveDave.MusicPlay
         readonly ClickGate gate;
         readonly IPianoVoices voices;
         readonly Func<float> clock;
-        readonly INoteTiming timing;
+        readonly Func<ChordMoment> momentNow;
 
-        public PianoReaction(IPianoPicker picker, PianoNoteVolume volume, ClickGate gate, IPianoVoices voices, Func<float> clock, INoteTiming timing)
+        public PianoReaction(IPianoPicker picker, PianoNoteVolume volume, ClickGate gate, IPianoVoices voices, Func<float> clock, Func<ChordMoment> momentNow)
         {
             this.picker = picker;
             this.volume = volume;
             this.gate = gate;
             this.voices = voices;
             this.clock = clock;
-            this.timing = timing;
+            this.momentNow = momentNow;
         }
 
         public void OnMoveAttempted(MoveAttempt attempt)
         {
             if (!gate.TryPass(clock())) return;
-            if (!timing.TryPlan(out var delaySeconds, out var moment)) return;
-            var clipIndex = picker.Next(moment);
+            var clipIndex = picker.Next(momentNow());
             if (clipIndex == PianoPicker.NoClip) return;
-            voices.Play(clipIndex, volume.For(attempt), delaySeconds);
+            voices.Play(clipIndex, volume.For(attempt));
         }
     }
 }

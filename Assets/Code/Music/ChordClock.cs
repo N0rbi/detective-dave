@@ -6,7 +6,6 @@ namespace DetectiveDave.MusicPlay
     public sealed class ChordClock
     {
         const int StrongBeatEvery = 2;
-        const double SlotTolerance = 1e-6;
         const double MomentTolerance = 1e-6;
 
         readonly double secondsPerBeat;
@@ -24,15 +23,9 @@ namespace DetectiveDave.MusicPlay
             this.segments = segments;
         }
 
-        public double SecondsPerBeat => secondsPerBeat;
-
-        public double LoopSeconds => loopBeats * secondsPerBeat;
-
-        public double UnwrappedChartBeat(double loopSeconds) => loopSeconds / secondsPerBeat + chartBeatAtLoopStart;
-
         public ChordMoment MomentAt(double loopSeconds)
         {
-            var beat = Wrap(UnwrappedChartBeat(loopSeconds) + MomentTolerance);
+            var beat = Wrap(ChartBeat(loopSeconds) + MomentTolerance);
             var segmentIndex = SegmentIndexAt(beat);
             if (segmentIndex == ChordMoment.NoSegment) return ChordMoment.Outside;
             var wholeBeat = (int)Math.Floor(beat);
@@ -41,13 +34,7 @@ namespace DetectiveDave.MusicPlay
             return new ChordMoment(segmentIndex, beatInBar, beatInBar % StrongBeatEvery == 0, isChordStart);
         }
 
-        public GridSlot NextSlot(double loopSeconds, float gridBeats)
-        {
-            var position = UnwrappedChartBeat(loopSeconds) / gridBeats;
-            var index = (long)Math.Ceiling(position - SlotTolerance);
-            var delay = (index - position) * gridBeats * secondsPerBeat;
-            return new GridSlot(index, Math.Max(delay, 0.0));
-        }
+        double ChartBeat(double loopSeconds) => loopSeconds / secondsPerBeat + chartBeatAtLoopStart;
 
         double Wrap(double beat)
         {

@@ -36,41 +36,27 @@ namespace DetectiveDave.Tests
             }
         }
 
-        sealed class FixedTiming : INoteTiming
-        {
-            public bool Plays = true;
-            public double Delay;
-            public ChordMoment Moment = new ChordMoment(2, 1, false, false);
-
-            public bool TryPlan(out double delaySeconds, out ChordMoment moment)
-            {
-                delaySeconds = Delay;
-                moment = Moment;
-                return Plays;
-            }
-        }
-
         sealed class RecordingVoices : IPianoVoices
         {
-            public readonly List<(int Clip, float Volume, double Delay)> Played = new List<(int, float, double)>();
+            public readonly List<(int Clip, float Volume)> Played = new List<(int, float)>();
 
-            public void Play(int clipIndex, float volume, double delaySeconds) => Played.Add((clipIndex, volume, delaySeconds));
+            public void Play(int clipIndex, float volume) => Played.Add((clipIndex, volume));
         }
 
         RecordingVoices voices;
-        FixedTiming timing;
+        ChordMoment moment;
         float now;
 
         [SetUp]
         public void SetUp()
         {
             voices = new RecordingVoices();
-            timing = new FixedTiming();
+            moment = new ChordMoment(2, 1, false, false);
             now = 0f;
         }
 
         PianoReaction Build(IPianoPicker picker, float minSecondsBetween = 0f) =>
-            new PianoReaction(picker, new PianoNoteVolume(new FixedRandom(), BaseVolume, 0.2f, BlockedShare), new ClickGate(minSecondsBetween), voices, () => now, timing);
+            new PianoReaction(picker, new PianoNoteVolume(new FixedRandom(), BaseVolume, 0.2f, BlockedShare), new ClickGate(minSecondsBetween), voices, () => now, () => moment);
 
         [Test]
         public void A_move_plays_the_picked_clip_at_full_volume()
@@ -96,30 +82,16 @@ namespace DetectiveDave.Tests
         }
 
         [Test]
-        public void The_delay_of_the_timing_is_passed_to_the_voice()
+        public void The_picker_gets_the_chord_moment_of_the_press()
         {
-            timing.Delay = 0.35;
-            Build(new ScriptedPicker(0)).OnMoveAttempted(MoveAttempt.Moved);
-            Assert.AreEqual(0.35, voices.Played[0].Delay, 1e-9);
-        }
-
-        [Test]
-        public void The_picker_gets_the_moment_of_the_timing()
-        {
-            var picker = new ScriptedPicker(0);
-            Build(picker).OnMoveAttempted(MoveAttempt.Moved);
+            var picker = new ScriptedPicker(0, 0);
+            var reaction = Build(picker);
+            reaction.OnMoveAttempted(MoveAttempt.Moved);
             Assert.AreEqual(2, picker.LastMoment.SegmentIndex);
             Assert.AreEqual(1, picker.LastMoment.BeatInBar);
-        }
-
-        [Test]
-        public void When_the_timing_drops_the_note_the_picker_is_not_asked()
-        {
-            timing.Plays = false;
-            var picker = new ScriptedPicker(0);
-            Build(picker).OnMoveAttempted(MoveAttempt.Moved);
-            Assert.AreEqual(0, picker.Calls);
-            Assert.IsEmpty(voices.Played);
+            moment = new ChordMoment(5, 3, false, false);
+            reaction.OnMoveAttempted(MoveAttempt.Moved);
+            Assert.AreEqual(5, picker.LastMoment.SegmentIndex);
         }
 
         [Test]

@@ -8,16 +8,6 @@ namespace DetectiveDave.Tests
 {
     public class SequentialPianoPickerTests
     {
-        sealed class FixedTiming : INoteTiming
-        {
-            public bool TryPlan(out double delaySeconds, out ChordMoment moment)
-            {
-                delaySeconds = 0.0;
-                moment = new ChordMoment(1, 0, true, true);
-                return true;
-            }
-        }
-
         sealed class NoRandom : IRandomSource
         {
             public float Range(float min, float max) => (min + max) / 2f;
@@ -29,7 +19,7 @@ namespace DetectiveDave.Tests
         {
             public readonly List<int> Clips = new List<int>();
 
-            public void Play(int clipIndex, float volume, double delaySeconds) => Clips.Add(clipIndex);
+            public void Play(int clipIndex, float volume) => Clips.Add(clipIndex);
         }
 
         [Test]
@@ -75,7 +65,7 @@ namespace DetectiveDave.Tests
         public void A_blocked_move_also_takes_the_next_clip()
         {
             var voices = new RecordingVoices();
-            var reaction = new PianoReaction(new InOrderChordPicker(new SequentialPianoPicker(12), ChordFixtures.Palette()), new PianoNoteVolume(new NoRandom(), 0.8f, 0f, 0.5f), new ClickGate(0f), voices, () => 0f, new FixedTiming());
+            var reaction = new PianoReaction(new InOrderChordPicker(new SequentialPianoPicker(12), ChordFixtures.Palette()), new PianoNoteVolume(new NoRandom(), 0.8f, 0f, 0.5f), new ClickGate(0f), voices, () => 0f, () => new ChordMoment(1, 0, true, true));
             reaction.OnMoveAttempted(MoveAttempt.Moved);
             reaction.OnMoveAttempted(MoveAttempt.Blocked);
             reaction.OnMoveAttempted(MoveAttempt.Moved);
