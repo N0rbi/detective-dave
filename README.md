@@ -170,6 +170,13 @@ Every level can set how the 2D lights of the Game scene look while it plays. Ope
 
 The keys react to the 2D lights through the material `Assets/Game/Keyboard/Art/KeyboardCellLit.mat` (shader Universal Render Pipeline/2D/Sprite-Lit-Default), set on the keyboard grid's **Cell Material** by Set Up Lighting. Lit now: the keys and the keyboard backdrop of Game.unity. Still unlit: the level background, the player, guards, decorations, the evidence picture, the dash gust and the spiral wipe; the Overworld is unchanged.
 
+## Reactive music
+A jazz loop plays all the time, and a piano note plays on every move. The loop is `Assets/Audio/Music/JazzLoop.wav`, the notes are the files in `Assets/Audio/Music/Piano`, and both are referenced by `Assets/Audio/Music/Music Settings.config.asset`. Run **Window > Detective Dave > Set Up Music** (Set Up Player, Set Up Overworld and Play This Level run it too): it fills the empty references, makes the loop import as uncompressed streaming audio when it still has Unity's default import, and adds a `MusicLink` to the object that holds the `PlayerController` in Game.unity and the `OverworldController` in Overworld.unity.
+
+`MusicLink` creates one `MusicDirector` that survives scene changes, so the loop never restarts when a level restarts or the overworld loads the game, and two scenes never start two loops. It listens to the `MoveAttempted` event of the controller (`IMoveAttemptSource`), raised by `PlayerGame` for every key the player presses while able to move: a step, gutter, gap fall, goal or slip is `Moved`; a wall, the key the player stands on, or a key that is not next to the player when slips are forgiven (the magnifying glass) is `Blocked`. Presses before the start, while moving, falling, in the spiral and in the briefing raise nothing.
+
+The reaction (`IMusicReaction`, today `PianoReaction`) picks a random note that is never the same twice in a row (`PianoPicker`) and plays it at `Piano Volume` with a random change of up to `Piano Volume Variance`; a blocked move plays at `Blocked Move Volume Share` (0.5, half) of that. To try another way of reacting, write another `IMusicReaction` and return it from `MusicDirector`.
+
 ## Player
 
 The player is shown on the level's start Shift key and the game does not start until that Shift is pressed; then press neighbouring keys to move. The other Shift is the End. All code is in `Assets/Code/Player` (namespace `DetectiveDave.PlayerPlay`, assembly `DetectiveDave.Game`).

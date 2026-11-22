@@ -135,3 +135,13 @@ Play with F5 on a level with a Gap and a WallGutter key between the two Shifts. 
 - Two patterns, one with Weight 0: only the other is ever picked. Weights 3 and 1: the first is picked about three times as often.
 - Wait At Least 9 and Wait At Most 4: the checks show an error with Swap the waits.
 - Play a level with flicker: the lights flicker now and then at random intervals; load the next level: the flicker restarts with that level's settings.
+
+## Reactive music
+- Assets/Staging no longer holds JazzLoop.wav or the Jazz - Piano files; they are in Assets/Audio/Music and Assets/Audio/Music/Piano.
+- Run Window > Detective Dave > Set Up Music. Assets/Audio/Music/Music Settings.config.asset exists with the Loop Clip and 12 Piano Clips. JazzLoop.wav imports as Streaming, PCM. The object with PlayerController in Game.unity and the object with OverworldController in Overworld.unity each have a MusicLink with the settings assigned.
+- Play the Overworld (Shift+F5): the loop fades in after about 2 seconds and plays all the time. Move the magnifying glass: a piano note plays on every move and never the same note twice in a row. Press a key that is not next to the glass: a quieter note (half volume) plays.
+- Open a case: the loop keeps playing without a restart while the briefing is open. Press keys during the briefing: no piano notes.
+- Start the level from the overworld: the loop does not restart on the scene change, and there is only one Music Director in the Hierarchy (under DontDestroyOnLoad). Walk the player: a note per step. Walk into a wall and press the key you stand on: half volume notes. While the player falls or the spiral plays, key presses make no sound.
+- Play a level directly with F5 (Play This Level): the loop plays and the notes react.
+- Set Min Seconds Between Piano Notes to 0.3 and press keys quickly: notes are skipped to keep 0.3 seconds apart. Set Piano Clips to one clip: it plays every time. Empty Piano Clips: a warning in the Console and no notes, the loop still plays.
+
