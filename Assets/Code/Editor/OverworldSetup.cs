@@ -44,7 +44,7 @@ namespace DetectiveDave.EditorTools
             var playerError = PlayerSetup.ApplyOrError();
             if (playerError != null) return "The player cannot be set up:\n" + playerError;
             AssetDatabase.Refresh();
-            var missing = OverworldSetupPaths.SpritePaths.Concat(OverworldSetupPaths.PlaceholderPaths).Where(path => !AssetImporter.GetAtPath(path)).ToArray();
+            var missing = OverworldSetupPaths.SpritePaths.Concat(OverworldSetupPaths.PlaceholderPaths).Concat(OverworldSetupPaths.FontPaths).Where(path => !AssetImporter.GetAtPath(path)).ToArray();
             if (missing.Length > 0) return "Nothing was changed. Missing assets:\n" + string.Join("\n", missing);
             var level = AssetDatabase.LoadAssetAtPath<Level>(OverworldSetupPaths.LevelPath);
             var sprites = OverworldSetupPaths.SpritePaths.Select(PlayerSpriteImport.ImportDecoration).ToArray();
@@ -107,7 +107,9 @@ namespace DetectiveDave.EditorTools
             FillIfEmpty(serialized, "letterPaperSprite", PlayerSpriteImport.ImportDecoration(OverworldSetupPaths.LetterPaperPath));
             FillIfEmpty(serialized, "ringSprite", PlayerSpriteImport.ImportDecoration(OverworldSetupPaths.RingPath));
             FillIfEmpty(serialized, "shiftKeycapSprite", PlayerSpriteImport.ImportDecoration(OverworldSetupPaths.KeycapPath));
-            FillIfEmpty(serialized, "textFont", AssetDatabase.LoadAssetAtPath<Font>(OverworldSetupPaths.FontPath));
+            FillIfEmpty(serialized, "clientAndPlaceholderFont", AssetDatabase.LoadAssetAtPath<Font>(OverworldSetupPaths.ClientAndPlaceholderFontPath));
+            FillIfEmpty(serialized, "findingsAndTypedFont", AssetDatabase.LoadAssetAtPath<Font>(OverworldSetupPaths.FindingsAndTypedFontPath));
+            FillIfEmpty(serialized, "noticeFont", AssetDatabase.LoadAssetAtPath<Font>(OverworldSetupPaths.NoticeFontPath));
             FillIfEmpty(serialized, "backspaceClip", AssetDatabase.LoadAssetAtPath<AudioClip>(OverworldSetupPaths.BackspacePath));
             var clicks = serialized.FindProperty("typewriterClicks");
             if (clicks.arraySize == 0)

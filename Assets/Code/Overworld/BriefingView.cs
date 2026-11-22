@@ -35,6 +35,8 @@ namespace DetectiveDave.OverworldPlay
         StoryTyper responseTyper;
         ResponsePaperModel responseModel;
         PaperReveal leftReveal;
+        TextRole leftSettledRole;
+        TextRole leftRevealedRole;
         Action<LetterOutcome> letterFinished;
         Action reportFinished;
         Action reviewFinished;
@@ -63,6 +65,8 @@ namespace DetectiveDave.OverworldPlay
             var file = findCase(caseId);
             mode = Mode.Letter;
             letterFinished = finishedCallback;
+            leftSettledRole = TextRole.ClientMessage;
+            leftRevealedRole = TextRole.ClientMessage;
             var leftText = new PaperReveal(string.Empty, file.ResolvedDescription).Full;
             var letters = PlacePapers(leftText, LetterPaperModel.Unwrapped(file.ClientName, file.ResolvedAcceptMessage, file.ResolvedDeclineMessage));
             leftReveal = new PaperReveal(string.Empty, TextWrap.Wrap(file.ResolvedDescription, letters.Description));
@@ -80,6 +84,7 @@ namespace DetectiveDave.OverworldPlay
             var file = findCase(caseId);
             mode = Mode.Report;
             reportFinished = finishedCallback;
+            UseReportRoles();
             var letters = PlacePapers(ReportText(file), file.ResolvedResponse);
             leftReveal = ReportReveal(file, letters.Description);
             gate = new BriefingGate(new TimedReveal(leftReveal.RevealedLength, settings.DescriptionSecondsPerCharacter, settings.DescriptionSkipSpeedMultiplier));
@@ -95,6 +100,7 @@ namespace DetectiveDave.OverworldPlay
             var file = findCase(caseId);
             mode = Mode.Review;
             reviewFinished = finishedCallback;
+            UseReportRoles();
             var letters = PlacePapers(ReportText(file), file.ResolvedResponse);
             leftReveal = ReportReveal(file, letters.Description);
             gate = new BriefingGate(new TimedReveal(0, settings.DescriptionSecondsPerCharacter, settings.DescriptionSkipSpeedMultiplier));
@@ -104,6 +110,12 @@ namespace DetectiveDave.OverworldPlay
             Begin();
         }
 
+        void UseReportRoles()
+        {
+            leftSettledRole = TextRole.ClientMessage;
+            leftRevealedRole = TextRole.Findings;
+        }
+
         static string ReportText(CaseFile file) => new PaperReveal(file.ResolvedDescription, file.ResolvedFindings).Full;
 
         static PaperReveal ReportReveal(CaseFile file, int lettersPerLine) =>
@@ -111,7 +123,7 @@ namespace DetectiveDave.OverworldPlay
 
         public void Refuse(string message, Action finished)
         {
-            letterPaper.SetText(message, settings.PendingTextColor);
+            letterPaper.SetText(message, FontRoles.Fill(message.Length, TextRole.Notice), settings.PendingTextColor);
             FinishAfterPause(finished, RefusalHoldFactor);
         }
 
@@ -148,7 +160,7 @@ namespace DetectiveDave.OverworldPlay
         {
             var paper = new GameObject(paperName).AddComponent<PaperView>();
             paper.transform.SetParent(transform, false);
-            paper.Configure(sprite, settings.TextFont);
+            paper.Configure(sprite, settings);
             return paper;
         }
 
@@ -161,10 +173,12 @@ namespace DetectiveDave.OverworldPlay
             var letterSpot = BriefingLayout.Place(settings.LetterPlacement, centre, view);
             var left = FitText(descriptionPaper, descriptionSpot, leftText, view.y);
             var right = FitText(letterPaper, letterSpot, rightText, view.y);
-            descriptionPaper.Place(descriptionSpot, left.LineHeight, settings.PaperPaddingShare);
-            letterPaper.Place(letterSpot, right.LineHeight, settings.PaperPaddingShare);
+            descriptionPaper.Place(descriptionSpot, TextGridOf(left), settings.PaperPaddingShare);
+            letterPaper.Place(letterSpot, TextGridOf(right), settings.PaperPaddingShare);
             return (left.LettersPerLine, right.LettersPerLine);
         }
+
+        TextGrid TextGridOf(TextFitResult fit) => new TextGrid(fit.LineHeight, settings.TextLineHeightRatio, settings.TextAdvanceRatio);
 
         TextFitResult FitText(PaperView paper, PaperSpot spot, string text, float viewHeight)
         {
@@ -319,7 +333,7 @@ namespace DetectiveDave.OverworldPlay
             sound.PlayDescriptionKey();
         }
 
-        void ShowLeft(int revealedCount) => descriptionPaper.SetText(leftReveal.Shown(revealedCount), settings.DescriptionTextColor);
+        void ShowLeft(int revealedCount) => descriptionPaper.SetText(leftReveal.Shown(revealedCount), leftReveal.Slots(revealedCount, leftSettledRole, leftRevealedRole), settings.DescriptionTextColor);
 
         void RenderLetter()
         {
@@ -327,7 +341,7 @@ namespace DetectiveDave.OverworldPlay
             DrawLetter();
         }
 
-        void DrawLetter() => letterPaper.SetText(letterModel.Render(letterTyper.TypedCount, letterTyper.Path, LetterColors(), unchosenAlpha), settings.PendingTextColor);
+        void DrawLetter() => letterPaper.SetText(letterModel.Render(letterTyper.TypedCount, letterTyper.Path, LetterColors(), unchosenAlpha), letterModel.Slots(letterTyper.TypedCount, letterTyper.Path), settings.PendingTextColor);
 
         void FadeUnchosenAnswer()
         {
@@ -353,9 +367,9 @@ namespace DetectiveDave.OverworldPlay
 
         LetterPalette LetterColors() => new LetterPalette(Hex(settings.TypedTextColor), Hex(settings.PendingTextColor), Hex(settings.AcceptPendingTextColor), Hex(settings.DeclinePendingTextColor));
 
-        void RenderResponse() => letterPaper.SetText(responseModel.RenderTyping(responseTyper.TypedCount, responseTyper.CurrentUnitEnd, Hex(settings.TypedTextColor), Hex(settings.PendingTextColor)), settings.PendingTextColor);
+        void RenderResponse() => letterPaper.SetText(responseModel.RenderTyping(responseTyper.TypedCount, responseTyper.CurrentUnitEnd, Hex(settings.TypedTextColor), Hex(settings.PendingTextColor)), responseModel.TypingSlots(responseTyper.TypedCount, responseTyper.CurrentUnitEnd), settings.PendingTextColor);
 
-        void RenderReview() => letterPaper.SetText(responseModel.RenderReview(Hex(settings.TypedTextColor)), settings.TypedTextColor);
+        void RenderReview() => letterPaper.SetText(responseModel.RenderReview(Hex(settings.TypedTextColor)), responseModel.ReviewSlots(), settings.TypedTextColor);
 
         static string Hex(Color color) => ColorUtility.ToHtmlStringRGB(color);
     }

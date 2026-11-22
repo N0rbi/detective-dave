@@ -14,9 +14,13 @@ namespace DetectiveDave.OverworldPlay
         [SerializeField] [Tooltip("The sheet of paper the letter and the response are typed on.")] Sprite letterPaperSprite;
         [SerializeField] [Tooltip("The hollow ring drawn around the magnifying glass while the dwell timer runs. White is tinted by the ring track colour.")] Sprite ringSprite;
         [SerializeField] [Tooltip("The keycap picture drawn under Left Shift and Right Shift so the desk reads as a keyboard. It is stretched to the size of the key.")] Sprite shiftKeycapSprite;
-        [SerializeField] [Tooltip("The typewriter font used for the description, the findings, the letter and the response.")] Font textFont;
         [SerializeField] [Tooltip("Typewriter clicks. One is picked at random for every valid key.")] AudioClip[] typewriterClicks = new AudioClip[0];
         [SerializeField] [Tooltip("Played when Backspace takes a letter away. Leave empty for silence.")] AudioClip backspaceClip;
+
+        [Header("Fonts")]
+        [SerializeField] [Tooltip("Used for the client's message on the left paper and for the grey placeholder text that waits to be typed. Use a monospaced font.")] Font clientAndPlaceholderFont;
+        [SerializeField] [Tooltip("Used for the investigation findings on the left paper and for the black text the player has typed. Use a monospaced font.")] Font findingsAndTypedFont;
+        [SerializeField] [Tooltip("Used for the notice shown on the letter paper when a case has no level yet. Use a monospaced font.")] Font noticeFont;
 
         [Header("Desk")]
         [SerializeField] [Tooltip("The desk the game starts on.")] DeskLayout desk;
@@ -104,7 +108,17 @@ namespace DetectiveDave.OverworldPlay
         public float RouteWidthInKeys => routeWidthInKeys;
         public float RouteFlowKeysPerSecond => routeFlowKeysPerSecond;
         public Color RouteColor => routeColor;
-        public Font TextFont => textFont;
+        public Font FontFor(FontSlot slot)
+        {
+            switch (slot)
+            {
+                case FontSlot.ClientAndPlaceholder: return clientAndPlaceholderFont;
+                case FontSlot.FindingsAndTyped: return findingsAndTypedFont;
+                case FontSlot.Notice: return noticeFont;
+                default: throw new System.ArgumentOutOfRangeException(nameof(slot), slot, "No font for this slot");
+            }
+        }
+
         public AudioClip[] TypewriterClicks => typewriterClicks;
         public AudioClip BackspaceClip => backspaceClip;
         public DeskLayout Desk => desk;
@@ -156,7 +170,9 @@ namespace DetectiveDave.OverworldPlay
                 if (!letterPaperSprite) missing.Add("letterPaperSprite");
                 if (!ringSprite) missing.Add("ringSprite");
                 if (!shiftKeycapSprite) missing.Add("shiftKeycapSprite");
-                if (!textFont) missing.Add("textFont");
+                if (!clientAndPlaceholderFont) missing.Add("clientAndPlaceholderFont");
+                if (!findingsAndTypedFont) missing.Add("findingsAndTypedFont");
+                if (!noticeFont) missing.Add("noticeFont");
                 if (typewriterClicks == null || typewriterClicks.Length == 0 || System.Array.TrueForAll(typewriterClicks, clip => !clip)) missing.Add("typewriterClicks");
                 return string.Join(", ", missing);
             }
