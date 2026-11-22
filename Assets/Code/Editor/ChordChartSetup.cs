@@ -32,8 +32,10 @@ namespace DetectiveDave.EditorTools
                 PlayerSetup.ShowProblem(DialogTitle, error);
                 return;
             }
+            var singles = SingleNoteSetup.Apply(settings);
+            AssetDatabase.SaveAssets();
             Selection.activeObject = AssetDatabase.LoadAssetAtPath<Object>(MusicSetupPaths.ChartPath);
-            EditorUtility.DisplayDialog(DialogTitle, "The Chord Chart is filled from chord_chart.json and linked on Music Settings.", "OK");
+            EditorUtility.DisplayDialog(DialogTitle, "The Chord Chart is filled from chord_chart.json and linked on Music Settings.\n\n" + singles.Text, "OK");
         }
 
         public static string ApplyOrError(MusicSettings settings, bool replaceExisting)
@@ -98,6 +100,7 @@ namespace DetectiveDave.EditorTools
         static Dictionary<string, AudioClip> PianoClipsByName() =>
             AssetDatabase.FindAssets("t:AudioClip", new[] { MusicSetupPaths.PianoFolder })
                 .Select(AssetDatabase.GUIDToAssetPath)
+                .Where(path => !MusicSetupPaths.IsSingleNotePath(path))
                 .Select(AssetDatabase.LoadAssetAtPath<AudioClip>)
                 .GroupBy(clip => clip.name)
                 .ToDictionary(group => group.Key, group => group.First());

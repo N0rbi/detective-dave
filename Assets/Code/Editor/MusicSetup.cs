@@ -22,18 +22,21 @@ namespace DetectiveDave.EditorTools
                 return;
             }
             AssetDatabase.Refresh();
-            var error = ApplyOrError();
+            var error = ApplyOrError(out var singles);
             if (error != null)
             {
                 PlayerSetup.ShowProblem(DialogTitle, error);
                 return;
             }
             Selection.activeObject = AssetDatabase.LoadAssetAtPath<Object>(MusicSetupPaths.SettingsPath);
-            EditorUtility.DisplayDialog(DialogTitle, "The jazz loop and the piano notes are on Music Settings, and the game and the overworld play them.", "OK");
+            EditorUtility.DisplayDialog(DialogTitle, "The jazz loop and the piano notes are on Music Settings, and the game and the overworld play them.\n\n" + singles.Text, "OK");
         }
 
-        public static string ApplyOrError()
+        public static string ApplyOrError() => ApplyOrError(out _);
+
+        public static string ApplyOrError(out SingleNoteReport singles)
         {
+            singles = SingleNoteReport.Empty;
             var pianoPaths = PianoPaths();
             var missing = MissingAssets(pianoPaths);
             if (missing.Length > 0) return "Nothing was changed. Missing assets:\n" + string.Join("\n", missing);
@@ -41,12 +44,13 @@ namespace DetectiveDave.EditorTools
             var settings = EnsureSettings(pianoPaths);
             var chartError = ChordChartSetup.ApplyOrError(settings, false);
             if (chartError != null) return chartError;
+            singles = SingleNoteSetup.Apply(settings);
             AssetDatabase.SaveAssets();
             return WireScene(PlayerSetupPaths.ScenePath, settings) ?? WireScene(OverworldSetupPaths.ScenePath, settings);
         }
 
         static string[] PianoPaths() =>
-            NaturalOrder.Sort(AssetDatabase.FindAssets("t:AudioClip", new[] { MusicSetupPaths.PianoFolder }).Select(AssetDatabase.GUIDToAssetPath).ToArray());
+            NaturalOrder.Sort(AssetDatabase.FindAssets("t:AudioClip", new[] { MusicSetupPaths.PianoFolder }).Select(AssetDatabase.GUIDToAssetPath).Where(path => !MusicSetupPaths.IsSingleNotePath(path)).ToArray());
 
         static string[] MissingAssets(string[] pianoPaths)
         {
