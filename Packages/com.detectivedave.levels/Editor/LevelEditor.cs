@@ -12,9 +12,18 @@ namespace DetectiveDave.Levels.Editor
         List<LevelIssue> issues;
         LevelTerrain preview;
 
-        void OnEnable() => cache = new LevelInspectorCache(Repaint);
+        void OnEnable()
+        {
+            cache = new LevelInspectorCache(Repaint);
+            LightingPreview.Changed += Repaint;
+        }
 
-        void OnDisable() => cache?.Dispose();
+        void OnDisable()
+        {
+            LightingPreview.Changed -= Repaint;
+            LightingPreview.Stop();
+            cache?.Dispose();
+        }
 
         public override void OnInspectorGUI()
         {
@@ -31,8 +40,14 @@ namespace DetectiveDave.Levels.Editor
 
             LevelEditorGUI.Header("Level");
             EditorGUI.BeginChangeCheck();
-            DrawPropertiesExcluding(serializedObject, "m_Script");
+            DrawPropertiesExcluding(serializedObject, "m_Script", "lighting");
             LevelEditorGUI.DrawEndKey(level);
+            if (EditorGUI.EndChangeCheck()) cache.MarkDirty();
+            serializedObject.ApplyModifiedProperties();
+
+            serializedObject.Update();
+            EditorGUI.BeginChangeCheck();
+            LightingEditorGUI.Draw(serializedObject.FindProperty("lighting"), level.Lighting);
             if (EditorGUI.EndChangeCheck()) cache.MarkDirty();
             serializedObject.ApplyModifiedProperties();
 
