@@ -37,9 +37,42 @@ namespace DetectiveDave.Tests
         {
             var typer = Single("a, b");
             typer.TryType('a');
-            Assert.AreEqual(2, typer.TypedCount);
-            Assert.IsTrue(typer.TryType(' '));
             Assert.AreEqual(3, typer.TypedCount);
+            Assert.IsTrue(typer.TryType('b'));
+        }
+
+        [Test]
+        public void SpacesAreTypedByThemselvesEvenWhenFreeCharactersAreNot()
+        {
+            var typer = Single("a b", false);
+            typer.TryType('a');
+            Assert.AreEqual(2, typer.TypedCount);
+        }
+
+        [Test]
+        public void PressingSpaceWhereNoSpaceIsExpectedDoesNothing()
+        {
+            var typer = Single("ab");
+            Assert.IsFalse(typer.TryType(' '));
+            Assert.AreEqual(0, typer.TypedCount);
+        }
+
+        [Test]
+        public void AnyWhitespaceMatchesAnyWhitespace()
+        {
+            var typer = new PrefixTyper(new[] { "a\nb", "a c" }, TypingRules.Default);
+            typer.TryType('a');
+            Assert.AreEqual(2, typer.TypedCount);
+        }
+
+        [Test]
+        public void EnterTypedByHandChoosesTheTargetThatContinuesWithWhitespace()
+        {
+            var typer = new PrefixTyper(new[] { "a\nb", "a.b" }, new TypingRules(false));
+            typer.TryType('a');
+            Assert.IsTrue(typer.TryType('\r'));
+            Assert.IsTrue(typer.IsAlive(0));
+            Assert.IsFalse(typer.IsAlive(1));
         }
 
         [Test]
@@ -88,7 +121,7 @@ namespace DetectiveDave.Tests
             var typer = Single("ab, c");
             typer.TryType('a');
             typer.TryType('b');
-            Assert.AreEqual(3, typer.TypedCount);
+            Assert.AreEqual(4, typer.TypedCount);
             typer.Backspace();
             Assert.AreEqual(1, typer.TypedCount);
         }

@@ -42,7 +42,7 @@ namespace DetectiveDave.OverworldPlay
             if (target.Length < typed.Count) return false;
             for (int position = 0; position < typed.Count; position++)
             {
-                if (Lower(target[position]) != typed[position]) return false;
+                if (CharacterMatch.Canonical(target[position]) != typed[position]) return false;
             }
             return true;
         }
@@ -50,9 +50,9 @@ namespace DetectiveDave.OverworldPlay
         public bool TryType(char character)
         {
             if (IsComplete) return false;
-            var lowered = Lower(character);
-            if (rules.IsAutoTyped(lowered) || !AnyAliveTargetExpects(lowered)) return false;
-            typed.Add(lowered);
+            var canonical = CharacterMatch.Canonical(character);
+            if (!AnyAliveTargetExpects(canonical)) return false;
+            typed.Add(canonical);
             TypeFreeCharacters();
             return true;
         }
@@ -67,11 +67,11 @@ namespace DetectiveDave.OverworldPlay
             return typed.Count != before;
         }
 
-        bool AnyAliveTargetExpects(char lowered)
+        bool AnyAliveTargetExpects(char canonical)
         {
             for (int index = 0; index < targets.Length; index++)
             {
-                if (IsAlive(index) && typed.Count < targets[index].Length && Lower(targets[index][typed.Count]) == lowered) return true;
+                if (IsAlive(index) && typed.Count < targets[index].Length && CharacterMatch.Canonical(targets[index][typed.Count]) == canonical) return true;
             }
             return false;
         }
@@ -89,7 +89,7 @@ namespace DetectiveDave.OverworldPlay
             {
                 if (!IsAlive(index)) continue;
                 if (typed.Count >= targets[index].Length) return false;
-                var candidate = Lower(targets[index][typed.Count]);
+                var candidate = CharacterMatch.Canonical(targets[index][typed.Count]);
                 if (found && candidate != next) return false;
                 next = candidate;
                 found = true;
@@ -98,7 +98,5 @@ namespace DetectiveDave.OverworldPlay
         }
 
         void RemoveLast() => typed.RemoveAt(typed.Count - 1);
-
-        static char Lower(char character) => char.ToLowerInvariant(character);
     }
 }

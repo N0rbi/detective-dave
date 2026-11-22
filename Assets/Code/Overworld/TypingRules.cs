@@ -11,8 +11,10 @@ namespace DetectiveDave.OverworldPlay
 
         public static TypingRules Default => new TypingRules(true);
 
-        public static bool IsFreeCharacter(char character) => character == '\n' || character == '\r' || char.IsPunctuation(character) || char.IsSymbol(character);
+        public static bool IsFreeCharacter(char character) => char.IsWhiteSpace(character) || IsMark(character);
 
-        public bool IsAutoTyped(char character) => AutoTypeFreeCharacters && IsFreeCharacter(character);
+        public bool IsAutoTyped(char character) => char.IsWhiteSpace(character) || (AutoTypeFreeCharacters && IsMark(character));
+
+        static bool IsMark(char character) => char.IsPunctuation(character) || char.IsSymbol(character);
     }
 }

@@ -233,7 +233,7 @@ namespace DetectiveDave.Tests
             Assert.AreEqual("|Hi |there. Bye now.", Shown(typer));
             Type(typer, "h");
             Assert.AreEqual("H|i |there. Bye now.", Shown(typer));
-            Type(typer, "i ");
+            Type(typer, "i");
             Assert.AreEqual("Hi |there. |Bye now.", Shown(typer));
         }
 
@@ -241,15 +241,15 @@ namespace DetectiveDave.Tests
         public void Auto_typed_punctuation_turns_black_at_once()
         {
             var typer = new StoryTyper(Story, TypingRules.Default, RevealUnit.Word);
-            Type(typer, "hi there");
-            Assert.AreEqual("Hi there.| |Bye now.", Shown(typer));
+            Type(typer, "hithere");
+            Assert.AreEqual("Hi there. |Bye |now.", Shown(typer));
         }
 
         [Test]
         public void Backspace_turns_a_typed_letter_grey_again()
         {
             var typer = new StoryTyper(Story, TypingRules.Default, RevealUnit.Word);
-            Type(typer, "hi t");
+            Type(typer, "hit");
             Assert.AreEqual("Hi t|here. |Bye now.", Shown(typer));
             typer.Backspace();
             Assert.AreEqual("Hi |there. |Bye now.", Shown(typer));
@@ -260,7 +260,7 @@ namespace DetectiveDave.Tests
         {
             var typer = new StoryTyper(Story, TypingRules.Default, RevealUnit.Sentence);
             Assert.AreEqual("|Hi there. |Bye now.", Shown(typer));
-            Type(typer, "hi there ");
+            Type(typer, "hithere");
             Assert.AreEqual("Hi there. |Bye now.|", Shown(typer));
         }
 
@@ -269,14 +269,14 @@ namespace DetectiveDave.Tests
         {
             var typer = new StoryTyper(Story, TypingRules.Default, RevealUnit.Character);
             Type(typer, "hi");
-            Assert.AreEqual("Hi|" + " " + "|there. Bye now.", Shown(typer));
+            Assert.AreEqual("Hi |t|here. Bye now.", Shown(typer));
         }
 
         [Test]
         public void The_end_of_the_text_leaves_nothing_pending_or_hidden()
         {
             var typer = new StoryTyper(Story, TypingRules.Default, RevealUnit.Word);
-            Type(typer, "hi there bye now");
+            Type(typer, "hitherebyenow");
             Assert.IsTrue(typer.IsComplete);
             Assert.AreEqual("Hi there. Bye now.||", Shown(typer));
         }
