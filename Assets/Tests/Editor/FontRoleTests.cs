@@ -73,68 +73,6 @@ namespace DetectiveDave.Tests
         }
     }
 
-    public class LayerLinesTests
-    {
-        const FontSlot Client = FontSlot.Placeholder;
-        const FontSlot Typed = FontSlot.Typed;
-
-        [Test]
-        public void A_layer_keeps_its_own_characters_and_hides_the_others_in_place()
-        {
-            var runs = RichRuns.Parse("<color=#111>ab</color><color=#999>cd</color>");
-            var slots = new[] { Typed, Typed, Client, Client };
-            Assert.AreEqual(new[] { "<color=#111>ab</color><color=#00000000>cd</color>" }, LayerLines.Build(runs, slots, Typed));
-            Assert.AreEqual(new[] { "<color=#00000000>ab</color><color=#999>cd</color>" }, LayerLines.Build(runs, slots, Client));
-        }
-
-        [Test]
-        public void Lines_split_at_line_breaks()
-        {
-            var runs = RichRuns.Parse("ab\ncd");
-            var slots = new[] { Client, Client, Client, Client, Client };
-            CollectionAssert.AreEqual(new[] { "ab", "cd" }, LayerLines.Build(runs, slots, Client));
-        }
-
-        [Test]
-        public void A_line_without_any_character_of_the_layer_is_null()
-        {
-            var runs = RichRuns.Parse("ab\ncd");
-            var slots = new[] { Typed, Typed, Typed, Client, Client };
-            CollectionAssert.AreEqual(new[] { "ab", null }, LayerLines.Build(runs, slots, Typed));
-        }
-
-        [Test]
-        public void A_blank_line_keeps_its_place_as_null()
-        {
-            var runs = RichRuns.Parse("a\n\nb");
-            var slots = new[] { Client, Client, Client, Client };
-            CollectionAssert.AreEqual(new[] { "a", null, "b" }, LayerLines.Build(runs, slots, Client));
-        }
-
-        [Test]
-        public void A_run_that_spans_two_slots_is_split_into_visible_and_hidden_parts()
-        {
-            var runs = RichRuns.Parse("<color=#111>abcd</color>");
-            var slots = new[] { Typed, Typed, Client, Client };
-            Assert.AreEqual(new[] { "<color=#111>ab</color><color=#00000000>cd</color>" }, LayerLines.Build(runs, slots, Typed));
-        }
-
-        [Test]
-        public void Uncoloured_text_of_the_layer_stays_uncoloured()
-        {
-            var runs = RichRuns.Parse("ab");
-            var slots = new[] { Client, Typed };
-            Assert.AreEqual(new[] { "a<color=#00000000>b</color>" }, LayerLines.Build(runs, slots, Client));
-        }
-
-        [Test]
-        public void A_slot_count_that_does_not_match_the_text_is_an_error()
-        {
-            var runs = RichRuns.Parse("abc");
-            Assert.Throws<System.ArgumentException>(() => LayerLines.Build(runs, new[] { Client }, Client));
-        }
-    }
-
     public class FontSlotsOfModelsTests
     {
         [Test]

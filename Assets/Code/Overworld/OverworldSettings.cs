@@ -23,6 +23,8 @@ namespace DetectiveDave.OverworldPlay
         [SerializeField, FormerlySerializedAs("findingsAndTypedFont")] [Tooltip("Used for the black text the player has typed, which replaces the grey placeholder. Use a monospaced font.")] Font typedFont;
         [SerializeField] [Tooltip("Used for the investigation findings on the left paper, after the level and in the solved case review. A case's Description Font Override never changes it. Use a monospaced font.")] Font findingsFont;
         [SerializeField] [Tooltip("Used for the notice shown on the letter paper when a case has no level yet. Use a monospaced font.")] Font noticeFont;
+        [SerializeField, Range(-0.5f, 0.5f)] [Tooltip("Moves the typed letters down (positive) or up (negative), as a share of the text row height. Use it to put the typed font on the same baseline as the placeholder font.")] float typedFontBaselineOffsetShare;
+        [SerializeField, Range(-0.5f, 0.5f)] [Tooltip("Moves the grey placeholder letters down (positive) or up (negative), as a share of the text row height.")] float placeholderFontBaselineOffsetShare;
 
         [Header("Desk")]
         [SerializeField] [Tooltip("The desk the game starts on.")] DeskLayout desk;
@@ -121,6 +123,16 @@ namespace DetectiveDave.OverworldPlay
                 case FontSlot.Findings: return findingsFont;
                 case FontSlot.Notice: return noticeFont;
                 default: throw new System.ArgumentOutOfRangeException(nameof(slot), slot, "No font for this slot");
+            }
+        }
+
+        public float BaselineOffsetShareFor(FontSlot slot)
+        {
+            switch (slot)
+            {
+                case FontSlot.Typed: return typedFontBaselineOffsetShare;
+                case FontSlot.Placeholder: return placeholderFontBaselineOffsetShare;
+                default: return 0f;
             }
         }
 

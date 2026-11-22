@@ -16,22 +16,25 @@ namespace DetectiveDave.OverworldPlay
 
         readonly Dictionary<FontSlot, Font> fonts = new Dictionary<FontSlot, Font>();
         readonly Dictionary<FontSlot, float> advancePixels = new Dictionary<FontSlot, float>();
-        readonly Dictionary<FontSlot, List<TextMesh>> layers = new Dictionary<FontSlot, List<TextMesh>>();
+        readonly Dictionary<int, float> glyphWidthPixels = new Dictionary<int, float>();
+        readonly List<GlyphMesh> glyphMeshes = new List<GlyphMesh>();
 
+        OverworldSettings settings;
         Font settingsRequestFont;
         SpriteRenderer sheet;
         Vector2 rest;
         Vector3 textOrigin;
         TextGrid grid;
 
-        public void Configure(Sprite paper, OverworldSettings settings)
+        public void Configure(Sprite paper, OverworldSettings overworldSettings)
         {
+            settings = overworldSettings;
             sheet = new GameObject("Sheet").AddComponent<SpriteRenderer>();
             sheet.transform.SetParent(transform, false);
             sheet.sprite = paper;
             sheet.sortingOrder = SheetSortingOrder;
             settingsRequestFont = settings.FontFor(FontSlot.Request);
-            foreach (var slot in AllSlots) AddLayer(slot, settings.FontFor(slot));
+            foreach (var slot in AllSlots) AddFont(slot, settings.FontFor(slot));
             gameObject.SetActive(false);
         }
 
@@ -60,33 +63,26 @@ namespace DetectiveDave.OverworldPlay
 
         public void SetText(string richText, FontSlot[] slots, Color baseColor, LineScales scales)
         {
-            var runs = RichRuns.Parse(richText);
-            foreach (var slot in AllSlots) ShowLayer(slot, LayerLines.Build(runs, slots, slot), baseColor, scales);
+            var glyphs = GlyphPlan.Build(RichRuns.Parse(richText), slots);
+            for (int index = 0; index < glyphs.Count; index++) DrawGlyph(MeshAt(index), glyphs[index], baseColor, scales);
+            for (int index = glyphs.Count; index < glyphMeshes.Count; index++) glyphMeshes[index].Hide();
         }
 
         public void UseRequestFont(Font caseOverride) => ChangeFont(FontSlot.Request, RequestFontChoice.For(caseOverride, settingsRequestFont));
 
         public void SetVisible(bool visible) => gameObject.SetActive(visible);
 
-        void AddLayer(FontSlot slot, Font font)
+        void AddFont(FontSlot slot, Font font)
         {
             fonts[slot] = font;
             advancePixels[slot] = MeasureAdvance(font);
-            layers[slot] = new List<TextMesh>();
         }
 
         void ChangeFont(FontSlot slot, Font font)
         {
             if (fonts[slot] == font) return;
-            fonts[slot] = font;
-            advancePixels[slot] = MeasureAdvance(font);
-            foreach (var mesh in layers[slot]) ApplyFont(mesh, font);
-        }
-
-        static void ApplyFont(TextMesh mesh, Font font)
-        {
-            mesh.font = font;
-            mesh.GetComponent<MeshRenderer>().sharedMaterial = font.material;
+            AddFont(slot, font);
+            glyphWidthPixels.Clear();
         }
 
         static float MeasureAdvance(Font font)
@@ -97,45 +93,92 @@ namespace DetectiveDave.OverworldPlay
             return info.advance;
         }
 
-        void ShowLayer(FontSlot slot, string[] lines, Color baseColor, LineScales scales)
+        float WidthPixelsOf(FontSlot slot, char character)
         {
-            var meshes = layers[slot];
-            for (int index = 0; index < lines.Length; index++)
-            {
-                var mesh = MeshAt(slot, meshes, index);
-                bool visible = lines[index] != null;
-                mesh.gameObject.SetActive(visible);
-                if (visible) Draw(mesh, slot, lines[index], scales, index, baseColor);
-            }
-            for (int index = lines.Length; index < meshes.Count; index++) meshes[index].gameObject.SetActive(false);
+            int key = ((int)slot << 16) | character;
+            if (glyphWidthPixels.TryGetValue(key, out float known)) return known;
+            var font = fonts[slot];
+            font.RequestCharactersInTexture(character.ToString(), FontSize);
+            font.GetCharacterInfo(character, out var info, FontSize);
+            float width = Mathf.Max(info.advance, info.maxX - info.minX);
+            glyphWidthPixels[key] = width;
+            return width;
         }
 
-        TextMesh MeshAt(FontSlot slot, List<TextMesh> meshes, int index)
+        GlyphMesh MeshAt(int index)
         {
-            while (meshes.Count <= index) meshes.Add(NewMesh(slot, meshes.Count));
-            return meshes[index];
+            while (glyphMeshes.Count <= index) glyphMeshes.Add(NewGlyphMesh(glyphMeshes.Count));
+            return glyphMeshes[index];
         }
 
-        TextMesh NewMesh(FontSlot slot, int index)
+        GlyphMesh NewGlyphMesh(int index)
         {
-            var textObject = new GameObject("Text " + slot + " " + index);
+            var textObject = new GameObject("Glyph " + index);
             textObject.transform.SetParent(transform, false);
             var mesh = textObject.AddComponent<TextMesh>();
             mesh.fontSize = FontSize;
-            mesh.richText = true;
-            mesh.anchor = TextAnchor.UpperLeft;
-            mesh.alignment = TextAlignment.Left;
-            ApplyFont(mesh, fonts[slot]);
+            mesh.richText = false;
+            mesh.anchor = TextAnchor.UpperCenter;
+            mesh.alignment = TextAlignment.Center;
             textObject.GetComponent<MeshRenderer>().sortingOrder = TextSortingOrder;
-            return mesh;
+            return new GlyphMesh(mesh);
         }
 
-        void Draw(TextMesh mesh, FontSlot slot, string line, LineScales scales, int index, Color baseColor)
+        void DrawGlyph(GlyphMesh glyphMesh, Glyph glyph, Color baseColor, LineScales scales)
         {
-            mesh.characterSize = grid.LetterWidth * scales.ShareOf(index) / (advancePixels[slot] * EmScale);
-            mesh.color = baseColor;
-            mesh.text = line;
-            mesh.transform.localPosition = textOrigin + Vector3.down * (scales.OffsetOf(index) * grid.LineStep);
+            var color = ColorOf(glyph.ColorHex, baseColor);
+            if (color.a <= 0f)
+            {
+                glyphMesh.Hide();
+                return;
+            }
+            float cellWidth = grid.LetterWidth * scales.ShareOf(glyph.Row);
+            float characterSize = cellWidth / (advancePixels[glyph.Slot] * EmScale);
+            float glyphWidth = WidthPixelsOf(glyph.Slot, glyph.Character) * characterSize * EmScale;
+            float x = textOrigin.x + GlyphCell.CentreX(glyph.Column, cellWidth);
+            float y = textOrigin.y + GlyphCell.TopY(scales.OffsetOf(glyph.Row), grid.LineStep, settings.BaselineOffsetShareFor(glyph.Slot), scales.ShareOf(glyph.Row));
+            glyphMesh.Show(glyph.Character, fonts[glyph.Slot], color, characterSize, GlyphCell.HorizontalScale(glyphWidth, cellWidth), new Vector3(x, y, textOrigin.z));
+        }
+
+        static Color ColorOf(string hex, Color baseColor)
+        {
+            if (hex == null) return baseColor;
+            if (!ColorUtility.TryParseHtmlString("#" + hex, out var color)) throw new FormatException("Not a colour: " + hex);
+            return color;
+        }
+
+        sealed class GlyphMesh
+        {
+            readonly TextMesh mesh;
+            readonly MeshRenderer meshRenderer;
+            char character;
+
+            public GlyphMesh(TextMesh textMesh)
+            {
+                mesh = textMesh;
+                meshRenderer = textMesh.GetComponent<MeshRenderer>();
+            }
+
+            public void Hide() => mesh.gameObject.SetActive(false);
+
+            public void Show(char shown, Font font, Color color, float characterSize, float horizontalScale, Vector3 localPosition)
+            {
+                mesh.gameObject.SetActive(true);
+                if (mesh.font != font)
+                {
+                    mesh.font = font;
+                    meshRenderer.sharedMaterial = font.material;
+                }
+                if (character != shown)
+                {
+                    character = shown;
+                    mesh.text = shown.ToString();
+                }
+                mesh.characterSize = characterSize;
+                mesh.color = color;
+                mesh.transform.localScale = new Vector3(horizontalScale, 1f, 1f);
+                mesh.transform.localPosition = localPosition;
+            }
         }
     }
 }
