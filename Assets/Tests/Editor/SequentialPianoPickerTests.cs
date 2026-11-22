@@ -19,7 +19,7 @@ namespace DetectiveDave.Tests
         {
             public readonly List<int> Clips = new List<int>();
 
-            public void Play(int clipIndex, float volume) => Clips.Add(clipIndex);
+            public void Play(NoteKind kind, int clipIndex, float volume) => Clips.Add(clipIndex);
         }
 
         [Test]
@@ -65,7 +65,7 @@ namespace DetectiveDave.Tests
         public void A_blocked_move_also_takes_the_next_clip()
         {
             var voices = new RecordingVoices();
-            var reaction = new PianoReaction(new InOrderChordPicker(new SequentialPianoPicker(12), ChordFixtures.Palette()), new PianoNoteVolume(new NoRandom(), 0.8f, 0f, 0.5f), new ClickGate(0f), voices, () => 0f, () => new ChordMoment(1, 0, true, true));
+            var reaction = new PianoReaction(new InOrderChordPicker(new SequentialPianoPicker(12), ChordFixtures.Palette()), new AnyClipPicker(PianoOrder.InOrder, new NoRandom(), 0), new DebounceGate(0f, true), new PianoNoteVolume(new NoRandom(), 0.8f, 0f, 0.5f), new ClickGate(0f), voices, () => 0f, () => new ChordMoment(1, 0, true, true), _ => { });
             reaction.OnMoveAttempted(MoveAttempt.Moved);
             reaction.OnMoveAttempted(MoveAttempt.Blocked);
             reaction.OnMoveAttempted(MoveAttempt.Moved);

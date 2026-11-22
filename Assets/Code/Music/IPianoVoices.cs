@@ -2,6 +2,6 @@ namespace DetectiveDave.MusicPlay
 {
     public interface IPianoVoices
     {
-        void Play(int clipIndex, float volume);
+        void Play(NoteKind kind, int clipIndex, float volume);
     }
 }

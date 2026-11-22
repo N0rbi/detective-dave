@@ -15,6 +15,7 @@ namespace DetectiveDave.MusicPlay
 
         MusicSettings settings;
         AudioClip[] pianoClips;
+        IReadOnlyList<SingleNoteClip> singleClips;
         AudioSource loop;
         AudioSource[] voices;
         int nextVoice;
@@ -31,12 +32,12 @@ namespace DetectiveDave.MusicPlay
             return instance;
         }
 
-        public void Play(int clipIndex, float volume)
+        public void Play(NoteKind kind, int clipIndex, float volume)
         {
             var voice = voices[nextVoice];
             nextVoice = (nextVoice + 1) % voices.Length;
             voice.Stop();
-            voice.clip = pianoClips[clipIndex];
+            voice.clip = kind == NoteKind.Single ? singleClips[clipIndex].Clip : pianoClips[clipIndex];
             voice.volume = Mathf.Clamp01(volume);
             voice.Play();
         }
@@ -45,6 +46,7 @@ namespace DetectiveDave.MusicPlay
         {
             settings = musicSettings;
             pianoClips = NaturalNameOrder.Sorted(settings.PianoClips.Where(clip => clip), clip => clip.name).ToArray();
+            singleClips = SingleNoteOrder.Sorted(settings.SingleNoteClips);
             voices = Enumerable.Range(0, settings.PianoPoolSize).Select(_ => NewVoice()).ToArray();
             Reaction = BuildReaction();
             StartLoop();
@@ -57,20 +59,26 @@ namespace DetectiveDave.MusicPlay
             var random = new UnityRandomSource();
             var chart = settings.ChordChart;
             var hasChords = chart && chart.Segments.Count > 0;
+            var chordPitches = pianoClips.Select(clip => hasChords ? PitchesOf(chart, clip) : default).ToList();
+            var singlePitches = singleClips.Select(single => PitchClassSet.Of(new[] { single.PitchClass })).ToList();
             return new PianoReaction(
-                hasChords ? BuildChordPicker(chart, random) : new AnyClipPicker(settings.PianoOrder, random, pianoClips.Length),
+                BuildPicker(chart, hasChords, random, chordPitches, "piano clip"),
+                BuildPicker(chart, hasChords, random, singlePitches, "single note clip"),
+                new DebounceGate(settings.ChordDebounceSeconds, settings.SinglesExtendDebounce),
                 new PianoNoteVolume(random, settings.PianoVolume, settings.PianoVolumeVariance, settings.BlockedMoveVolumeShare),
                 new ClickGate(settings.MinSecondsBetweenPianoNotes),
                 this,
                 () => Time.unscaledTime,
-                hasChords ? ChordMomentNow(chart) : () => ChordMoment.Outside);
+                hasChords ? ChordMomentNow(chart) : () => ChordMoment.Outside,
+                message => Debug.LogWarning($"{LogPrefix} {message}", settings));
         }
 
-        IPianoPicker BuildChordPicker(ChordChart chart, UnityRandomSource random)
+        IPianoPicker BuildPicker(ChordChart chart, bool hasChords, UnityRandomSource random, IReadOnlyList<PitchClassSet> pitches, string clipKind)
         {
-            var palette = new ChordPalette(chart.Segments, pianoClips.Select(clip => PitchesOf(chart, clip)).ToList());
+            if (!hasChords || pitches.Count == 0) return new AnyClipPicker(settings.PianoOrder, random, pitches.Count);
+            var palette = new ChordPalette(chart.Segments, pitches);
             var fitting = PianoPickers.For(settings.PianoOrder, random, palette, settings.ChordToneWeight);
-            var warning = new WarnOnSilentChordPicker(fitting, palette, message => Debug.LogWarning($"{LogPrefix} {message}", chart));
+            var warning = new WarnOnSilentChordPicker(fitting, palette, message => Debug.LogWarning($"{LogPrefix} {message}", chart), clipKind);
             return new GuaranteedClipPicker(warning, palette, settings.WhenNoClipFits);
         }
 

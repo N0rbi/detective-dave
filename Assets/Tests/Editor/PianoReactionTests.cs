@@ -40,7 +40,7 @@ namespace DetectiveDave.Tests
         {
             public readonly List<(int Clip, float Volume)> Played = new List<(int, float)>();
 
-            public void Play(int clipIndex, float volume) => Played.Add((clipIndex, volume));
+            public void Play(NoteKind kind, int clipIndex, float volume) => Played.Add((clipIndex, volume));
         }
 
         RecordingVoices voices;
@@ -56,7 +56,7 @@ namespace DetectiveDave.Tests
         }
 
         PianoReaction Build(IPianoPicker picker, float minSecondsBetween = 0f) =>
-            new PianoReaction(picker, new PianoNoteVolume(new FixedRandom(), BaseVolume, 0.2f, BlockedShare), new ClickGate(minSecondsBetween), voices, () => now, () => moment);
+            new PianoReaction(picker, new ScriptedPicker(), new DebounceGate(0f, true), new PianoNoteVolume(new FixedRandom(), BaseVolume, 0.2f, BlockedShare), new ClickGate(minSecondsBetween), voices, () => now, () => moment, _ => { });
 
         [Test]
         public void A_move_plays_the_picked_clip_at_full_volume()

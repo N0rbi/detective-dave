@@ -23,6 +23,14 @@ namespace DetectiveDave.Tests
         }
 
         [Test]
+        public void A_new_settings_asset_debounces_for_six_tenths_of_a_second_and_has_no_single_notes()
+        {
+            Assert.AreEqual(0.6f, settings.ChordDebounceSeconds, 1e-6f);
+            Assert.IsTrue(settings.SinglesExtendDebounce);
+            Assert.IsEmpty(settings.SingleNoteClips);
+        }
+
+        [Test]
         public void Without_a_chord_chart_the_settings_report_it_as_missing()
         {
             StringAssert.Contains("Chord Chart", settings.MissingReferences);
