@@ -60,7 +60,7 @@ namespace DetectiveDave.EditorTools
             AssignDeskIfEmpty(settings, desk);
             AssetDatabase.SaveAssets();
             var playerPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(PlayerSetupPaths.PrefabPath).GetComponent<PlayerView>();
-            return OverworldSceneBuilder.WireOrError(playerPrefab, magnifier, settings) ?? MusicSetup.ApplyOrError();
+            return OverworldSceneBuilder.WireOrError(playerPrefab, magnifier, settings) ?? MusicSetup.ApplyOrError() ?? CheatSetup.ApplyOrError();
         }
 
         static void EnsureFolder(string path)
