@@ -19,7 +19,7 @@ namespace DetectiveDave.KeyboardGrid
 
         [SerializeField] Vector2 size = new Vector2(15f, 4f);       // the rectangle the layout is fitted into, in world units (15 x 4: one key is one world unit)
         [SerializeField] KeyboardPalette palette;                    // idle = key, lit = accent, backdrop = panel
-        [SerializeField] Material cellMaterial;                      // flat unlit sprite material (Art/KeyboardCell.mat)
+        [SerializeField, Tooltip("The material of the keys and the backdrop. Use Art/KeyboardCellLit.mat (Set Up Lighting) so 2D lights shine on the keys.")] Material cellMaterial;
         [SerializeField, Tooltip("Off: the keys and the backdrop are not drawn, but the board and the key positions still work (the overworld desk).")] bool drawKeys = true;
         [SerializeField, Range(0f, 0.3f)] float gap = 0.08f;         // between cells, in key units
         [SerializeField, Min(1f), Tooltip("How many times taller than wide the keys are drawn. The climbing player needs room above a gutter. Keep equal to Key Height Stretch in Project Settings > Detective Dave > Levels.")]
