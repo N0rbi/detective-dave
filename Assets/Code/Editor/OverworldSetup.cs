@@ -107,7 +107,8 @@ namespace DetectiveDave.EditorTools
             FillIfEmpty(serialized, "letterPaperSprite", PlayerSpriteImport.ImportDecoration(OverworldSetupPaths.LetterPaperPath));
             FillIfEmpty(serialized, "ringSprite", PlayerSpriteImport.ImportDecoration(OverworldSetupPaths.RingPath));
             FillIfEmpty(serialized, "shiftKeycapSprite", PlayerSpriteImport.ImportDecoration(OverworldSetupPaths.KeycapPath));
-            FillIfEmpty(serialized, "clientAndPlaceholderFont", AssetDatabase.LoadAssetAtPath<Font>(OverworldSetupPaths.ClientAndPlaceholderFontPath));
+            FillIfEmpty(serialized, "requestFont", AssetDatabase.LoadAssetAtPath<Font>(OverworldSetupPaths.RequestFontPath));
+            FillIfEmpty(serialized, "placeholderFont", AssetDatabase.LoadAssetAtPath<Font>(OverworldSetupPaths.PlaceholderFontPath));
             FillIfEmpty(serialized, "typedFont", AssetDatabase.LoadAssetAtPath<Font>(OverworldSetupPaths.TypedFontPath));
             FillIfEmpty(serialized, "findingsFont", AssetDatabase.LoadAssetAtPath<Font>(OverworldSetupPaths.FindingsFontPath));
             FillIfEmpty(serialized, "noticeFont", AssetDatabase.LoadAssetAtPath<Font>(OverworldSetupPaths.NoticeFontPath));

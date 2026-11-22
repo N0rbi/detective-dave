@@ -9,8 +9,9 @@ namespace DetectiveDave.OverworldPlay
             switch (role)
             {
                 case TextRole.ClientMessage:
+                    return FontSlot.Request;
                 case TextRole.Placeholder:
-                    return FontSlot.ClientAndPlaceholder;
+                    return FontSlot.Placeholder;
                 case TextRole.Findings:
                     return FontSlot.Findings;
                 case TextRole.Typed:

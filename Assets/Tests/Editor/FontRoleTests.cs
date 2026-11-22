@@ -6,10 +6,11 @@ namespace DetectiveDave.Tests
     public class FontRolesTests
     {
         [Test]
-        public void The_client_message_and_the_placeholder_share_one_font()
+        public void The_client_message_and_the_placeholder_have_their_own_fonts()
         {
-            Assert.AreEqual(FontSlot.ClientAndPlaceholder, FontRoles.SlotOf(TextRole.ClientMessage));
-            Assert.AreEqual(FontSlot.ClientAndPlaceholder, FontRoles.SlotOf(TextRole.Placeholder));
+            Assert.AreEqual(FontSlot.Request, FontRoles.SlotOf(TextRole.ClientMessage));
+            Assert.AreEqual(FontSlot.Placeholder, FontRoles.SlotOf(TextRole.Placeholder));
+            Assert.AreNotEqual(FontRoles.SlotOf(TextRole.ClientMessage), FontRoles.SlotOf(TextRole.Placeholder));
         }
 
         [Test]
@@ -74,7 +75,7 @@ namespace DetectiveDave.Tests
 
     public class LayerLinesTests
     {
-        const FontSlot Client = FontSlot.ClientAndPlaceholder;
+        const FontSlot Client = FontSlot.Placeholder;
         const FontSlot Typed = FontSlot.Typed;
 
         [Test]
@@ -137,13 +138,13 @@ namespace DetectiveDave.Tests
     public class FontSlotsOfModelsTests
     {
         [Test]
-        public void The_left_paper_uses_the_client_font_for_the_description_and_the_findings_font_for_the_findings()
+        public void The_left_paper_uses_the_request_font_for_the_description_and_the_findings_font_for_the_findings()
         {
             var reveal = new PaperReveal("desc", "found");
             var slots = reveal.Slots(3, TextRole.ClientMessage, TextRole.Findings);
             Assert.AreEqual(reveal.Shown(3).Length, slots.Length);
-            Assert.AreEqual(FontSlot.ClientAndPlaceholder, slots[0]);
-            Assert.AreEqual(FontSlot.ClientAndPlaceholder, slots[4 + PaperReveal.Separator.Length - 1]);
+            Assert.AreEqual(FontSlot.Request, slots[0]);
+            Assert.AreEqual(FontSlot.Request, slots[4 + PaperReveal.Separator.Length - 1]);
             Assert.AreEqual(FontSlot.Findings, slots[4 + PaperReveal.Separator.Length]);
             Assert.AreEqual(FontSlot.Findings, slots[slots.Length - 1]);
         }
@@ -171,7 +172,7 @@ namespace DetectiveDave.Tests
             var slots = model.TypingSlots(4, 8);
             Assert.AreEqual(11, slots.Length);
             for (int index = 0; index < 4; index++) Assert.AreEqual(FontSlot.Typed, slots[index]);
-            for (int index = 4; index < 11; index++) Assert.AreEqual(FontSlot.ClientAndPlaceholder, slots[index]);
+            for (int index = 4; index < 11; index++) Assert.AreEqual(FontSlot.Placeholder, slots[index]);
         }
 
         [Test]
@@ -200,8 +201,8 @@ namespace DetectiveDave.Tests
             Assert.AreEqual(paper.Plain.Length, slots.Length);
             Assert.AreEqual(FontSlot.Typed, slots[0]);
             Assert.AreEqual(FontSlot.Typed, slots[head - 1]);
-            Assert.AreEqual(FontSlot.ClientAndPlaceholder, slots[head]);
-            Assert.AreEqual(FontSlot.ClientAndPlaceholder, slots[slots.Length - 1]);
+            Assert.AreEqual(FontSlot.Placeholder, slots[head]);
+            Assert.AreEqual(FontSlot.Placeholder, slots[slots.Length - 1]);
         }
 
         [Test]

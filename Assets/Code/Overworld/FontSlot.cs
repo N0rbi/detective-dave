@@ -2,7 +2,8 @@ namespace DetectiveDave.OverworldPlay
 {
     public enum FontSlot
     {
-        ClientAndPlaceholder,
+        Request,
+        Placeholder,
         Typed,
         Findings,
         Notice

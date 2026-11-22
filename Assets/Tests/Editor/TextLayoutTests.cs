@@ -120,19 +120,19 @@ namespace DetectiveDave.Tests
 
         [TestCase(PaperScreen.Report)]
         [TestCase(PaperScreen.Review)]
-        public void The_final_findings_use_the_findings_font_and_the_description_the_client_font(PaperScreen screen)
+        public void The_findings_use_the_findings_font_and_the_description_the_request_font(PaperScreen screen)
         {
             var roles = PaperScreens.RolesOf(screen);
-            Assert.AreEqual(FontSlot.ClientAndPlaceholder, SlotOf(roles.LeftSettled));
+            Assert.AreEqual(FontSlot.Request, SlotOf(roles.LeftSettled));
             Assert.AreEqual(FontSlot.Findings, SlotOf(roles.LeftRevealed));
         }
 
         [Test]
-        public void The_letter_screen_uses_the_client_font_on_the_left_and_the_placeholder_and_typed_fonts_on_the_right()
+        public void The_letter_screen_uses_the_request_font_on_the_left_and_the_placeholder_and_typed_fonts_on_the_right()
         {
             var roles = PaperScreens.RolesOf(PaperScreen.Letter);
-            Assert.AreEqual(FontSlot.ClientAndPlaceholder, SlotOf(roles.LeftRevealed));
-            Assert.AreEqual(FontSlot.ClientAndPlaceholder, SlotOf(roles.RightPending));
+            Assert.AreEqual(FontSlot.Request, SlotOf(roles.LeftRevealed));
+            Assert.AreEqual(FontSlot.Placeholder, SlotOf(roles.RightPending));
             Assert.AreEqual(FontSlot.Typed, SlotOf(roles.RightTyped));
         }
 
