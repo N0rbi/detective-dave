@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Linq;
 using DG.Tweening;
 using DetectiveDave.OverworldPlay;
@@ -29,13 +30,15 @@ namespace DetectiveDave.MusicPlay
             return instance;
         }
 
-        public void Play(int clipIndex, float volume)
+        public void Play(int clipIndex, float volume, double delaySeconds)
         {
             var voice = voices[nextVoice];
             nextVoice = (nextVoice + 1) % voices.Length;
+            voice.Stop();
             voice.clip = pianoClips[clipIndex];
             voice.volume = Mathf.Clamp01(volume);
-            voice.Play();
+            if (delaySeconds <= 0.0) voice.Play();
+            else voice.PlayScheduled(AudioSettings.dspTime + delaySeconds);
         }
 
         void Configure(MusicSettings musicSettings)
@@ -43,21 +46,35 @@ namespace DetectiveDave.MusicPlay
             settings = musicSettings;
             pianoClips = NaturalNameOrder.Sorted(settings.PianoClips.Where(clip => clip), clip => clip.name).ToArray();
             voices = Enumerable.Range(0, settings.PianoPoolSize).Select(_ => NewVoice()).ToArray();
-            Reaction = BuildReaction();
+            Reaction = settings.ChordChart ? (IMusicReaction)BuildReaction(settings.ChordChart) : new NoPianoReaction();
             StartLoop();
             WarnIfSilent();
+            WarnAboutChart();
         }
 
-        PianoReaction BuildReaction()
+        PianoReaction BuildReaction(ChordChart chart)
         {
             var random = new UnityRandomSource();
+            var clock = chart.CreateClock();
+            var palette = new ChordPalette(chart.Segments, pianoClips.Select(clip => PitchesOf(chart, clip)).ToList());
+            var picker = new WarnOnSilentChordPicker(PianoPickers.For(settings.PianoOrder, random, palette, settings.ChordToneWeight), palette, message => Debug.LogWarning($"{LogPrefix} {message}", chart));
+            var quantizer = new NoteQuantizer(clock, settings.QuantizeGrid, settings.MaxDelaySeconds, settings.LookAheadSeconds, settings.DropExtraNotesInSlot);
             return new PianoReaction(
-                PianoSequences.For(settings.PianoOrder, random, pianoClips.Length),
+                picker,
                 new PianoNoteVolume(random, settings.PianoVolume, settings.PianoVolumeVariance, settings.BlockedMoveVolumeShare),
                 new ClickGate(settings.MinSecondsBetweenPianoNotes),
                 this,
-                () => Time.unscaledTime);
+                () => Time.unscaledTime,
+                new ChordNoteTiming(clock, quantizer, LoopSeconds));
         }
+
+        static PitchClassSet PitchesOf(ChordChart chart, AudioClip clip)
+        {
+            var entry = chart.ClipPitches.FirstOrDefault(pitch => pitch.Clip == clip);
+            return entry == null ? default : entry.PitchClasses;
+        }
+
+        double LoopSeconds() => loop && loop.clip ? loop.timeSamples / (double)loop.clip.frequency : 0.0;
 
         void StartLoop()
         {
@@ -86,7 +103,20 @@ namespace DetectiveDave.MusicPlay
         {
             if (!settings.LoopClip) Debug.LogWarning($"{LogPrefix} Music Settings has no Loop Clip: there is no background music. Run Window > Detective Dave > Set Up Music.", settings);
             if (pianoClips.Length == 0) Debug.LogWarning($"{LogPrefix} Music Settings has no Piano Clips: moves are silent. Run Window > Detective Dave > Set Up Music.", settings);
+            if (!settings.ChordChart) Debug.LogWarning($"{LogPrefix} Music Settings has no Chord Chart: moves are silent. Run Window > Detective Dave > Set Up Chord Chart.", settings);
             if (!FindAnyObjectByType<AudioListener>()) Debug.LogWarning($"{LogPrefix} The scene has no Audio Listener: nothing can be heard. Add one to the main camera.");
         }
+
+        void WarnAboutChart()
+        {
+            var chart = settings.ChordChart;
+            if (!chart) return;
+            var loopSeconds = settings.LoopClip ? settings.LoopClip.length : 0f;
+            foreach (var problem in ChordChartValidation.Problems(chart, loopSeconds)) Debug.LogWarning($"{LogPrefix} Chord Chart: {problem}", chart);
+            foreach (var clip in UnmappedClips(chart)) Debug.LogWarning($"{LogPrefix} Chord Chart: {clip.name} has no entry in Clip Pitches, so it never plays.", chart);
+        }
+
+        IEnumerable<AudioClip> UnmappedClips(ChordChart chart) =>
+            pianoClips.Where(clip => chart.ClipPitches.All(pitch => pitch.Clip != clip));
     }
 }

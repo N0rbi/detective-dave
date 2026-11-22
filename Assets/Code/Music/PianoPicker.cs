@@ -1,8 +1,10 @@
+using System.Collections.Generic;
+using System.Linq;
 using DetectiveDave.OverworldPlay;
 
 namespace DetectiveDave.MusicPlay
 {
-    public sealed class PianoPicker : IPianoSequence
+    public sealed class PianoPicker
     {
         public const int NoClip = -1;
 
@@ -24,6 +26,14 @@ namespace DetectiveDave.MusicPlay
             var pick = random.Index(clipCount - 1);
             if (pick >= last) pick++;
             return last = pick;
+        }
+
+        public int Next(IReadOnlyList<int> candidates)
+        {
+            if (candidates.Count == 0) return NoClip;
+            var others = candidates.Where(clip => clip != last).ToList();
+            var pool = others.Count > 0 ? others : candidates.ToList();
+            return last = pool[random.Index(pool.Count)];
         }
     }
 }

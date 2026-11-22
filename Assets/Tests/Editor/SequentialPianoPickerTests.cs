@@ -8,6 +8,16 @@ namespace DetectiveDave.Tests
 {
     public class SequentialPianoPickerTests
     {
+        sealed class FixedTiming : INoteTiming
+        {
+            public bool TryPlan(out double delaySeconds, out ChordMoment moment)
+            {
+                delaySeconds = 0.0;
+                moment = new ChordMoment(1, 0, true, true);
+                return true;
+            }
+        }
+
         sealed class NoRandom : IRandomSource
         {
             public float Range(float min, float max) => (min + max) / 2f;
@@ -19,7 +29,7 @@ namespace DetectiveDave.Tests
         {
             public readonly List<int> Clips = new List<int>();
 
-            public void Play(int clipIndex, float volume) => Clips.Add(clipIndex);
+            public void Play(int clipIndex, float volume, double delaySeconds) => Clips.Add(clipIndex);
         }
 
         [Test]
@@ -45,22 +55,27 @@ namespace DetectiveDave.Tests
         }
 
         [Test]
-        public void In_order_gives_the_sequential_picker()
+        public void A_pick_that_must_fit_skips_the_clips_that_do_not()
         {
-            Assert.IsInstanceOf<SequentialPianoPicker>(PianoSequences.For(PianoOrder.InOrder, new NoRandom(), 3));
+            var picker = new SequentialPianoPicker(4);
+            var picks = new[] { picker.Next(clip => clip % 2 == 1), picker.Next(clip => clip % 2 == 1), picker.Next(clip => clip % 2 == 1) };
+            CollectionAssert.AreEqual(new[] { 1, 3, 1 }, picks);
         }
 
         [Test]
-        public void Random_gives_the_random_picker()
+        public void When_no_clip_fits_the_place_in_the_order_is_kept()
         {
-            Assert.IsInstanceOf<PianoPicker>(PianoSequences.For(PianoOrder.Random, new NoRandom(), 3));
+            var picker = new SequentialPianoPicker(3);
+            picker.Next();
+            Assert.AreEqual(PianoPicker.NoClip, picker.Next(_ => false));
+            Assert.AreEqual(1, picker.Next());
         }
 
         [Test]
         public void A_blocked_move_also_takes_the_next_clip()
         {
             var voices = new RecordingVoices();
-            var reaction = new PianoReaction(new SequentialPianoPicker(3), new PianoNoteVolume(new NoRandom(), 0.8f, 0f, 0.5f), new ClickGate(0f), voices, () => 0f);
+            var reaction = new PianoReaction(new InOrderChordPicker(new SequentialPianoPicker(12), ChordFixtures.Palette()), new PianoNoteVolume(new NoRandom(), 0.8f, 0f, 0.5f), new ClickGate(0f), voices, () => 0f, new FixedTiming());
             reaction.OnMoveAttempted(MoveAttempt.Moved);
             reaction.OnMoveAttempted(MoveAttempt.Blocked);
             reaction.OnMoveAttempted(MoveAttempt.Moved);
