@@ -123,3 +123,14 @@ Play with F5 on a level with a Gap and a WallGutter key between the two Shifts. 
 - Select something other than a guard: every guard in the level shows a small green dot on its START key.
 - Play This Level: the guard patrols between START and END along the line shown.
 - Step next to a guard while it is between two keys (not only when it reaches a key): it switches to the chase animation at once, finishes the step smoothly (turning back to the key it left when it had walked less than half of it) and then follows the shortest key path to you. No jump in its position. Step onto either key it is between: you are caught. Step onto a gutter key mid-chase: it finishes its step, then goes back to patrolling from where it stands.
+
+## Level lighting
+- Run Window > Detective Dave > Set Up Lighting (or Set Up Player). Game.unity: the object with LevelLoader has a LevelLightingView, and every Keyboard Grid View there has Cell Material = KeyboardCellLit. Assets/Game/Keyboard/Art/KeyboardCellLit.mat exists.
+- Play Game: the keys are lit by the 2D lights (move or dim a light in the scene: the keys change). A level with the default Lighting looks as before the change.
+- Level prefab > Lighting: set Intensity 0.5 and a tint: play, all lights follow; stop, the lights in the scene are back as authored.
+- Turn Flicker on with no pattern: the checks show an error with Add a Blink pattern. Click the fix: a Blink pattern with a timeline appears.
+- Timeline: click empty space adds a point, drag moves it (snapping to the grid when Snap To Grid is on), right-click a point removes it, select a point and press Delete removes it. Start From replaces the points with a preset and sets the duration.
+- Preview on a pattern: the green playhead runs over the timeline, Final Look dims, and the lights of the open scene dim. Preview Like In Game: random waits, random patterns. Stop, enter Play Mode or save the scene: the lights are back to their own values.
+- Two patterns, one with Weight 0: only the other is ever picked. Weights 3 and 1: the first is picked about three times as often.
+- Wait At Least 9 and Wait At Most 4: the checks show an error with Swap the waits.
+- Play a level with flicker: the lights flicker now and then at random intervals; load the next level: the flicker restarts with that level's settings.

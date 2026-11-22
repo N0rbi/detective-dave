@@ -36,6 +36,10 @@ Select the level root (in Prefab Mode or in the Project window). **Checks** list
 | 'X' is not in the Level Tiles palette | Press **Add to Level Tiles**. |
 | This level is in another folder | Press **Move to Assets/Levels**. |
 
+## Lighting
+
+The **Lighting** section of the Level inspector sets how the 2D lights look in this level: **Intensity** (a multiple of how each light is set up in the scene), **Color Tint**, and an optional **Flicker**. A flicker waits a random time between **Wait At Least** and **Wait At Most**, then plays one of the level's **flicker patterns** picked at random (by **Weight**). Draw a pattern on its timeline: click to add a point, drag to move, right-click to remove, **Start From** to begin from a preset. **Preview** and **Preview Like In Game** play it in the editor. The checks tell you when flicker has no patterns, the waits are reversed, a pattern has no duration or only weight 0.
+
 ## Add a new kind of key
 
 1. In `Assets/Tiles`, **Assets > Create > Detective Dave > Tile Type**. Name it, give it a **Sprite** and **Color** (what you

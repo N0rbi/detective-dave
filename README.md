@@ -156,6 +156,20 @@ IReadOnlyList<Vector2> GetPath(Vector2 start, Vector2 goal, Func<MapTile, bool> 
   `LevelBackgroundView` draws the level's background behind everything, covering the camera.
 - The glue only reads the keyboard (layout, key centers, events) and writes only to the grid view; it never calls into the input package.
 
+## Level lighting
+
+Every level can set how the 2D lights of the Game scene look while it plays. Open the level prefab and find **Lighting** in the Level inspector:
+
+- **Intensity** multiplies the brightness of every light in the scene (1 leaves them as set up in the scene, 0 turns them off). **Color Tint** multiplies their colours (white leaves them). **Final Look** shows the result.
+- **Flicker** turns on a flicker. The lights wait a random time (**Wait At Least** to **Wait At Most**), play one flicker pattern and wait again.
+- A **flicker pattern** is a short timeline: time runs left to right, brightness bottom (dark) to top (full). Click empty space to add a point, drag a point to move it, right-click a point (or select it and press Delete) to remove it, **Snap To Grid** keeps points on the grid. **Start From** fills a pattern with Blink, Stutter, Dim and recover, Short out or Buzz. **Weight** says how often a pattern is picked compared with the others; each flicker picks one pattern at random.
+- **Preview** plays one pattern once; **Preview Like In Game** plays random waits and random patterns. Both drive the lamp in the inspector and the lights of the open scenes, and put them back when stopped, on Play Mode and before a scene is saved.
+- The level checks list flicker without patterns, reversed waits, patterns without a duration or with every weight at 0, points after the end of a pattern, and lights at intensity 0.
+
+`LevelLightingView` (on the object with `LevelLoader`, added by **Window > Detective Dave > Set Up Lighting**, also run by Set Up Player and Play This Level) reads the lighting of the current level, restarts the flicker whenever a level loads and puts the lights back when it is disabled. By default it lights every `Light2D` of the scene; turn **Use All Scene Lights** off and fill **Target Lights** to light only some. It uses scaled game time.
+
+The keys react to the 2D lights through the material `Assets/Game/Keyboard/Art/KeyboardCellLit.mat` (shader Universal Render Pipeline/2D/Sprite-Lit-Default), set on the keyboard grid's **Cell Material** by Set Up Lighting. Lit now: the keys and the keyboard backdrop of Game.unity. Still unlit: the level background, the player, guards, decorations, the evidence picture, the dash gust and the spiral wipe; the Overworld is unchanged.
+
 ## Player
 
 The player is shown on the level's start Shift key and the game does not start until that Shift is pressed; then press neighbouring keys to move. The other Shift is the End. All code is in `Assets/Code/Player` (namespace `DetectiveDave.PlayerPlay`, assembly `DetectiveDave.Game`).

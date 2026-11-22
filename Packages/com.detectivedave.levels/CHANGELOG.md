@@ -4,6 +4,10 @@ All notable changes to this package are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+### Added
+- `Level.Lighting` (`LevelLightingSettings`): intensity, colour tint and an optional flicker per level. `FlickerPattern` / `FlickerPoint` timelines, `FlickerPicker` (weighted random pick), `FlickerScheduler` (random waits between flickers), `LightingMath`, `LightingProblems`.
+- Editor: the Lighting section of the Level inspector with the timeline widget and preview, `LevelLightingCheck`, `LightingPreview` and `LightingPreviewHost`.
+
 ### Changed (breaking)
 - Level gained Start key (Left/Right Shift); the Start and Goal tile types were retired.
 
