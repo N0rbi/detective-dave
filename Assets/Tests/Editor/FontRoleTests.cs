@@ -13,10 +13,11 @@ namespace DetectiveDave.Tests
         }
 
         [Test]
-        public void The_findings_and_the_typed_text_share_one_font()
+        public void The_findings_and_the_typed_text_have_their_own_fonts()
         {
-            Assert.AreEqual(FontSlot.FindingsAndTyped, FontRoles.SlotOf(TextRole.Findings));
-            Assert.AreEqual(FontSlot.FindingsAndTyped, FontRoles.SlotOf(TextRole.Typed));
+            Assert.AreEqual(FontSlot.Findings, FontRoles.SlotOf(TextRole.Findings));
+            Assert.AreEqual(FontSlot.Typed, FontRoles.SlotOf(TextRole.Typed));
+            Assert.AreNotEqual(FontRoles.SlotOf(TextRole.Findings), FontRoles.SlotOf(TextRole.Typed));
         }
 
         [Test]
@@ -74,7 +75,7 @@ namespace DetectiveDave.Tests
     public class LayerLinesTests
     {
         const FontSlot Client = FontSlot.ClientAndPlaceholder;
-        const FontSlot Typed = FontSlot.FindingsAndTyped;
+        const FontSlot Typed = FontSlot.Typed;
 
         [Test]
         public void A_layer_keeps_its_own_characters_and_hides_the_others_in_place()
@@ -143,8 +144,8 @@ namespace DetectiveDave.Tests
             Assert.AreEqual(reveal.Shown(3).Length, slots.Length);
             Assert.AreEqual(FontSlot.ClientAndPlaceholder, slots[0]);
             Assert.AreEqual(FontSlot.ClientAndPlaceholder, slots[4 + PaperReveal.Separator.Length - 1]);
-            Assert.AreEqual(FontSlot.FindingsAndTyped, slots[4 + PaperReveal.Separator.Length]);
-            Assert.AreEqual(FontSlot.FindingsAndTyped, slots[slots.Length - 1]);
+            Assert.AreEqual(FontSlot.Findings, slots[4 + PaperReveal.Separator.Length]);
+            Assert.AreEqual(FontSlot.Findings, slots[slots.Length - 1]);
         }
 
         [Test]
@@ -169,7 +170,7 @@ namespace DetectiveDave.Tests
             var model = new ResponsePaperModel("abc def ghi", 100);
             var slots = model.TypingSlots(4, 8);
             Assert.AreEqual(11, slots.Length);
-            for (int index = 0; index < 4; index++) Assert.AreEqual(FontSlot.FindingsAndTyped, slots[index]);
+            for (int index = 0; index < 4; index++) Assert.AreEqual(FontSlot.Typed, slots[index]);
             for (int index = 4; index < 11; index++) Assert.AreEqual(FontSlot.ClientAndPlaceholder, slots[index]);
         }
 
@@ -197,8 +198,8 @@ namespace DetectiveDave.Tests
             int head = LetterText.Head("Ann").Length;
             var slots = paper.Slots(head, LetterPath.Undecided);
             Assert.AreEqual(paper.Plain.Length, slots.Length);
-            Assert.AreEqual(FontSlot.FindingsAndTyped, slots[0]);
-            Assert.AreEqual(FontSlot.FindingsAndTyped, slots[head - 1]);
+            Assert.AreEqual(FontSlot.Typed, slots[0]);
+            Assert.AreEqual(FontSlot.Typed, slots[head - 1]);
             Assert.AreEqual(FontSlot.ClientAndPlaceholder, slots[head]);
             Assert.AreEqual(FontSlot.ClientAndPlaceholder, slots[slots.Length - 1]);
         }

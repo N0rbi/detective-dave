@@ -108,7 +108,8 @@ namespace DetectiveDave.EditorTools
             FillIfEmpty(serialized, "ringSprite", PlayerSpriteImport.ImportDecoration(OverworldSetupPaths.RingPath));
             FillIfEmpty(serialized, "shiftKeycapSprite", PlayerSpriteImport.ImportDecoration(OverworldSetupPaths.KeycapPath));
             FillIfEmpty(serialized, "clientAndPlaceholderFont", AssetDatabase.LoadAssetAtPath<Font>(OverworldSetupPaths.ClientAndPlaceholderFontPath));
-            FillIfEmpty(serialized, "findingsAndTypedFont", AssetDatabase.LoadAssetAtPath<Font>(OverworldSetupPaths.FindingsAndTypedFontPath));
+            FillIfEmpty(serialized, "typedFont", AssetDatabase.LoadAssetAtPath<Font>(OverworldSetupPaths.TypedFontPath));
+            FillIfEmpty(serialized, "findingsFont", AssetDatabase.LoadAssetAtPath<Font>(OverworldSetupPaths.FindingsFontPath));
             FillIfEmpty(serialized, "noticeFont", AssetDatabase.LoadAssetAtPath<Font>(OverworldSetupPaths.NoticeFontPath));
             FillIfEmpty(serialized, "backspaceClip", AssetDatabase.LoadAssetAtPath<AudioClip>(OverworldSetupPaths.BackspacePath));
             var clicks = serialized.FindProperty("typewriterClicks");

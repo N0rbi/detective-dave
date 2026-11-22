@@ -19,7 +19,8 @@ namespace DetectiveDave.OverworldPlay
 
         [Header("Fonts")]
         [SerializeField] [Tooltip("Used for the client's message on the left paper and for the grey placeholder text that waits to be typed. Use a monospaced font.")] Font clientAndPlaceholderFont;
-        [SerializeField] [Tooltip("Used for the investigation findings on the left paper and for the black text the player has typed. Use a monospaced font.")] Font findingsAndTypedFont;
+        [SerializeField, FormerlySerializedAs("findingsAndTypedFont")] [Tooltip("Used for the black text the player has typed, which replaces the grey placeholder. Use a monospaced font.")] Font typedFont;
+        [SerializeField] [Tooltip("Used for the final findings on the left paper after the level and in the solved case review. Use a monospaced font.")] Font findingsFont;
         [SerializeField] [Tooltip("Used for the notice shown on the letter paper when a case has no level yet. Use a monospaced font.")] Font noticeFont;
 
         [Header("Desk")]
@@ -61,7 +62,8 @@ namespace DetectiveDave.OverworldPlay
         [SerializeField] [Tooltip("Where the letter paper lies on the screen.")] PaperPlacement letterPlacement = new PaperPlacement(0.25f, -0.01f, 0.4f, 1.5f);
         [SerializeField, Range(0f, 0.3f)] [Tooltip("Empty border of the paper picture, as a share of its width. Text starts inside it.")] float paperPaddingShare = 0.09f;
         [SerializeField, Range(0.01f, 0.08f)] [Tooltip("Largest text size, as a share of the screen height. Long texts shrink from here until they fit the paper.")] float textHeightShare = 0.034f;
-        [SerializeField, Range(0.005f, 0.08f)] [Tooltip("Smallest text size, as a share of the screen height. Below this the text is left as is and a warning is logged.")] float minTextHeightShare = 0.016f;
+        [SerializeField, Range(0.002f, 0.05f)] [Tooltip("Smallest text size, as a share of the screen height. Text shrinks down to this to fit the paper. If it still does not fit, a warning naming the case is logged.")] float hardMinTextHeightShare = 0.008f;
+        [SerializeField, Range(0.5f, 1f)] [Tooltip("Size of the findings text compared with the case description. 0.85 draws the findings at 85% of the description size.")] float findingsSizeShare = 0.85f;
         [SerializeField, Range(0.001f, 0.01f)] [Tooltip("How much the text size shrinks per try, as a share of the screen height.")] float textFitStepShare = 0.002f;
         [SerializeField, Range(0.8f, 2f)] [Tooltip("Height of one text row divided by the text size. Raise it if text still runs past the bottom of the paper.")] float textLineHeightRatio = 1.1f;
         [SerializeField, Range(0.3f, 1f)] [Tooltip("Width of one letter divided by the text size. 0.6 fits typewriter fonts. Raise it if lines run past the paper edge.")] float textAdvanceRatio = 0.6f;
@@ -113,7 +115,8 @@ namespace DetectiveDave.OverworldPlay
             switch (slot)
             {
                 case FontSlot.ClientAndPlaceholder: return clientAndPlaceholderFont;
-                case FontSlot.FindingsAndTyped: return findingsAndTypedFont;
+                case FontSlot.Typed: return typedFont;
+                case FontSlot.Findings: return findingsFont;
                 case FontSlot.Notice: return noticeFont;
                 default: throw new System.ArgumentOutOfRangeException(nameof(slot), slot, "No font for this slot");
             }
@@ -134,7 +137,8 @@ namespace DetectiveDave.OverworldPlay
         public PaperPlacement LetterPlacement => letterPlacement;
         public float PaperPaddingShare => paperPaddingShare;
         public float TextHeightShare => textHeightShare;
-        public float MinTextHeightShare => minTextHeightShare;
+        public float HardMinTextHeightShare => hardMinTextHeightShare;
+        public float FindingsSizeShare => findingsSizeShare;
         public float TextFitStepShare => textFitStepShare;
         public float TextLineHeightRatio => textLineHeightRatio;
         public float TextAdvanceRatio => textAdvanceRatio;
@@ -171,7 +175,8 @@ namespace DetectiveDave.OverworldPlay
                 if (!ringSprite) missing.Add("ringSprite");
                 if (!shiftKeycapSprite) missing.Add("shiftKeycapSprite");
                 if (!clientAndPlaceholderFont) missing.Add("clientAndPlaceholderFont");
-                if (!findingsAndTypedFont) missing.Add("findingsAndTypedFont");
+                if (!typedFont) missing.Add("typedFont");
+                if (!findingsFont) missing.Add("findingsFont");
                 if (!noticeFont) missing.Add("noticeFont");
                 if (typewriterClicks == null || typewriterClicks.Length == 0 || System.Array.TrueForAll(typewriterClicks, clip => !clip)) missing.Add("typewriterClicks");
                 return string.Join(", ", missing);

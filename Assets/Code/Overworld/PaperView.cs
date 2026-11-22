@@ -54,10 +54,12 @@ namespace DetectiveDave.OverworldPlay
 
         public void SlideFromRight(float distance) => transform.position = new Vector3(rest.x + distance, rest.y, transform.position.z);
 
-        public void SetText(string richText, FontSlot[] slots, Color baseColor)
+        public void SetText(string richText, FontSlot[] slots, Color baseColor) => SetText(richText, slots, baseColor, LineScales.Uniform);
+
+        public void SetText(string richText, FontSlot[] slots, Color baseColor, LineScales scales)
         {
             var runs = RichRuns.Parse(richText);
-            foreach (var slot in AllSlots) ShowLayer(slot, LayerLines.Build(runs, slots, slot), baseColor);
+            foreach (var slot in AllSlots) ShowLayer(slot, LayerLines.Build(runs, slots, slot), baseColor, scales);
         }
 
         public void SetVisible(bool visible) => gameObject.SetActive(visible);
@@ -77,7 +79,7 @@ namespace DetectiveDave.OverworldPlay
             return info.advance;
         }
 
-        void ShowLayer(FontSlot slot, string[] lines, Color baseColor)
+        void ShowLayer(FontSlot slot, string[] lines, Color baseColor, LineScales scales)
         {
             var meshes = layers[slot];
             for (int index = 0; index < lines.Length; index++)
@@ -85,7 +87,7 @@ namespace DetectiveDave.OverworldPlay
                 var mesh = MeshAt(slot, meshes, index);
                 bool visible = lines[index] != null;
                 mesh.gameObject.SetActive(visible);
-                if (visible) Draw(mesh, slot, lines[index], index, baseColor);
+                if (visible) Draw(mesh, slot, lines[index], scales, index, baseColor);
             }
             for (int index = lines.Length; index < meshes.Count; index++) meshes[index].gameObject.SetActive(false);
         }
@@ -112,12 +114,12 @@ namespace DetectiveDave.OverworldPlay
             return mesh;
         }
 
-        void Draw(TextMesh mesh, FontSlot slot, string line, int index, Color baseColor)
+        void Draw(TextMesh mesh, FontSlot slot, string line, LineScales scales, int index, Color baseColor)
         {
-            mesh.characterSize = grid.LetterWidth / (advancePixels[slot] * EmScale);
+            mesh.characterSize = grid.LetterWidth * scales.ShareOf(index) / (advancePixels[slot] * EmScale);
             mesh.color = baseColor;
             mesh.text = line;
-            mesh.transform.localPosition = textOrigin + Vector3.down * (index * grid.LineStep);
+            mesh.transform.localPosition = textOrigin + Vector3.down * (scales.OffsetOf(index) * grid.LineStep);
         }
     }
 }

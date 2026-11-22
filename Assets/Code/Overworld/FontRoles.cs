@@ -12,8 +12,9 @@ namespace DetectiveDave.OverworldPlay
                 case TextRole.Placeholder:
                     return FontSlot.ClientAndPlaceholder;
                 case TextRole.Findings:
+                    return FontSlot.Findings;
                 case TextRole.Typed:
-                    return FontSlot.FindingsAndTyped;
+                    return FontSlot.Typed;
                 case TextRole.Notice:
                     return FontSlot.Notice;
                 default:

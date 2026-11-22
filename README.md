@@ -255,8 +255,11 @@ Desk look and hints (sections `Keyboard look`, `Floating case files` and `Route 
 Fonts (section `Fonts` on `Overworld Settings.config.asset`, files in `Assets/Overworld/Fonts`):
 
 1. `Client And Placeholder Font` (`jmh_typewriter.ttf`) is used for the client's message on the left paper and for the grey text that waits to be typed.
-2. `Findings And Typed Font` (`moms_typewriter.ttf`) is used for the investigation findings and for the black text the player has typed, so a typed letter replaces its grey placeholder in a different font.
-3. `Notice Font` (`1942_report.ttf`) is used for the notice shown on the paper when a case has no level yet.
+2. `Typed Font` (`moms_typewriter.ttf`) is used for the black text the player has typed, so a typed letter replaces its grey placeholder in a different font.
+3. `Findings Font` (`1942_report.ttf`) is used for the final findings on the left paper, after the level and in the solved case review. Point it at `moms_typewriter.ttf` to draw the findings in the typed font instead.
+4. `Notice Font` (`1942_report.ttf`) is used for the notice shown on the paper when a case has no level yet.
+
+Text fit: the left paper is fitted as a whole (description plus findings) before anything is typed, so the size never changes while the findings type in. The findings are drawn at `Findings Size Share` (default 0.85) of the description size. Text shrinks down to `Hard Min Text Height Share`; a word longer than a line also forces a smaller size. If it still does not fit at that size, one warning naming the case is logged. `Set Up Overworld` fills the empty `Findings Font` field; the old `Findings And Typed Font` value moves to `Typed Font` by itself.
 
 Use monospaced fonts. Every letter is placed on the grid set by `Text Advance Ratio`; each font is scaled to that letter width and every line is placed by `Text Line Height Ratio`, so lines and the placeholder-to-typed swap never shift. Licences: JMH Typewriter is free for personal use only (buy a licence before selling the game), Mom's Typewriter and 1942 report need their readme or text file kept with them. The unused weights stay in `Assets/Staging`.
 
