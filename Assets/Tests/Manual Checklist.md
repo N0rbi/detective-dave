@@ -145,3 +145,11 @@ Play with F5 on a level with a Gap and a WallGutter key between the two Shifts. 
 - Play a level directly with F5 (Play This Level): the loop plays and the notes react.
 - Set Min Seconds Between Piano Notes to 0.3 and press keys quickly: notes are skipped to keep 0.3 seconds apart. Set Piano Clips to one clip: it plays every time. Empty Piano Clips: a warning in the Console and no notes, the loop still plays.
 
+## Cheat codes
+- Run Window > Detective Dave > Set Up Cheats. Assets/Cheats/Cheat Settings.config.asset exists with Cheats Enabled on and one entry, resetplayer. The object with the Keyboard Key Source in Game.unity and in Overworld.unity has a CheatLink with the settings assigned.
+- Solve a case in the overworld, then type resetplayer in the overworld: "Progress reset" shows for about 2 seconds, the overworld reloads and every case is locked or unsolved again as in a new game. progress.json is gone.
+- Start a case, and while the level is on screen type resetplayer: the overworld loads, the case is not still active, the music keeps playing without a restart, and there is still only one Cheat Director under DontDestroyOnLoad.
+- Type it during the spiral or while the player falls: the overworld still loads. Type it in capitals, and with a typo fixed with Backspace: it still works. Type half of it, wait 4 seconds, type the rest: nothing happens.
+- Type resetplayer while a letter paper is open: the letters are typed into the paper and the overworld loads anyway.
+- Turn Cheats Enabled off: typing resetplayer does nothing.
+

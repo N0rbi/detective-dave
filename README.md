@@ -177,6 +177,20 @@ A jazz loop plays all the time, and a piano note plays on every move. The loop i
 
 The reaction (`IMusicReaction`, today `PianoReaction`) picks the note by `Piano Order` on the settings asset: `In Order` (default) sorts the clips by name once (`NaturalNameOrder`, so `Piano 2` comes before `Piano 10`, whatever order they are listed in) and each move takes the next clip, going back to the first after the last, and a move that does not move the player also takes the next clip; `Random` picks a random clip that is never the same twice in a row (`PianoPicker`). The place in the order is kept across levels and scenes. It plays the note at `Piano Volume` with a random change of up to `Piano Volume Variance`; a blocked move plays at `Blocked Move Volume Share` (0.5, half) of that. To try another way of reacting, write another `IMusicReaction` and return it from `MusicDirector`.
 
+## Cheat codes
+
+Type a code word on the keyboard, in the game or in the overworld, and nothing else is needed: no terminal, no menu.
+
+| Code | What it does |
+|---|---|
+| `resetplayer` | Forgets every solved case (the same as `Window > Detective Dave > Reset Overworld Progress`), drops the case in progress, shows "Progress reset" on screen and loads the overworld fresh. |
+
+- Run `Window > Detective Dave > Set Up Cheats` once (Set Up Player, Set Up Overworld and Play This Level run it too). It creates `Assets/Cheats/Cheat Settings.config.asset` and adds a `CheatLink` next to the Keyboard Key Source in Game.unity and Overworld.unity.
+- The letters are read from the keys the OS says they type, so the code works on any keyboard layout. Case does not matter. Backspace removes the last letter. A pause longer than `Timeout Seconds` (3) forgets the letters typed so far. Other keys are ignored.
+- The code is a normal word on normal keys: while typing it the player also moves, or types into an open paper. The cheat fires anyway. Progress is deleted without a confirmation.
+- Cheat Settings: `Cheats Enabled` (turn off for a release build), `Timeout Seconds`, `Entries` (code word and action, so the word can be changed or more entries added), `Reset Player Message`, `Message Seconds`, `Message Font` (filled with the Notice Font), `Message Size Share`, `Message Color`, `Message Background Color`.
+- Code: `CheatCodeMatcher` (letters to a matched code), `CheatDispatcher` (code to `IGameCheat`), `ResetPlayerCheat` behind `ICheatEnvironment`, `CheatDirector` (one persistent object, draws the message), `CheatLink` (listens to the key source's raw key events without changing them). A new cheat is a new `CheatAction`, an `IGameCheat` and a line in `CheatDirector.CheatFor`.
+
 ## Player
 
 The player is shown on the level's start Shift key and the game does not start until that Shift is pressed; then press neighbouring keys to move. The other Shift is the End. All code is in `Assets/Code/Player` (namespace `DetectiveDave.PlayerPlay`, assembly `DetectiveDave.Game`).
