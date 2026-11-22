@@ -70,6 +70,7 @@ Play with F5 on a level with a Gap and a WallGutter key between the two Shifts. 
 ## Overworld briefing (round 2)
 
 - Run Set Up Overworld twice: the second dialog says nothing needed changing.
+- Fonts: the client's message and the grey waiting text use JMH Typewriter; the findings and the letters you type use Mom's Typewriter, so a typed letter changes font where it replaces its grey placeholder. Letters stay on the same spots (no jump when typing, no overlap between the two fonts on one line). A case without a level shows its notice in the 1942 report font. If Console says a font has no letter width, assign a real font on `Overworld Settings.config.asset` (section Fonts); run `Set Up Overworld` if the three Font fields are empty.
 - Dwell on a case: the description types at a steady speed with soft clicks (no click faster than the minimum interval, also while skipping); a key press speeds it up; the letter paper appears only afterwards and typing before that does nothing.
 - Both papers are slightly rotated on the desk; untyped text is grey, typed text black; each valid key clicks with a slightly different pitch, volume and clip every time, Backspace plays the softer clip. If anything is silent the Console says why (empty click list, no Audio Listener, volume 0).
 - Finish a level: back in the overworld the left paper already shows the description and the findings type in below it (steady speed, soft clicks, a key press speeds it up). The right paper appears only when the findings are done and typing before that does nothing.

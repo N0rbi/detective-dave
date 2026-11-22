@@ -252,6 +252,14 @@ Desk look and hints (sections `Keyboard look`, `Floating case files` and `Route 
 2. Case files drift gently. Every file rolls its own timing, distance and tilt between the Min and Max values (`Case Float ...`), so they never move together. The keys a case covers and the dwell use the resting position, so the drift never changes which case you are on. `Case Float Enabled` turns it off.
 3. A dashed line follows the keys from the magnifier to the nearest open case, using the same pathfinding as the guards. `Route Hint Visibility`: `UntilCaseReached` keeps the line, shortening it from where the player stands, until an open case is reached; `UntilFirstMove` hides it at the first move. It shows again each time the desk starts, and is hidden while a briefing is open. Dash length, gap, width, flow speed and colour are on the same settings asset; `Route Hint Enabled` turns it off.
 
+Fonts (section `Fonts` on `Overworld Settings.config.asset`, files in `Assets/Overworld/Fonts`):
+
+1. `Client And Placeholder Font` (`jmh_typewriter.ttf`) is used for the client's message on the left paper and for the grey text that waits to be typed.
+2. `Findings And Typed Font` (`moms_typewriter.ttf`) is used for the investigation findings and for the black text the player has typed, so a typed letter replaces its grey placeholder in a different font.
+3. `Notice Font` (`1942_report.ttf`) is used for the notice shown on the paper when a case has no level yet.
+
+Use monospaced fonts. Every letter is placed on the grid set by `Text Advance Ratio`; each font is scaled to that letter width and every line is placed by `Text Line Height Ratio`, so lines and the placeholder-to-typed swap never shift. Licences: JMH Typewriter is free for personal use only (buy a licence before selling the game), Mom's Typewriter and 1942 report need their readme or text file kept with them. The unused weights stay in `Assets/Staging`.
+
 All art and audio are references on settings assets; placeholders are files named `placeholder_*` in `Assets/Overworld/Art`, `Assets/Overworld/Audio` and `Assets/Overworld/Fonts`. Replace a placeholder by pointing the reference on `Overworld Settings.config.asset` at your own file. Nothing is generated at runtime; `Set Up Overworld` only fills references that are empty and shows what it changed.
 
 Typewriter sound plays on every valid letter key, on Backspace, and softly while the description types in. Each strike picks a random clip (never the same twice in a row), pitch and volume within the ranges on `Overworld Settings.config.asset` (Sound section); description clicks are never closer than `Min Seconds Between Clicks`. If the Console reports an empty click list, a missing Audio Listener or a zero volume, that is why it is silent.
