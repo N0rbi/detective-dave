@@ -12,6 +12,7 @@ namespace DetectiveDave.OverworldPlay
         [SerializeField] [Tooltip("Who wrote to the detective. Replaces {client} in every text of this case.")] string clientName;
         [SerializeField] [Tooltip("More names for the texts: a suspect with key husband replaces {husband}.")] SuspectEntry[] suspects = new SuspectEntry[0];
         [SerializeField, TextArea(3, 8)] [Tooltip("Typed in real time on the left of the screen when the player stays on the case file.")] string description;
+        [SerializeField] [Tooltip("Optional. Draws the description (the client's message) of this case in this font instead of the Request Font on Overworld Settings. The findings are not affected. Use a monospaced font.")] Font descriptionFontOverride;
         [SerializeField, TextArea(2, 4)] [Tooltip("The answer when the detective takes the case. It may be the start of the decline message: then the player presses Enter or Space after it to choose it.")] string acceptMessage;
         [SerializeField, TextArea(2, 4)] [Tooltip("The answer when the detective turns the case down. It may be the start of the accept message: then the player presses Enter or Space after the short one to choose it.")] string declineMessage;
         [SerializeField, TextArea(4, 12)] [Tooltip("What the detective found. Appears under the description on the left after the level is solved, typed in at the same speed.")] string findings;
@@ -26,6 +27,7 @@ namespace DetectiveDave.OverworldPlay
         public string Id => CaseIdRules.StoredOrAssetName(caseId, name);
         public string ClientName => clientName;
         public IReadOnlyList<SuspectEntry> Suspects => suspects;
+        public Font DescriptionFontOverride => descriptionFontOverride;
         public Level Level => level;
         public bool HasLevel => level;
         public IReadOnlyList<CaseFile> Requires => requires;

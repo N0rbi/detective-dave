@@ -67,6 +67,7 @@ namespace DetectiveDave.OverworldPlay
             mode = Mode.Letter;
             letterFinished = finishedCallback;
             UseRoles(PaperScreen.Letter);
+            descriptionPaper.UseRequestFont(file.DescriptionFontOverride);
             var leftBlocks = new[] { new TextBlock(file.ResolvedDescription, 1f) };
             var letters = PlacePapers(file.name, leftBlocks, LetterPaperModel.Unwrapped(file.ClientName, file.ResolvedAcceptMessage, file.ResolvedDeclineMessage));
             leftReveal = new PaperReveal(string.Empty, TextWrap.Wrap(file.ResolvedDescription, letters.Description));
@@ -86,6 +87,7 @@ namespace DetectiveDave.OverworldPlay
             mode = Mode.Report;
             reportFinished = finishedCallback;
             UseRoles(PaperScreen.Report);
+            descriptionPaper.UseRequestFont(file.DescriptionFontOverride);
             var letters = PlacePapers(file.name, ReportBlocks(file), file.ResolvedResponse);
             UseReportReveal(file, letters);
             gate = new BriefingGate(new TimedReveal(leftReveal.RevealedLength, settings.DescriptionSecondsPerCharacter, settings.DescriptionSkipSpeedMultiplier));
@@ -102,6 +104,7 @@ namespace DetectiveDave.OverworldPlay
             mode = Mode.Review;
             reviewFinished = finishedCallback;
             UseRoles(PaperScreen.Review);
+            descriptionPaper.UseRequestFont(file.DescriptionFontOverride);
             var letters = PlacePapers(file.name, ReportBlocks(file), file.ResolvedResponse);
             UseReportReveal(file, letters);
             gate = new BriefingGate(new TimedReveal(0, settings.DescriptionSecondsPerCharacter, settings.DescriptionSkipSpeedMultiplier));

@@ -18,10 +18,10 @@ namespace DetectiveDave.OverworldPlay
         [SerializeField] [Tooltip("Played when Backspace takes a letter away. Leave empty for silence.")] AudioClip backspaceClip;
 
         [Header("Fonts")]
-        [SerializeField] [Tooltip("Used for the request: the client's message on the left paper, on every screen. Use a monospaced font.")] Font requestFont;
+        [SerializeField] [Tooltip("Used for the request: the client's message on the left paper, on every screen, unless the case sets its own Description Font Override. Use a monospaced font.")] Font requestFont;
         [SerializeField, FormerlySerializedAs("clientAndPlaceholderFont")] [Tooltip("Used for the grey placeholder text that waits to be typed. Use a monospaced font.")] Font placeholderFont;
         [SerializeField, FormerlySerializedAs("findingsAndTypedFont")] [Tooltip("Used for the black text the player has typed, which replaces the grey placeholder. Use a monospaced font.")] Font typedFont;
-        [SerializeField] [Tooltip("Used for the investigation findings on the left paper, after the level and in the solved case review. Use a monospaced font.")] Font findingsFont;
+        [SerializeField] [Tooltip("Used for the investigation findings on the left paper, after the level and in the solved case review. A case's Description Font Override never changes it. Use a monospaced font.")] Font findingsFont;
         [SerializeField] [Tooltip("Used for the notice shown on the letter paper when a case has no level yet. Use a monospaced font.")] Font noticeFont;
 
         [Header("Desk")]

@@ -18,6 +18,7 @@ namespace DetectiveDave.OverworldPlay
         readonly Dictionary<FontSlot, float> advancePixels = new Dictionary<FontSlot, float>();
         readonly Dictionary<FontSlot, List<TextMesh>> layers = new Dictionary<FontSlot, List<TextMesh>>();
 
+        Font settingsRequestFont;
         SpriteRenderer sheet;
         Vector2 rest;
         Vector3 textOrigin;
@@ -29,6 +30,7 @@ namespace DetectiveDave.OverworldPlay
             sheet.transform.SetParent(transform, false);
             sheet.sprite = paper;
             sheet.sortingOrder = SheetSortingOrder;
+            settingsRequestFont = settings.FontFor(FontSlot.Request);
             foreach (var slot in AllSlots) AddLayer(slot, settings.FontFor(slot));
             gameObject.SetActive(false);
         }
@@ -62,6 +64,8 @@ namespace DetectiveDave.OverworldPlay
             foreach (var slot in AllSlots) ShowLayer(slot, LayerLines.Build(runs, slots, slot), baseColor, scales);
         }
 
+        public void UseRequestFont(Font caseOverride) => ChangeFont(FontSlot.Request, RequestFontChoice.For(caseOverride, settingsRequestFont));
+
         public void SetVisible(bool visible) => gameObject.SetActive(visible);
 
         void AddLayer(FontSlot slot, Font font)
@@ -69,6 +73,20 @@ namespace DetectiveDave.OverworldPlay
             fonts[slot] = font;
             advancePixels[slot] = MeasureAdvance(font);
             layers[slot] = new List<TextMesh>();
+        }
+
+        void ChangeFont(FontSlot slot, Font font)
+        {
+            if (fonts[slot] == font) return;
+            fonts[slot] = font;
+            advancePixels[slot] = MeasureAdvance(font);
+            foreach (var mesh in layers[slot]) ApplyFont(mesh, font);
+        }
+
+        static void ApplyFont(TextMesh mesh, Font font)
+        {
+            mesh.font = font;
+            mesh.GetComponent<MeshRenderer>().sharedMaterial = font.material;
         }
 
         static float MeasureAdvance(Font font)
@@ -103,14 +121,12 @@ namespace DetectiveDave.OverworldPlay
             var textObject = new GameObject("Text " + slot + " " + index);
             textObject.transform.SetParent(transform, false);
             var mesh = textObject.AddComponent<TextMesh>();
-            mesh.font = fonts[slot];
             mesh.fontSize = FontSize;
             mesh.richText = true;
             mesh.anchor = TextAnchor.UpperLeft;
             mesh.alignment = TextAlignment.Left;
-            var renderer = textObject.GetComponent<MeshRenderer>();
-            renderer.sharedMaterial = fonts[slot].material;
-            renderer.sortingOrder = TextSortingOrder;
+            ApplyFont(mesh, fonts[slot]);
+            textObject.GetComponent<MeshRenderer>().sortingOrder = TextSortingOrder;
             return mesh;
         }
 
