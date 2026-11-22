@@ -7,7 +7,8 @@
         "DetectiveDave.Levels",
         "DetectiveDave.Levels.Editor",
         "Unity.InputSystem",
-        "Unity.2D.Tilemap.Editor"
+        "Unity.2D.Tilemap.Editor",
+        "Unity.RenderPipelines.Universal.2D.Runtime"
     ],
     "includePlatforms": [
         "Editor"
