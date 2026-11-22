@@ -2,7 +2,7 @@ using DetectiveDave.OverworldPlay;
 
 namespace DetectiveDave.MusicPlay
 {
-    public sealed class PianoPicker
+    public sealed class PianoPicker : IPianoSequence
     {
         public const int NoClip = -1;
 
