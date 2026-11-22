@@ -9,6 +9,14 @@ namespace DetectiveDave.OverworldPlay
         const string ColorMiddle = ">";
         const string ColorClose = "</color>";
 
+        enum Line
+        {
+            Head,
+            Accept,
+            Decline,
+            Tail
+        }
+
         readonly int headLength;
         readonly int acceptLength;
         readonly int declineLength;
@@ -31,19 +39,52 @@ namespace DetectiveDave.OverworldPlay
         public static string Unwrapped(string client, string acceptMessage, string declineMessage) =>
             LetterText.Head(client) + (acceptMessage ?? string.Empty) + "\n" + (declineMessage ?? string.Empty) + LetterText.Tail;
 
-        public string Render(int typedCount, LetterPath path, string typedColorHex, string pendingColorHex)
+        public string Render(int typedCount, LetterPath path, LetterPalette palette, float unchosenAlpha)
         {
             var typed = TypedMask(typedCount, path);
+            var alphaHex = AlphaHex(unchosenAlpha);
             var text = new StringBuilder();
             int runStart = 0;
+            string runColor = ColorAt(0, typed[0], path, palette, alphaHex);
             for (int position = 1; position <= plain.Length; position++)
             {
-                if (position < plain.Length && typed[position] == typed[runStart]) continue;
-                AppendRun(text, plain.Substring(runStart, position - runStart), typed[runStart] ? typedColorHex : pendingColorHex);
+                string color = position < plain.Length ? ColorAt(position, typed[position], path, palette, alphaHex) : null;
+                if (color == runColor) continue;
+                AppendRun(text, plain.Substring(runStart, position - runStart), runColor);
                 runStart = position;
+                runColor = color;
             }
             return text.ToString();
         }
+
+        string ColorAt(int position, bool isTyped, LetterPath path, LetterPalette palette, string alphaHex)
+        {
+            var line = LineAt(position);
+            var color = isTyped ? palette.TypedHex : PendingHex(line, path, palette);
+            return IsUnchosen(line, path) ? color + alphaHex : color;
+        }
+
+        Line LineAt(int position)
+        {
+            if (position < headLength) return Line.Head;
+            if (position < headLength + acceptLength) return Line.Accept;
+            if (position <= headLength + acceptLength) return Line.Head;
+            if (position < headLength + acceptLength + 1 + declineLength) return Line.Decline;
+            return Line.Tail;
+        }
+
+        static string PendingHex(Line line, LetterPath path, LetterPalette palette)
+        {
+            if (path != LetterPath.Undecided) return palette.PendingHex;
+            if (line == Line.Accept) return palette.AcceptPendingHex;
+            if (line == Line.Decline) return palette.DeclinePendingHex;
+            return palette.PendingHex;
+        }
+
+        static bool IsUnchosen(Line line, LetterPath path) =>
+            (line == Line.Accept && path == LetterPath.Decline) || (line == Line.Decline && path == LetterPath.Accept);
+
+        static string AlphaHex(float alpha) => ((int)Math.Round(Math.Max(0f, Math.Min(1f, alpha)) * 255f)).ToString("X2");
 
         bool[] TypedMask(int typedCount, LetterPath path)
         {

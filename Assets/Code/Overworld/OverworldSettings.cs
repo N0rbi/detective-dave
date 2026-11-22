@@ -64,6 +64,9 @@ namespace DetectiveDave.OverworldPlay
         [SerializeField] [Tooltip("Colour of the case description.")] Color descriptionTextColor = new Color(0.1f, 0.1f, 0.12f, 1f);
         [SerializeField] [Tooltip("Colour of the letter that is not typed yet.")] Color pendingTextColor = new Color(0.55f, 0.55f, 0.55f, 1f);
         [SerializeField] [Tooltip("Colour of the letter that is typed.")] Color typedTextColor = Color.black;
+        [SerializeField] [Tooltip("Colour of the accept answer that is not typed yet, while the player has not chosen.")] Color acceptPendingTextColor = new Color(0.2f, 0.6f, 0.28f, 1f);
+        [SerializeField] [Tooltip("Colour of the decline answer that is not typed yet, while the player has not chosen.")] Color declinePendingTextColor = new Color(0.75f, 0.22f, 0.22f, 1f);
+        [SerializeField, Min(0f)] [Tooltip("Seconds the answer that was not chosen takes to fade out. It keeps its space on the paper.")] float unchosenFadeSeconds = 0.4f;
 
         [Header("Description typing")]
         [SerializeField, Min(0.001f)] [Tooltip("Seconds between two characters of the case description typing in. Constant: no pauses.")] float descriptionSecondsPerCharacter = 0.025f;
@@ -81,7 +84,7 @@ namespace DetectiveDave.OverworldPlay
         [SerializeField, Range(0f, 1f)] [Tooltip("Volume of the description clicks as a share of the normal click volume.")] float descriptionClickShare = 0.5f;
 
         [Header("Typing")]
-        [SerializeField] [Tooltip("Newlines and punctuation type themselves, so nobody needs special symbols on a foreign keyboard.")] bool autoTypeFreeCharacters = true;
+        [SerializeField] [Tooltip("Punctuation and symbols type themselves, so nobody needs special symbols on a foreign keyboard. Spaces and line breaks always type themselves.")] bool autoTypeFreeCharacters = true;
         [SerializeField] [FormerlySerializedAs("findingsUnit")] [Tooltip("How much of the response one correct word, sentence or letter reveals.")] RevealUnit responseUnit = RevealUnit.Word;
 
         public Sprite FolderSprite => folderSprite;
@@ -124,6 +127,9 @@ namespace DetectiveDave.OverworldPlay
         public Color DescriptionTextColor => descriptionTextColor;
         public Color PendingTextColor => pendingTextColor;
         public Color TypedTextColor => typedTextColor;
+        public Color AcceptPendingTextColor => acceptPendingTextColor;
+        public Color DeclinePendingTextColor => declinePendingTextColor;
+        public float UnchosenFadeSeconds => unchosenFadeSeconds;
         public float ClickVolume => clickVolume;
         public float ClickPitchMin => Mathf.Min(clickPitchMin, clickPitchMax);
         public float ClickPitchMax => Mathf.Max(clickPitchMin, clickPitchMax);

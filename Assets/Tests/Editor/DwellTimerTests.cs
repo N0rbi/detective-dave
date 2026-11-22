@@ -96,13 +96,17 @@ namespace DetectiveDave.Tests
     {
         const string Typed = "111111";
         const string Pending = "999999";
+        const string Green = "22AA22";
+        const string Red = "CC2222";
+
+        static readonly LetterPalette Palette = new LetterPalette(Typed, Pending, Green, Red);
 
         [Test]
         public void Shows_both_messages_untyped_at_the_start()
         {
             var paper = new LetterPaperModel("Ann", "Yes please.", "No thanks.", 100);
             StringAssert.Contains("Yes please.\nNo thanks.", paper.Plain);
-            var rendered = paper.Render(0, LetterPath.Undecided, Typed, Pending);
+            var rendered = paper.Render(0, LetterPath.Undecided, Palette, 1f);
             StringAssert.DoesNotContain(Typed, rendered);
         }
 
@@ -110,8 +114,46 @@ namespace DetectiveDave.Tests
         public void Tints_the_head_once_it_is_typed()
         {
             var paper = new LetterPaperModel("Ann", "Yes please.", "No thanks.", 100);
-            var rendered = paper.Render(LetterText.Head("Ann").Length, LetterPath.Undecided, Typed, Pending);
+            var rendered = paper.Render(LetterText.Head("Ann").Length, LetterPath.Undecided, Palette, 1f);
             StringAssert.StartsWith("<color=#" + Typed + ">Dear Ann,", rendered);
         }
+
+        [Test]
+        public void The_accept_answer_waits_in_green_and_the_decline_answer_in_red()
+        {
+            var paper = new LetterPaperModel("Ann", "Yes", "No", 100);
+            var rendered = paper.Render(LetterText.Head("Ann").Length, LetterPath.Undecided, Palette, 1f);
+            StringAssert.Contains("<color=#" + Green + ">Yes</color>", rendered);
+            StringAssert.Contains("<color=#" + Red + ">No</color>", rendered);
+        }
+
+        [Test]
+        public void The_chosen_answer_goes_grey_and_black_and_the_other_one_fades_in_place()
+        {
+            var paper = new LetterPaperModel("Ann", "Yes", "No", 100);
+            int typed = LetterText.Head("Ann").Length + "Yes".Length;
+            var rendered = paper.Render(typed, LetterPath.Accept, Palette, 0f);
+            StringAssert.StartsWith("<color=#" + Typed + ">Dear Ann,\n\nYes</color>", rendered);
+            StringAssert.Contains("<color=#" + Pending + "00>No</color>", rendered);
+        }
+
+        [Test]
+        public void The_fade_keeps_the_text_so_the_space_stays()
+        {
+            var paper = new LetterPaperModel("Ann", "Yes", "No", 100);
+            var rendered = paper.Render(LetterText.Head("Ann").Length + 3, LetterPath.Accept, Palette, 0.5f);
+            StringAssert.Contains("<color=#" + Pending + "80>No</color>", rendered);
+            Assert.AreEqual(paper.Plain.Length, StripTags(rendered).Length);
+        }
+
+        [Test]
+        public void The_declined_side_fades_the_accept_answer_instead()
+        {
+            var paper = new LetterPaperModel("Ann", "Yes", "No", 100);
+            var rendered = paper.Render(LetterText.Head("Ann").Length + 1, LetterPath.Decline, Palette, 1f);
+            StringAssert.Contains(Pending + "FF>", rendered);
+        }
+
+        static string StripTags(string rendered) => System.Text.RegularExpressions.Regex.Replace(rendered, "<[^>]*>", string.Empty);
     }
 }

@@ -27,6 +27,7 @@ namespace DetectiveDave.OverworldPlay
         PaperView letterPaper;
         Tween slideTween;
         Tween appearTween;
+        Tween fadeTween;
         Keyboard keyboard;
         BriefingGate gate;
         DivergingTyper letterTyper;
@@ -41,6 +42,8 @@ namespace DetectiveDave.OverworldPlay
         Vector3 deskHome;
         float slide;
         float letterHidden = 1f;
+        float unchosenAlpha = 1f;
+        float fadeTarget = 1f;
         float viewWidth;
         bool listening;
         int generation;
@@ -63,6 +66,7 @@ namespace DetectiveDave.OverworldPlay
             var leftText = new PaperReveal(string.Empty, file.ResolvedDescription).Full;
             var letters = PlacePapers(leftText, LetterPaperModel.Unwrapped(file.ClientName, file.ResolvedAcceptMessage, file.ResolvedDeclineMessage));
             leftReveal = new PaperReveal(string.Empty, TextWrap.Wrap(file.ResolvedDescription, letters.Description));
+            ResetUnchosenFade();
             letterTyper = new DivergingTyper(file.ResolvedAcceptLetter, file.ResolvedDeclineLetter, settings.TypingRules);
             letterModel = new LetterPaperModel(file.ClientName, file.ResolvedAcceptMessage, file.ResolvedDeclineMessage, letters.Letter);
             gate = new BriefingGate(new TimedReveal(leftReveal.RevealedLength, settings.DescriptionSecondsPerCharacter, settings.DescriptionSkipSpeedMultiplier));
@@ -116,6 +120,7 @@ namespace DetectiveDave.OverworldPlay
             StopListening();
             generation++;
             appearTween?.Kill();
+            fadeTween?.Kill();
             SlideTo(0f, () => FinishClose(done));
         }
 
@@ -136,6 +141,7 @@ namespace DetectiveDave.OverworldPlay
             StopListening();
             slideTween?.Kill();
             appearTween?.Kill();
+            fadeTween?.Kill();
         }
 
         PaperView NewPaper(string paperName, Sprite sprite)
@@ -315,7 +321,37 @@ namespace DetectiveDave.OverworldPlay
 
         void ShowLeft(int revealedCount) => descriptionPaper.SetText(leftReveal.Shown(revealedCount), settings.DescriptionTextColor);
 
-        void RenderLetter() => letterPaper.SetText(letterModel.Render(letterTyper.TypedCount, letterTyper.Path, Hex(settings.TypedTextColor), Hex(settings.PendingTextColor)), settings.PendingTextColor);
+        void RenderLetter()
+        {
+            FadeUnchosenAnswer();
+            DrawLetter();
+        }
+
+        void DrawLetter() => letterPaper.SetText(letterModel.Render(letterTyper.TypedCount, letterTyper.Path, LetterColors(), unchosenAlpha), settings.PendingTextColor);
+
+        void FadeUnchosenAnswer()
+        {
+            float target = letterTyper.Path == LetterPath.Undecided ? 1f : 0f;
+            if (Mathf.Approximately(target, fadeTarget)) return;
+            fadeTarget = target;
+            fadeTween?.Kill();
+            fadeTween = DOVirtual.Float(unchosenAlpha, target, settings.UnchosenFadeSeconds, ApplyUnchosenAlpha).SetLink(gameObject);
+        }
+
+        void ApplyUnchosenAlpha(float value)
+        {
+            unchosenAlpha = value;
+            DrawLetter();
+        }
+
+        void ResetUnchosenFade()
+        {
+            fadeTween?.Kill();
+            unchosenAlpha = 1f;
+            fadeTarget = 1f;
+        }
+
+        LetterPalette LetterColors() => new LetterPalette(Hex(settings.TypedTextColor), Hex(settings.PendingTextColor), Hex(settings.AcceptPendingTextColor), Hex(settings.DeclinePendingTextColor));
 
         void RenderResponse() => letterPaper.SetText(responseModel.RenderTyping(responseTyper.TypedCount, responseTyper.CurrentUnitEnd, Hex(settings.TypedTextColor), Hex(settings.PendingTextColor)), settings.PendingTextColor);
 
