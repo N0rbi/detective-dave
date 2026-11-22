@@ -62,6 +62,8 @@ Play with F5 on a level with a Gap and a WallGutter key between the two Shifts. 
 - [ ] Shift+F5 shows the desk and the magnifier; the ring fills on the sample case and resets when leaving.
 - [ ] After 2 s the desk slides left, the description types in, the grey paper shows the letter.
 - [ ] Only valid keys tint and click; Backspace removes a letter; the wrong path stays grey after the split.
+- [ ] Spaces and line breaks are never needed: finish a word and the next one is ready. Before the split the accept answer waits in green and the decline answer in red; after it the other answer fades out but its space stays.
+- [ ] A case whose accept answer is the start of the decline answer (the `Kidnapped` case, `...` and `..............`): typing a dot takes the long answer, Enter or Space takes the short one, and both finish the letter. The case inspector warns about the overlap.
 - [ ] Declining returns to the desk; accepting wipes into the level; reaching the goal returns to the desk with the case solved.
 - [ ] F5 with the sample desk selected plays the overworld; F5 on a level still plays the level.
 
