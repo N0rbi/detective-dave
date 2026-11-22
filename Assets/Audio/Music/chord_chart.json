@@ -1,0 +1,276 @@
+{
+  "tempoBpm": 75.0,
+  "beatsPerBar": 4,
+  "loopLengthBars": 8,
+  "chartBeatAtLoopStart": 0.0,
+  "segments": [
+    {
+      "chordName": "Am7",
+      "startBeat": 0.0,
+      "lengthBeats": 4.0,
+      "chordTones": [
+        9,
+        0,
+        4,
+        7
+      ],
+      "scaleTones": [
+        9,
+        11,
+        0,
+        2,
+        4,
+        7
+      ]
+    },
+    {
+      "chordName": "Dm7",
+      "startBeat": 4.0,
+      "lengthBeats": 4.0,
+      "chordTones": [
+        2,
+        5,
+        9,
+        0
+      ],
+      "scaleTones": [
+        2,
+        4,
+        5,
+        7,
+        9,
+        11,
+        0
+      ]
+    },
+    {
+      "chordName": "Bm7b5",
+      "startBeat": 8.0,
+      "lengthBeats": 4.0,
+      "chordTones": [
+        11,
+        2,
+        5,
+        9
+      ],
+      "scaleTones": [
+        11,
+        0,
+        2,
+        4,
+        5,
+        7,
+        9
+      ]
+    },
+    {
+      "chordName": "E7",
+      "startBeat": 12.0,
+      "lengthBeats": 4.0,
+      "chordTones": [
+        4,
+        8,
+        11,
+        2
+      ],
+      "scaleTones": [
+        4,
+        5,
+        8,
+        9,
+        11,
+        0,
+        2
+      ]
+    },
+    {
+      "chordName": "Am7",
+      "startBeat": 16.0,
+      "lengthBeats": 4.0,
+      "chordTones": [
+        9,
+        0,
+        4,
+        7
+      ],
+      "scaleTones": [
+        9,
+        11,
+        0,
+        2,
+        4,
+        7
+      ]
+    },
+    {
+      "chordName": "Dm7",
+      "startBeat": 20.0,
+      "lengthBeats": 4.0,
+      "chordTones": [
+        2,
+        5,
+        9,
+        0
+      ],
+      "scaleTones": [
+        2,
+        4,
+        5,
+        7,
+        9,
+        11,
+        0
+      ]
+    },
+    {
+      "chordName": "Bm7b5",
+      "startBeat": 24.0,
+      "lengthBeats": 4.0,
+      "chordTones": [
+        11,
+        2,
+        5,
+        9
+      ],
+      "scaleTones": [
+        11,
+        0,
+        2,
+        4,
+        5,
+        7,
+        9
+      ]
+    },
+    {
+      "chordName": "E7",
+      "startBeat": 28.0,
+      "lengthBeats": 4.0,
+      "chordTones": [
+        4,
+        8,
+        11,
+        2
+      ],
+      "scaleTones": [
+        4,
+        5,
+        8,
+        9,
+        11,
+        0,
+        2
+      ]
+    }
+  ],
+  "clips": [
+    {
+      "clipName": "Jazz - Piano - 1",
+      "label": "C4 E4 G4",
+      "pitchClasses": [
+        0,
+        4,
+        7
+      ]
+    },
+    {
+      "clipName": "Jazz - Piano - 2",
+      "label": "F4 A4 C5",
+      "pitchClasses": [
+        5,
+        9,
+        0
+      ]
+    },
+    {
+      "clipName": "Jazz - Piano - 3",
+      "label": "F4 A4 C5",
+      "pitchClasses": [
+        5,
+        9,
+        0
+      ]
+    },
+    {
+      "clipName": "Jazz - Piano - 4",
+      "label": "D4 F4 A4",
+      "pitchClasses": [
+        2,
+        5,
+        9
+      ]
+    },
+    {
+      "clipName": "Jazz - Piano - 5",
+      "label": "D4 G#4 B4",
+      "pitchClasses": [
+        2,
+        8,
+        11
+      ]
+    },
+    {
+      "clipName": "Jazz - Piano - 6",
+      "label": "D4 G#4 B4",
+      "pitchClasses": [
+        2,
+        8,
+        11
+      ]
+    },
+    {
+      "clipName": "Jazz - Piano - 7",
+      "label": "C4 E4 G4",
+      "pitchClasses": [
+        0,
+        4,
+        7
+      ]
+    },
+    {
+      "clipName": "Jazz - Piano - 8",
+      "label": "F4 A4 C5",
+      "pitchClasses": [
+        5,
+        9,
+        0
+      ]
+    },
+    {
+      "clipName": "Jazz - Piano - 9",
+      "label": "F4 A4 C5",
+      "pitchClasses": [
+        5,
+        9,
+        0
+      ]
+    },
+    {
+      "clipName": "Jazz - Piano - 10",
+      "label": "D4 F4 A4",
+      "pitchClasses": [
+        2,
+        5,
+        9
+      ]
+    },
+    {
+      "clipName": "Jazz - Piano - 11",
+      "label": "D4 G#4 B4",
+      "pitchClasses": [
+        2,
+        8,
+        11
+      ]
+    },
+    {
+      "clipName": "Jazz - Piano - 12",
+      "label": "D4 G#4 B4",
+      "pitchClasses": [
+        2,
+        8,
+        11
+      ]
+    }
+  ]
+}
