@@ -2,12 +2,17 @@ using System.Linq;
 using DetectiveDave.Levels;
 using DetectiveDave.OverworldPlay;
 using UnityEditor;
+using UnityEngine;
 
 namespace DetectiveDave.EditorTools
 {
     [CustomEditor(typeof(CaseFile))]
     public sealed class CaseFileInspector : Editor
     {
+        const float SampleHeight = 24f;
+        const int SampleFontSize = 15;
+        const string SampleText = "The quick brown fox 0123";
+
         public override void OnInspectorGUI()
         {
             var file = (CaseFile)target;
@@ -15,6 +20,7 @@ namespace DetectiveDave.EditorTools
             DrawDefaultInspector();
             DrawLevelPicker();
             DrawIdProblems(file);
+            DrawLookPreview(file);
             EditorGUILayout.Space();
             EditorGUILayout.LabelField("Letter preview", EditorStyles.boldLabel);
             DrawLetter("Accept", file.ResolvedAcceptLetter);
@@ -35,6 +41,38 @@ namespace DetectiveDave.EditorTools
             if (picked == current) return;
             levelProperty.objectReferenceValue = picked == 0 ? null : levels[picked - 1];
             serializedObject.ApplyModifiedProperties();
+        }
+
+        static void DrawLookPreview(CaseFile file)
+        {
+            var settings = AssetDatabase.LoadAssetAtPath<OverworldSettings>(OverworldSetupPaths.SettingsPath);
+            EditorGUILayout.Space();
+            EditorGUILayout.LabelField("Look preview", EditorStyles.boldLabel);
+            if (!settings)
+            {
+                EditorGUILayout.HelpBox("No Overworld Settings found. Run Window > Detective Dave > Set Up Overworld to see the preview.", MessageType.Info);
+                return;
+            }
+            var colors = file.Look.Resolve(settings.TextColors);
+            var requestFont = RequestFontChoice.For(file.DescriptionFontOverride, settings.FontFor(FontSlot.Request));
+            DrawSample(settings, "Description", colors.Description, requestFont);
+            DrawSample(settings, "Findings", colors.Findings, settings.FontFor(FontSlot.Findings));
+            DrawSample(settings, "Typed", colors.Typed, settings.FontFor(FontSlot.Typed));
+            DrawSample(settings, "Placeholder", colors.Placeholder, settings.FontFor(FontSlot.Placeholder));
+            DrawSample(settings, "Accept answer", colors.AcceptPending, settings.FontFor(FontSlot.Placeholder));
+            DrawSample(settings, "Decline answer", colors.DeclinePending, settings.FontFor(FontSlot.Placeholder));
+        }
+
+        static void DrawSample(OverworldSettings settings, string label, Color color, Font font)
+        {
+            var rect = EditorGUILayout.GetControlRect(false, SampleHeight);
+            EditorGUI.DrawRect(rect, settings.PaperReferenceColor);
+            var style = new GUIStyle(EditorStyles.label) { font = font, fontSize = SampleFontSize, alignment = TextAnchor.MiddleLeft };
+            style.normal.textColor = color;
+            EditorGUI.LabelField(rect, label + ": " + SampleText, style);
+            float ratio = ContrastRatio.Of(color, settings.PaperReferenceColor);
+            if (ratio >= settings.MinimumTextContrast) return;
+            EditorGUILayout.HelpBox(label + " is hard to read on the paper: contrast " + ratio.ToString("0.0") + ", at least " + settings.MinimumTextContrast.ToString("0.0") + " is needed. Pick a darker or lighter colour.", MessageType.Warning);
         }
 
         static void DrawIdProblems(CaseFile file)
