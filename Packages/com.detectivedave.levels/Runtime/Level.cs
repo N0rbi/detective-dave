@@ -42,6 +42,9 @@ namespace DetectiveDave.Levels
         [Tooltip("Drawn behind the keyboard. Its sprite and colour are the level's background; with no sprite the Key Art's default background is used.")]
         [SerializeField] SpriteRenderer background;
 
+        [Tooltip("How the 2D lights look in this level: their brightness and colour, and an optional flicker.")]
+        [SerializeField] LevelLightingSettings lighting = new LevelLightingSettings();
+
         /// <summary>The name players see: the display name, or the object (file) name without the "(Clone)" Unity adds to instances.</summary>
         public string DisplayName
         {
@@ -61,6 +64,9 @@ namespace DetectiveDave.Levels
 
         /// <summary>The Shift key the player starts on; the other Shift key is the End.</summary>
         public StartSide StartKey => startKey;
+
+        /// <summary>How the 2D lights look while this level plays.</summary>
+        public LevelLightingSettings Lighting => lighting ??= new LevelLightingSettings();
 
         public float DrawnHeightStretch => drawnHeightStretch;
 
