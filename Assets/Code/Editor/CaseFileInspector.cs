@@ -52,8 +52,10 @@ namespace DetectiveDave.EditorTools
 
         static void DrawProblems(CaseFile file)
         {
-            if (!DivergingTyper.Diverge(file.ResolvedAcceptLetter, file.ResolvedDeclineLetter))
-                EditorGUILayout.HelpBox("The accept and decline messages must differ, and neither may be the start of the other.", MessageType.Warning);
+            if (DivergingTyper.OneStartsWithTheOther(file.ResolvedAcceptMessage, file.ResolvedDeclineMessage))
+                EditorGUILayout.HelpBox("One answer is the start of the other. The player chooses the shorter one by pressing Enter or Space after it, and the longer one by typing on.", MessageType.Warning);
+            else if (!DivergingTyper.Diverge(file.ResolvedAcceptLetter, file.ResolvedDeclineLetter))
+                EditorGUILayout.HelpBox("The accept and decline messages must differ.", MessageType.Warning);
             var unresolved = TextTemplate.UnresolvedPlaceholders(file.ResolvedDescription + file.ResolvedFindings + file.ResolvedResponse + file.ResolvedAcceptLetter + file.ResolvedDeclineLetter);
             if (unresolved.Count > 0)
                 EditorGUILayout.HelpBox("No value for " + string.Join(", ", unresolved) + ". Add a suspect with that key or fix the text.", MessageType.Warning);

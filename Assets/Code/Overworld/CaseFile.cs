@@ -12,8 +12,8 @@ namespace DetectiveDave.OverworldPlay
         [SerializeField] [Tooltip("Who wrote to the detective. Replaces {client} in every text of this case.")] string clientName;
         [SerializeField] [Tooltip("More names for the texts: a suspect with key husband replaces {husband}.")] SuspectEntry[] suspects = new SuspectEntry[0];
         [SerializeField, TextArea(3, 8)] [Tooltip("Typed in real time on the left of the screen when the player stays on the case file.")] string description;
-        [SerializeField, TextArea(2, 4)] [Tooltip("The answer when the detective takes the case. It must start differently from the decline message.")] string acceptMessage;
-        [SerializeField, TextArea(2, 4)] [Tooltip("The answer when the detective turns the case down. It must start differently from the accept message.")] string declineMessage;
+        [SerializeField, TextArea(2, 4)] [Tooltip("The answer when the detective takes the case. It may be the start of the decline message: then the player presses Enter or Space after it to choose it.")] string acceptMessage;
+        [SerializeField, TextArea(2, 4)] [Tooltip("The answer when the detective turns the case down. It may be the start of the accept message: then the player presses Enter or Space after the short one to choose it.")] string declineMessage;
         [SerializeField, TextArea(4, 12)] [Tooltip("What the detective found. Appears under the description on the left after the level is solved, typed in at the same speed.")] string findings;
         [SerializeField, TextArea(2, 8)] [Tooltip("The answer the player types on the right paper after reading the findings. Completing it solves the case.")] string response;
         [SerializeField] [Tooltip("The level played when the case is accepted.")] Level level;

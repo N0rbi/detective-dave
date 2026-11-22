@@ -130,7 +130,11 @@ namespace DetectiveDave.Tests
         public void FreeCharactersMustBeTypedWhenAutoTypingIsOff()
         {
             typer = Build(new TypingRules(false));
-            foreach (var character in "Dear Ann,\n\n") Assert.IsTrue(typer.TryType(character));
+            foreach (var character in "Dear Ann,")
+            {
+                if (char.IsWhiteSpace(character)) continue;
+                Assert.IsTrue(typer.TryType(character));
+            }
             Assert.AreEqual(LetterText.Head(Client).Length, typer.TypedCount);
         }
 
@@ -152,9 +156,133 @@ namespace DetectiveDave.Tests
         [Test]
         public void MessageThatIsAPrefixOfTheOtherDoesNotDiverge() => Assert.IsFalse(DivergingTyper.Diverge("I am", "I am sorry"));
 
+        [Test]
+        public void ShorterMessageIsTheStartOfTheLongerOne() => Assert.IsTrue(DivergingTyper.OneStartsWithTheOther("...", ".............."));
+
+        [Test]
+        public void LongerFirstIsAlsoTheStartOfTheOther() => Assert.IsTrue(DivergingTyper.OneStartsWithTheOther("I am sorry", "I am"));
+
+        [Test]
+        public void IdenticalMessagesAreNotTheStartOfTheOther() => Assert.IsFalse(DivergingTyper.OneStartsWithTheOther("I am", "I am"));
+
+        [Test]
+        public void MessagesThatDifferAreNotTheStartOfTheOther() => Assert.IsFalse(DivergingTyper.OneStartsWithTheOther(Accept, Decline));
+
         [TestCase("", "x")]
         [TestCase("x", "")]
         [TestCase(null, "x")]
         public void EmptyMessagesDoNotDiverge(string accept, string decline) => Assert.IsFalse(DivergingTyper.Diverge(accept, decline));
+    }
+
+    public class DivergingTyperPrefixTests
+    {
+        const string Client = "Mr Gangster";
+        const string Tail = "Yours sincerely,\nDetective Dave";
+
+        static DivergingTyper Build(string accept, string decline) =>
+            new DivergingTyper(LetterText.Compose(Client, accept), LetterText.Compose(Client, decline), TypingRules.Default);
+
+        static void TypeRequired(DivergingTyper typer, string text)
+        {
+            foreach (var character in text)
+            {
+                if (TypingRules.IsFreeCharacter(character)) continue;
+                Assert.IsTrue(typer.TryType(character), "could not type '" + character + "'");
+            }
+        }
+
+        static DivergingTyper Kidnapped()
+        {
+            var typer = Build("...", "..............");
+            TypeRequired(typer, "Dear Mr Gangster");
+            return typer;
+        }
+
+        [Test]
+        public void TheLettersThatAreOnlyDotsStopAtTheChoice()
+        {
+            var typer = Kidnapped();
+            Assert.AreEqual(LetterText.Head(Client).Length + 3, typer.TypedCount);
+            Assert.AreEqual(LetterPath.Undecided, typer.Path);
+            Assert.AreEqual(LetterOutcome.None, typer.Outcome);
+        }
+
+        [Test]
+        public void TypingADotTakesTheLongerAnswer()
+        {
+            var typer = Kidnapped();
+            Assert.IsTrue(typer.TryType('.'));
+            Assert.AreEqual(LetterPath.Decline, typer.Path);
+        }
+
+        [Test]
+        public void TheLongerAnswerFinishesTheLetterAsDeclined()
+        {
+            var typer = Kidnapped();
+            typer.TryType('.');
+            TypeRequired(typer, Tail);
+            Assert.AreEqual(LetterOutcome.Declined, typer.Outcome);
+        }
+
+        [TestCase('\r')]
+        [TestCase('\n')]
+        [TestCase(' ')]
+        public void PressingEnterOrSpaceTakesTheShorterAnswer(char key)
+        {
+            var typer = Kidnapped();
+            Assert.IsTrue(typer.TryType(key));
+            Assert.AreEqual(LetterPath.Accept, typer.Path);
+        }
+
+        [Test]
+        public void TheShorterAnswerFinishesTheLetterAsAccepted()
+        {
+            var typer = Kidnapped();
+            typer.TryType('\r');
+            TypeRequired(typer, Tail);
+            Assert.AreEqual(LetterOutcome.Accepted, typer.Outcome);
+        }
+
+        [Test]
+        public void BackspaceAfterTheChoiceReopensBothAnswers()
+        {
+            var typer = Kidnapped();
+            typer.TryType('\r');
+            Assert.IsTrue(typer.Backspace());
+            Assert.AreEqual(LetterPath.Undecided, typer.Path);
+            Assert.IsTrue(typer.TryType('r'));
+            Assert.AreEqual(LetterText.Head(Client).Length + 3, typer.TypedCount);
+            Assert.IsTrue(typer.TryType('.'));
+            Assert.AreEqual(LetterPath.Decline, typer.Path);
+        }
+
+        [Test]
+        public void ShortWordsFollowTheSameRule()
+        {
+            var typer = Build("Yes", "Yes sir");
+            TypeRequired(typer, "Dear Mr GangsterYes");
+            Assert.AreEqual(LetterPath.Undecided, typer.Path);
+            Assert.IsTrue(typer.TryType('s'));
+            Assert.AreEqual(LetterPath.Decline, typer.Path);
+        }
+
+        [Test]
+        public void ShortWordsAreChosenWithEnter()
+        {
+            var typer = Build("Yes", "Yes sir");
+            TypeRequired(typer, "Dear Mr GangsterYes");
+            Assert.IsTrue(typer.TryType('\r'));
+            Assert.AreEqual(LetterPath.Accept, typer.Path);
+            TypeRequired(typer, Tail);
+            Assert.AreEqual(LetterOutcome.Accepted, typer.Outcome);
+        }
+
+        [Test]
+        public void SpacesAreNeverRequiredToFinishAnOrdinaryLetter()
+        {
+            var typer = Build("I am sorry.", "I cannot help.");
+            TypeRequired(typer, LetterText.Compose(Client, "I am sorry."));
+            Assert.AreEqual(LetterOutcome.Accepted, typer.Outcome);
+        }
     }
 }

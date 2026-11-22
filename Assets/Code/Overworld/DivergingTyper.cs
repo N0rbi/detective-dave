@@ -58,9 +58,15 @@ namespace DetectiveDave.OverworldPlay
             int shared = Math.Min(first.Length, second.Length);
             for (int position = 0; position < shared; position++)
             {
-                if (char.ToLowerInvariant(first[position]) != char.ToLowerInvariant(second[position])) return position;
+                if (CharacterMatch.Canonical(first[position]) != CharacterMatch.Canonical(second[position])) return position;
             }
             return shared;
+        }
+
+        public static bool OneStartsWithTheOther(string first, string second)
+        {
+            if (string.IsNullOrEmpty(first) || string.IsNullOrEmpty(second) || first.Length == second.Length) return false;
+            return DivergenceIndex(first, second) == Math.Min(first.Length, second.Length);
         }
 
         public static bool Diverge(string accept, string decline)
