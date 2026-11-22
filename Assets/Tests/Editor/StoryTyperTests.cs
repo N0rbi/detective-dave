@@ -55,8 +55,7 @@ namespace DetectiveDave.Tests
         [Test]
         public void SpacesAtTheEndOfTheTextDoNotBlockCompletion()
         {
-            var typer = new StoryTyper("ab  
-", TypingRules.Default, RevealUnit.Word);
+            var typer = new StoryTyper("ab  \n", TypingRules.Default, RevealUnit.Word);
             TypeRequired(typer, "ab");
             Assert.IsTrue(typer.IsComplete);
         }
