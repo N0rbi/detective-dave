@@ -24,6 +24,15 @@ namespace DetectiveDave.MusicPlay
 
         public bool ContainsAll(PitchClassSet other) => (other.mask & ~mask) == 0;
 
+        public int CountIn(PitchClassSet scale) => BitCount(mask & scale.mask);
+
+        static int BitCount(int bits)
+        {
+            var count = 0;
+            for (; bits != 0; bits &= bits - 1) count++;
+            return count;
+        }
+
         static int BitOf(int note) => 1 << (((note % PitchClassesPerOctave) + PitchClassesPerOctave) % PitchClassesPerOctave);
     }
 }

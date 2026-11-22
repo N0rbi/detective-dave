@@ -25,7 +25,7 @@ namespace DetectiveDave.MusicPlay
         }
 
         string MessageFor(ChordMoment moment) => moment.IsInsideChart
-            ? $"No piano clip fits the scale of {palette.ChordName(moment.SegmentIndex)} (chord number {moment.SegmentIndex + 1}), so that chord plays no piano notes. Add a clip whose notes are in its scale, or widen the scale, on the Chord Chart."
-            : "The loop position is outside every chord of the Chord Chart, so no piano notes play there. Fix the chord segments on the Chord Chart.";
+            ? $"No piano clip fits the scale of {palette.ChordName(moment.SegmentIndex)} (chord number {moment.SegmentIndex + 1}), so When No Clip Fits chooses the clip played over it. Add a clip whose notes are in its scale, or widen the scale, on the Chord Chart."
+            : "The loop position is outside every chord of the Chord Chart, so the next clip in name order plays there. Fix the chord segments on the Chord Chart.";
     }
 }

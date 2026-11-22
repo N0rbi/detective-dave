@@ -34,7 +34,7 @@ namespace DetectiveDave.MusicPlay
         static IEnumerable<string> ProblemsOf(ChordSegment segment, int loopBeats)
         {
             if (segment.LengthBeats <= 0f) yield return $"{segment.ChordName}: the length must be above 0 beats.";
-            if (segment.ScaleTones.IsEmpty) yield return $"{segment.ChordName}: the scale has no notes, so no piano clip can play over it.";
+            if (segment.ScaleTones.IsEmpty) yield return $"{segment.ChordName}: the scale has no notes, so no piano clip fits it and When No Clip Fits decides what plays over it.";
             if (!segment.ScaleTones.ContainsAll(segment.ChordTones)) yield return $"{segment.ChordName}: some chord tones are not in its scale.";
             if (segment.EndBeat > loopBeats + BeatTolerance) yield return $"{segment.ChordName}: it ends at beat {segment.EndBeat:0.##}, after the end of the loop at beat {loopBeats}.";
         }
@@ -69,7 +69,7 @@ namespace DetectiveDave.MusicPlay
             var clipPitches = chart.ClipPitches.Select(pitch => pitch.PitchClasses).ToList();
             var palette = new ChordPalette(chart.Segments, clipPitches);
             for (var index = 0; index < chart.Segments.Count; index++)
-                if (palette.Allowed(index).Count == 0) yield return $"{chart.Segments[index].ChordName} (chord number {index + 1}): no piano clip fits its scale, so it plays no piano notes.";
+                if (palette.Allowed(index).Count == 0) yield return $"{chart.Segments[index].ChordName} (chord number {index + 1}): no piano clip fits its scale, so When No Clip Fits decides what plays over it.";
         }
     }
 }

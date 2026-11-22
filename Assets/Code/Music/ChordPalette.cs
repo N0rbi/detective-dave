@@ -10,10 +10,14 @@ namespace DetectiveDave.MusicPlay
         readonly string[] chordNames;
         readonly int[][] allowedBySegment;
         readonly bool[][] chordToneBySegment;
+        readonly PitchClassSet[] scaleBySegment;
+        readonly PitchClassSet[] clipPitches;
 
         public ChordPalette(IReadOnlyList<ChordSegment> segments, IReadOnlyList<PitchClassSet> clipPitches)
         {
             ClipCount = clipPitches.Count;
+            this.clipPitches = clipPitches.ToArray();
+            scaleBySegment = segments.Select(segment => segment.ScaleTones).ToArray();
             chordNames = segments.Select(segment => segment.ChordName).ToArray();
             allowedBySegment = segments.Select(segment => AllowedClips(segment, clipPitches)).ToArray();
             chordToneBySegment = segments.Select(segment => ChordToneFlags(segment, clipPitches)).ToArray();
@@ -24,6 +28,21 @@ namespace DetectiveDave.MusicPlay
         public IReadOnlyList<int> Allowed(int segmentIndex) => IsKnown(segmentIndex) ? allowedBySegment[segmentIndex] : NoClips;
 
         public bool IsChordTone(int segmentIndex, int clipIndex) => IsKnown(segmentIndex) && chordToneBySegment[segmentIndex][clipIndex];
+
+        public int Closest(int segmentIndex, int excludedClip)
+        {
+            var best = PianoPicker.NoClip;
+            var bestScore = -1;
+            for (var clip = 0; clip < ClipCount; clip++)
+            {
+                if (clip == excludedClip && ClipCount > 1) continue;
+                var score = clipPitches[clip].CountIn(scaleBySegment[segmentIndex]);
+                if (score <= bestScore) continue;
+                best = clip;
+                bestScore = score;
+            }
+            return best;
+        }
 
         public string ChordName(int segmentIndex) => IsKnown(segmentIndex) ? chordNames[segmentIndex] : string.Empty;
 
