@@ -135,7 +135,7 @@ Tile types are assets (each Terrain Tile in `Assets/Tiles` carries one), so a ne
 layer) for it, and give it sprites in the key art. The key art lives in `Assets/Key Art/Default Key Art.config.asset`; a level
 points at it as its **Style Template** and overrides only what it wants to change. Sprites are grayscale and multiplied by each
 style's tint. Each kind needs two sprites in the key art: a 9-sliced **Box** for every key and an **Enter** for the L-shaped key; starter
-canvases for the artist are in `ArtTemplates/KeyArt` (see its README). The old per-size sprites remain as optional **Shape Overrides**.
+canvases for the artist are in `ArtTemplates/KeyArt` (see its README). The old per-size sprites remain as optional **Shape Overrides**. Painted art dropped in `Assets/Staging/Tiles` for the Walkable kind (`keyboard_stealth_platform.png`, `keyboard_stealth_platform_enter.png`) is placed and imported by `Window > Detective Dave > Set Up Key Art`, which assigns Box and Enter on the Walkable style only.
 
 Game code asks the mapper, which sits next to `KeyboardGridView`:
 

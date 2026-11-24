@@ -34,6 +34,7 @@ Run these in the Editor after changes to the level tools. Each line says what to
 - [ ] Put a Box without a border on a style: the inspector and the level checks warn, **Set 9-Slice Border** fixes it (border and Full Rect) and pressing it again changes nothing.
 - [ ] Take the Enter sprite away: the Enter is drawn with the Box in two pieces and the Console warns once.
 - [ ] A style that only has per-size sprites (no Box) still draws as before and shows the "can move to Box + Enter" info; a Shape Override beats the Box for its size.
+- [ ] Painted Walkable art: put `keyboard_stealth_platform.png` and `keyboard_stealth_platform_enter.png` in `Assets/Staging/Tiles`, run `Window > Detective Dave > Set Up Key Art`: the files move to `Assets/Key Art/Walkable` as `walkable_box.png` and `walkable_enter.png`, the Box gets a 65 px border, and the Walkable style of Default Key Art shows them (tint white, old per-size sprites cleared). Wall, Gap and Wall Gutter keep their sprites. Running it again changes nothing.
 - [ ] Change Border Thickness In Key Units while playing: the borders get thicker or thinner on all keys; lit keys still react to the 2D lights.
 - [ ] Stop, then press the normal Play button in KeyboardSelect: the picker shows, and after picking, Game plays Level 01 (first of the sequence).
 - [ ] Rebind F5 in Edit > Shortcuts > Detective Dave > Play This Level; the new key works.
