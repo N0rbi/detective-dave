@@ -5,6 +5,8 @@ All notable changes to this package are documented here. The format follows [Kee
 ## [Unreleased]
 
 ### Added
+- Key Art takes two sprites per kind: a 9-sliced `Box` for every single-rectangle key and an `Enter` for the L-shaped key (`TileStyle.Box`, `TileStyle.Enter`, `KeyArt.Resolve`, `KeySpriteChoice`, `KeyArt.BorderThicknessInKeyUnits`). The per-size sprites stay as optional Shape Overrides and win for their size; styles with only those keep working (`TileStyle.CanMigrateToBox`).
+- Editor: Box, Enter and border thickness in the Key Art inspector, a 9-slice border and Full Rect fix, checks for a missing or unsliced Box.
 - `Level.Lighting` (`LevelLightingSettings`): intensity, colour tint and an optional flicker per level. `FlickerPattern` / `FlickerPoint` timelines, `FlickerPicker` (weighted random pick), `FlickerScheduler` (random waits between flickers), `LightingMath`, `LightingProblems`.
 - Editor: the Lighting section of the Level inspector with the timeline widget and preview, `LevelLightingCheck`, `LightingPreview` and `LightingPreviewHost`.
 

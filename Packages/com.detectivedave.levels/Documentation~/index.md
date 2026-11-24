@@ -52,13 +52,20 @@ The **Lighting** section of the Level inspector sets how the 2D lights look in t
 Edit `Assets/Key Art/Default Key Art` and every level that uses it follows. To give one level its own look, duplicate the Key
 Art (Ctrl+D), change the copy, and pick the copy in that level's **Key Art** field.
 
-In the Key Art inspector, each kind has a strip of small squares: every key shape as it will look in game; red means no sprite.
+In the Key Art inspector, each kind has a strip of small squares: every key shape as it will look in game; red means nothing draws it.
 
 ## For artists: key sprites
 
-- One sprite per key shape per kind. The shapes the shipped keyboards use: 1, 1.25, 1.5, 1.75, 2, 2.25 and 2.75 units wide,
-  1 high, plus the whole L-shaped Enter (1.5 x 2). **Add Standard Key Shapes** creates these rows.
-- Sprites are stretched to fill the key and multiplied by the style's **Tint**. Draw in grayscale to recolour with the tint.
-- Name files `<anything>_<width>x<height>.png` with `_` for the decimal point (`wall_1_25x1.png`), and
-  `<anything>_enter_1_5x2.png` for the whole Enter. **Fill From Folder…** on a style then assigns a whole folder at once.
-- Without a whole-key Enter sprite the Enter is drawn from its two rectangles (1.5 x 1 on top, 1.25 x 1 below).
+Each kind of key needs two sprites on its style in the Key Art:
+
+- **Box**: one 9-sliced sprite used for every single-rectangle key, whatever its size (1 to 2.75 units wide, 1 high, even a space bar).
+  The border keeps one thickness (**Border Thickness In Key Units**, default 0.1875 = 3 px of 16 px art) and only the middle stretches,
+  so the 2x key height never distorts it. The sprite needs a 9-slice border and Mesh Type Full Rect: the inspector warns and has a
+  **Set 9-Slice Border** button that sets both on the texture's import settings.
+- **Enter**: one sprite over the whole L-shaped Enter (1.5 x 2 keys, 24 x 64 px at 16 px per key). It is stretched, not sliced.
+  Without it each rectangle of the Enter is drawn with the Box and the check shows an Info.
+- Sprites are multiplied by the style's **Tint**. Draw in grayscale to recolour with the tint.
+- **Shape Overrides (optional)**, collapsed, keep the old design: a sprite for one exact key size wins over the Box for that size.
+  Name files `<anything>_<width>x<height>.png` with `_` for the decimal point and use **Fill From Folder…**. A style that only has
+  shape sprites and no Box works as before, and the checks tell it can move to Box + Enter.
+- Templates for the artist: `ArtTemplates/KeyArt` (blank canvases, guides, a README).

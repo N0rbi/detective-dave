@@ -30,6 +30,11 @@ Run these in the Editor after changes to the level tools. Each line says what to
 - [ ] While playing, paint a key in Prefab Mode (Auto Save on): the key changes in the Game view within a frame; the Console logs `[Live reload]`.
   Keys stay responsive (the keyboard is not rebuilt; no exception from KeyboardKeySource.Begin).
 - [ ] Edit a sprite or tint in Default Key Art while playing: keys redraw.
+- [ ] Key Art Box and Enter: on a style set a Box (9-sliced, Mesh Type Full Rect) and an Enter. Keys of every width keep the same border thickness and the tall keys do not squash the border; the Enter is stretched over the L.
+- [ ] Put a Box without a border on a style: the inspector and the level checks warn, **Set 9-Slice Border** fixes it (border and Full Rect) and pressing it again changes nothing.
+- [ ] Take the Enter sprite away: the Enter is drawn with the Box in two pieces and the Console warns once.
+- [ ] A style that only has per-size sprites (no Box) still draws as before and shows the "can move to Box + Enter" info; a Shape Override beats the Box for its size.
+- [ ] Change Border Thickness In Key Units while playing: the borders get thicker or thinner on all keys; lit keys still react to the 2D lights.
 - [ ] Stop, then press the normal Play button in KeyboardSelect: the picker shows, and after picking, Game plays Level 01 (first of the sequence).
 - [ ] Rebind F5 in Edit > Shortcuts > Detective Dave > Play This Level; the new key works.
 

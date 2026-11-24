@@ -19,7 +19,7 @@ Assets/
     Models/                      GameScene enum (shared across domains)
     AssetDependencies/           code that depends on specific assets: SceneLoader, and an editor-only build-list registrar
   Game/Keyboard/                 Data/ (one JSON per layout, KeyboardPalette.config.asset) and Art/ (glyph masks keyboard_<id>.png, glyph and cell materials)
-  Key Art/                       Default Key Art.config.asset (the style template every level falls back to) and one folder per kind (Walkable, Gap, Wall, WallGutter) with a sprite for every key shape.
+  Key Art/                       Default Key Art.config.asset (the style template every level falls back to) and one folder per kind (Walkable, Gap, Wall, WallGutter) with a 9-sliced Box sprite and an Enter sprite (per-size sprites stay as optional shape overrides).
   Tiles/                         the Terrain Tile assets you paint with: Walkable, Gap, Wall, WallGutter (each carries its Tile Type), Level Tiles.prefab (the palette), Sprites/ (16 x 16 tile sprites, 64 pixels per unit: one tile is a quarter of a key)
   Levels/                        one prefab per level (the Level Definition), Level Sequence.config.asset, Templates/
   Player/                        Player.prefab, Player Movement Settings.config.asset, the walk and climb cycle PNGs
@@ -134,7 +134,8 @@ has the API. In short:
 Tile types are assets (each Terrain Tile in `Assets/Tiles` carries one), so a new kind of key needs no code: create a Tile Type, a Terrain Tile (or a
 layer) for it, and give it sprites in the key art. The key art lives in `Assets/Key Art/Default Key Art.config.asset`; a level
 points at it as its **Style Template** and overrides only what it wants to change. Sprites are grayscale and multiplied by each
-style's tint; see the designer guide for the naming convention and the **Fill From Folder…** button.
+style's tint. Each kind needs two sprites in the key art: a 9-sliced **Box** for every key and an **Enter** for the L-shaped key; starter
+canvases for the artist are in `ArtTemplates/KeyArt` (see its README). The old per-size sprites remain as optional **Shape Overrides**.
 
 Game code asks the mapper, which sits next to `KeyboardGridView`:
 

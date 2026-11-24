@@ -13,7 +13,7 @@ positions, draws the keys and loads levels. Designer guide (no code): [Documenta
 |---|---|---|
 | `TileType : Tile` | One kind of key **and** the tile you paint it with: editor colour, walkable flag, notes, plus the tile's own sprite/colour for painting. | `Assets/Tiles/<Kind>.asset` (Create > Detective Dave > Tile Type) |
 | Level Tiles palette | The Tile Palette with every Tile Type. | `Assets/Tiles/Level Tiles.prefab` |
-| `KeyArt` | How keys look in game: per Tile Type a tint and a sprite per key shape; a default background. | `Assets/Key Art/Default Key Art.config.asset` (Create > Detective Dave > Key Art) |
+| `KeyArt` | How keys look in game: per Tile Type a tint, a 9-sliced Box sprite for every single-rectangle key and an Enter sprite (optional per-size shape overrides); a default background. | `Assets/Key Art/Default Key Art.config.asset` (Create > Detective Dave > Key Art) |
 | `Level` | Root of a level prefab: `displayName`, `keyArt`, `shape` (Tilemap), `background` (SpriteRenderer). | `Assets/Levels/<Name>.prefab` |
 | Level Template | What new levels are copied from (Grid cell 0.25, empty Shape, Background, Default Key Art). | `Assets/Levels/Templates/Level Template.prefab` |
 | `LevelTerrain` | The shape as a lookup, built from the Shape tilemap when a level loads. | runtime only |
@@ -49,7 +49,9 @@ LevelTerrain BuildTerrain();          // allocates: on load/change, not per fram
 // KeyArt (ScriptableObject)
 IReadOnlyList<TileStyle> TileStyles { get; }
 TileStyle FindStyle(TileType type);
-Sprite FindSprite(TileType type, Vector2 size, bool wholeKey = false);
+Sprite FindSprite(TileType type, Vector2 size, bool wholeKey = false);   // shape overrides only
+KeySpriteChoice Resolve(TileType type, Vector2 size, bool wholeKey);      // override, then Enter / Box; Kind None | Stretched | Sliced
+float BorderThicknessInKeyUnits { get; }
 Sprite DefaultBackground { get; }  Color DefaultBackgroundTint { get; }
 event Action Changed;                  // raised from OnValidate (editor only)
 
