@@ -30,6 +30,14 @@ namespace DetectiveDave.Levels.Tests
             return sprite;
         }
 
+        public Sprite SpriteWithBorder(string spriteName, float border)
+        {
+            var texture = Track(new Texture2D(24, 24));
+            var sprite = Track(UnityEngine.Sprite.Create(texture, new Rect(0, 0, 24, 24), new Vector2(0.5f, 0.5f), 16f, 0, SpriteMeshType.FullRect, new Vector4(border, border, border, border)));
+            sprite.name = spriteName;
+            return sprite;
+        }
+
         public KeyArt KeyArt(string artName = "Key Art")
         {
             var art = Track(ScriptableObject.CreateInstance<KeyArt>());
@@ -55,6 +63,20 @@ namespace DetectiveDave.Levels.Tests
                 entry.FindPropertyRelative("wholeKey").boolValue = shapes[i].wholeKey;
                 entry.FindPropertyRelative("sprite").objectReferenceValue = shapes[i].sprite;
             }
+            serialized.ApplyModifiedPropertiesWithoutUndo();
+        }
+
+        public void AddBoxStyle(KeyArt art, TileType type, Sprite box, Sprite enter = null)
+        {
+            var serialized = new SerializedObject(art);
+            var styles = serialized.FindProperty("tileStyles");
+            styles.arraySize++;
+            var style = styles.GetArrayElementAtIndex(styles.arraySize - 1);
+            style.FindPropertyRelative("type").objectReferenceValue = type;
+            style.FindPropertyRelative("tint").colorValue = Color.white;
+            style.FindPropertyRelative("box").objectReferenceValue = box;
+            style.FindPropertyRelative("enter").objectReferenceValue = enter;
+            style.FindPropertyRelative("shapes").arraySize = 0;
             serialized.ApplyModifiedPropertiesWithoutUndo();
         }
 

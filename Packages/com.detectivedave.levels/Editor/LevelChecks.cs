@@ -135,10 +135,7 @@ namespace DetectiveDave.Levels.Editor
                         "Open Key Art", () => Selection.activeObject = keyArt));
                     continue;
                 }
-                var shapes = LevelValidator.MissingStandardShapes(keyArt, type);
-                if (shapes.Count > 0)
-                    issues.Add(new LevelIssue(MessageType.Warning, $"'{keyArt.name}' has no '{type.name}' sprite for: {string.Join(", ", shapes)}. Those keys are drawn as flat squares.", keyArt,
-                        "Open Key Art", () => Selection.activeObject = keyArt));
+                issues.AddRange(LevelValidator.StyleIssues(keyArt, keyArt.FindStyle(type), () => Selection.activeObject = keyArt));
             }
         }
 

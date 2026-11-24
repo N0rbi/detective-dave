@@ -6,8 +6,8 @@ using UnityEngine;
 namespace DetectiveDave.Levels.Editor
 {
     /// <summary>
-    /// The Key Art inspector: checks on top, the default background (with preview), then one box per kind of key with a strip
-    /// of every standard key shape as it will look in game, and helpers to fill the sprites.
+    /// The Key Art inspector: checks on top, the default background (with preview), then one box per kind of key with its two
+    /// sprites (the 9-sliced Box and the Enter), a strip of every standard key shape as it will look in game, and the optional shape overrides.
     /// </summary>
     [CustomEditor(typeof(KeyArt))]
     internal sealed class KeyArtEditor : UnityEditor.Editor
@@ -18,6 +18,8 @@ namespace DetectiveDave.Levels.Editor
         SerializedProperty background;
         SerializedProperty backgroundTint;
         SerializedProperty tileStyles;
+        SerializedProperty borderThickness;
+        readonly Dictionary<int, int> borderPixels = new Dictionary<int, int>();
         LevelInspectorCache cache;
         List<LevelIssue> issues;
 
@@ -26,6 +28,7 @@ namespace DetectiveDave.Levels.Editor
             background = serializedObject.FindProperty("background");
             backgroundTint = serializedObject.FindProperty("backgroundTint");
             tileStyles = serializedObject.FindProperty("tileStyles");
+            borderThickness = serializedObject.FindProperty("borderThicknessInKeyUnits");
             cache = new LevelInspectorCache(Repaint);
         }
 
@@ -63,14 +66,10 @@ namespace DetectiveDave.Levels.Editor
         void DrawStyles(KeyArt keyArt)
         {
             LevelEditorGUI.Header("Keys");
+            EditorGUILayout.PropertyField(borderThickness);
 
-            using (new EditorGUILayout.HorizontalScope())
-            {
-                if (GUILayout.Button(new GUIContent("Add Styles For All Tile Types", "Adds a style, with the standard key shapes, for every Tile Type asset in the project that has none here.")))
-                    AddStylesForAllTypes(keyArt);
-                if (GUILayout.Button(new GUIContent("Add Standard Key Shapes", "Adds the key shapes every shipped keyboard layout uses to each style that lacks them.")))
-                    for (int i = 0; i < tileStyles.arraySize; i++) AddStandardShapes(tileStyles.GetArrayElementAtIndex(i).FindPropertyRelative("shapes"));
-            }
+            if (GUILayout.Button(new GUIContent("Add Styles For All Tile Types", "Adds a style for every Tile Type asset in the project that has none here.")))
+                AddStylesForAllTypes(keyArt);
 
             for (int i = 0; i < tileStyles.arraySize; i++)
             {
@@ -97,24 +96,77 @@ namespace DetectiveDave.Levels.Editor
 
                 EditorGUILayout.PropertyField(element.FindPropertyRelative("type"));
                 EditorGUILayout.PropertyField(element.FindPropertyRelative("tint"));
-                EditorGUILayout.PropertyField(element.FindPropertyRelative("shapes"), true);
+                var box = element.FindPropertyRelative("box");
+                EditorGUILayout.PropertyField(box);
+                DrawBoxHelper(box, index);
+                EditorGUILayout.PropertyField(element.FindPropertyRelative("enter"));
+                DrawMigrationHint(keyArt, type);
+                DrawShapeOverrides(element, type);
 
-                using (new EditorGUILayout.HorizontalScope())
+                if (GUILayout.Button("Remove Style"))
                 {
-                    if (GUILayout.Button(new GUIContent("Fill From Folder…", "Pick a folder of sprites named like 'wall_1_25x1' or 'wall_enter_1_5x2' ('_' is the decimal point). Each sprite goes to the shape its name gives.")))
-                    {
-                        FillFromFolder(element.FindPropertyRelative("shapes"), type);
-                        serializedObject.ApplyModifiedProperties();
-                        GUIUtility.ExitGUI();      // a folder dialog ran in the middle of this GUI pass: end the pass here
-                    }
-                    if (GUILayout.Button("Remove Style"))
-                    {
-                        tileStyles.DeleteArrayElementAtIndex(index);
-                        return true;
-                    }
+                    tileStyles.DeleteArrayElementAtIndex(index);
+                    return true;
                 }
             }
             return false;
+        }
+
+        void DrawBoxHelper(SerializedProperty box, int index)
+        {
+            var sprite = box.objectReferenceValue as Sprite;
+            if (!sprite) return;
+            var problem = BoxSpriteCheck.ProblemOf(sprite);
+            if (problem == BoxSpriteProblem.None)
+            {
+                EditorGUILayout.HelpBox("The Box is 9-sliced. Its border is " + sprite.border.x + " px.", MessageType.None);
+                return;
+            }
+            EditorGUILayout.HelpBox($"The Box '{sprite.name}': {BoxSpriteCheck.Describe(problem)}. It is drawn stretched until this is fixed.", MessageType.Warning);
+            if (!BoxSpriteCheck.CanSetBorder(sprite, out var reason))
+            {
+                EditorGUILayout.LabelField(reason, EditorStyles.wordWrappedMiniLabel);
+                return;
+            }
+            if (!borderPixels.TryGetValue(index, out var pixels) || pixels <= 0)
+                pixels = BoxSpriteCheck.SuggestedBorderPixels((int)sprite.rect.width, (int)sprite.rect.height);
+            using (new EditorGUILayout.HorizontalScope())
+            {
+                pixels = Mathf.Max(1, EditorGUILayout.IntField(new GUIContent("Border (pixels)", "The same on all four sides of the sprite file."), pixels));
+                borderPixels[index] = pixels;
+                if (GUILayout.Button(new GUIContent("Set 9-Slice Border", "Sets the border on the sprite's import settings and Mesh Type to Full Rect."), GUILayout.Width(140f)))
+                {
+                    BoxSpriteCheck.TrySetBorder(sprite, pixels, out var message);
+                    Debug.Log($"Key Art: {message}", sprite);
+                    cache.MarkDirty();
+                    GUIUtility.ExitGUI();
+                }
+            }
+        }
+
+        static void DrawMigrationHint(KeyArt keyArt, TileType type)
+        {
+            var style = type ? keyArt.FindStyle(type) : null;
+            if (style != null && style.CanMigrateToBox)
+                EditorGUILayout.HelpBox("This style still draws keys from one sprite per size (Shape Overrides). It works as before. To use the two-sprite design, set a Box and an Enter above.", MessageType.Info);
+        }
+
+        void DrawShapeOverrides(SerializedProperty element, TileType type)
+        {
+            var shapes = element.FindPropertyRelative("shapes");
+            EditorGUILayout.PropertyField(shapes, new GUIContent("Shape Overrides (optional)", "A picture for one exact key size, used instead of the Box for that size. Leave empty when the Box is enough."), true);
+            if (!shapes.isExpanded) return;
+            using (new EditorGUILayout.HorizontalScope())
+            {
+                if (GUILayout.Button(new GUIContent("Add Standard Key Shapes", "Adds the key shapes every shipped keyboard layout uses, without a sprite.")))
+                    AddStandardShapes(shapes);
+                if (GUILayout.Button(new GUIContent("Fill From Folder…", "Pick a folder of sprites named like 'wall_1_25x1' or 'wall_enter_1_5x2' ('_' is the decimal point). Each sprite goes to the shape its name gives.")))
+                {
+                    FillFromFolder(shapes, type);
+                    serializedObject.ApplyModifiedProperties();
+                    GUIUtility.ExitGUI();      // a folder dialog ran in the middle of this GUI pass: end the pass here
+                }
+            }
         }
 
         // Every standard shape as it is drawn in game, red when missing.
@@ -128,11 +180,14 @@ namespace DetectiveDave.Levels.Editor
             for (int i = 0; i < shapes.Count; i++)
             {
                 var cell = new Rect(row.x + i * width, row.y, width - 2f, row.height - 2f);
-                var sprite = keyArt.FindSprite(type, shapes[i].Size, shapes[i].WholeKey);
-                LevelEditorGUI.DrawSprite(cell, sprite, tint);
-                GUI.Label(cell, new GUIContent(string.Empty, shapes[i].Label + (sprite ? string.Empty : " (missing)")));
+                var choice = keyArt.Resolve(type, shapes[i].Size, shapes[i].WholeKey);
+                LevelEditorGUI.DrawSprite(cell, choice.Sprite, tint);
+                GUI.Label(cell, new GUIContent(string.Empty, shapes[i].Label + Describe(choice)));
             }
         }
+
+        static string Describe(KeySpriteChoice choice) =>
+            choice.Kind == KeySpriteKind.None ? " (missing)" : choice.Kind == KeySpriteKind.Sliced ? " (Box, 9-sliced)" : string.Empty;
 
         void AddStylesForAllTypes(KeyArt keyArt)
         {
@@ -145,9 +200,9 @@ namespace DetectiveDave.Levels.Editor
         {
             element.FindPropertyRelative("type").objectReferenceValue = type;
             element.FindPropertyRelative("tint").colorValue = Color.white;
-            var shapes = element.FindPropertyRelative("shapes");
-            shapes.arraySize = 0;
-            AddStandardShapes(shapes);
+            element.FindPropertyRelative("box").objectReferenceValue = null;
+            element.FindPropertyRelative("enter").objectReferenceValue = null;
+            element.FindPropertyRelative("shapes").arraySize = 0;
             element.isExpanded = true;
         }
 
