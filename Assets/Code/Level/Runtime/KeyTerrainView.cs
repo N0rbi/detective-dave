@@ -83,20 +83,39 @@ namespace DetectiveDave.LevelPlay
             var rects = cell.Def.Rects;
             if (rects.Count > 1 && art)
             {
-                var whole = art.FindSprite(type, BoundsSize(rects), wholeKey: true);
-                if (whole)
+                var whole = art.Resolve(type, BoundsSize(rects), wholeKey: true);
+                if (whole.Kind != KeySpriteKind.None)
                 {
-                    view.SetKeySprite(cell, whole);
+                    view.SetKeySprite(cell, whole.Sprite);
                     return;
                 }
             }
             for (int part = 0; part < cell.Parts.Length; part++)
             {
                 var size = new Vector2(rects[part].Width, rects[part].Height);
-                var sprite = art ? art.FindSprite(type, size) : null;
-                if (styled && !sprite) ReportOnce($"Key Art '{art.name}' (level '{level.DisplayName}') has no '{type.name}' sprite for a {size.x} x {size.y} key: drawn as a flat square.");
-                view.SetPartSprite(cell, part, sprite);
+                var choice = art ? art.Resolve(type, size, wholeKey: false) : KeySpriteChoice.None;
+                if (styled && choice.Kind == KeySpriteKind.None)
+                    ReportOnce($"Key Art '{art.name}' (level '{level.DisplayName}') has no '{type.name}' Box sprite for a {size.x} x {size.y} key: drawn as a flat square.");
+                if (rects.Count > 1 && choice.Kind == KeySpriteKind.Sliced)
+                    ReportOnce($"Key Art '{art.name}' has no '{type.name}' Enter sprite: each rectangle of the L-shaped key is drawn with the Box.");
+                DrawPart(cell, part, choice, art);
             }
+        }
+
+        void DrawPart(KeyCell cell, int part, KeySpriteChoice choice, KeyArt art)
+        {
+            if (choice.Kind != KeySpriteKind.Sliced)
+            {
+                view.SetPartSprite(cell, part, choice.Sprite);
+                return;
+            }
+            if (!SlicedKeyGeometry.HasBorder(choice.Sprite.border))
+            {
+                ReportOnce($"Key Art '{art.name}': the Box sprite '{choice.Sprite.name}' has no 9-slice border, so it is stretched. Set the border in the Key Art inspector.");
+                view.SetPartSprite(cell, part, choice.Sprite);
+                return;
+            }
+            view.SetPartSliced(cell, part, choice.Sprite, art.BorderThicknessInKeyUnits);
         }
 
         static Vector2 BoundsSize(IReadOnlyList<KeyRect> rects)

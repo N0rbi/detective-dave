@@ -5,7 +5,7 @@ using UnityEngine;
 namespace DetectiveDave.Levels
 {
     /// <summary>
-    /// How keys look in game: for every <see cref="TileType"/> a tint and a sprite per key shape, plus a default background.
+    /// How keys look in game: for every <see cref="TileType"/> a tint, one 9-sliced Box sprite for all single-rectangle keys and one Enter sprite, plus a default background.
     /// A <see cref="Level"/> references one Key Art; to give a level a different look, duplicate the Key Art and point the level at the copy.
     /// Lives in Assets/Key Art (Assets > Create > Detective Dave > Key Art).
     /// </summary>
@@ -22,6 +22,9 @@ namespace DetectiveDave.Levels
         [SerializeField] Color backgroundTint = Color.white;
 
         [Header("Keys")]
+        [Tooltip("How thick the 9-sliced Box border is drawn, as a share of one key's width. 0.12 means a border of 12% of a letter key. The border never stretches with the key height.")]
+        [SerializeField, Range(0.02f, 0.5f)] float borderThicknessInKeyUnits = 0.12f;
+
         [Tooltip("How each kind of key looks: a tint and a sprite per key shape. One entry per Tile Type.")]
         [SerializeField] TileStyle[] tileStyles = Array.Empty<TileStyle>();
 
@@ -30,6 +33,9 @@ namespace DetectiveDave.Levels
         /// Only raised from <c>OnValidate</c>: it never fires in a build.
         /// </summary>
         public event Action Changed;
+
+        /// <summary>The thickness of the Box border in key units (one key width is 1).</summary>
+        public float BorderThicknessInKeyUnits => Mathf.Clamp(borderThicknessInKeyUnits, 0.02f, 0.5f);
 
         /// <summary>The background for levels that have none of their own, or null.</summary>
         public Sprite DefaultBackground => background;
@@ -54,6 +60,10 @@ namespace DetectiveDave.Levels
         /// asks for a sprite covering a whole multi-rectangle key (then <paramref name="size"/> is the box around the key).
         /// </summary>
         public Sprite FindSprite(TileType type, Vector2 size, bool wholeKey = false) => FindStyle(type)?.FindSprite(size, wholeKey);
+
+        /// <summary>What to draw for a key rectangle of <paramref name="type"/>; see <see cref="TileStyle.Resolve"/>.</summary>
+        public KeySpriteChoice Resolve(TileType type, Vector2 size, bool wholeKey) =>
+            FindStyle(type)?.Resolve(size, wholeKey) ?? KeySpriteChoice.None;
 
         void OnValidate()
         {

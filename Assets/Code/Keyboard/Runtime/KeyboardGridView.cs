@@ -72,9 +72,25 @@ namespace DetectiveDave.KeyboardGrid
             var renderer = cell.Parts[part];
             var drawn = GridUtils.PartRect(cell.Def.Rects, part, gap);
             renderer.enabled = true;
+            renderer.drawMode = SpriteDrawMode.Simple;
             renderer.sprite = sprite;
             renderer.transform.localPosition = GridUtils.ToLocal(Layout, Scale, drawn.center, HeightStretch);
             renderer.transform.localScale = GridUtils.ScaleToFit(GridUtils.ToLocalSize(drawn.size, Scale, HeightStretch), sprite.bounds.size);
+        }
+
+        /// <summary>Draws one rectangle of a key with a 9-sliced sprite: the border keeps its thickness, only the middle stretches, whatever the key size and the height stretch.</summary>
+        public void SetPartSliced(KeyCell cell, int part, Sprite sprite, float borderThicknessInKeyUnits)
+        {
+            var renderer = cell.Parts[part];
+            var drawn = GridUtils.PartRect(cell.Def.Rects, part, gap);
+            var target = GridUtils.ToLocalSize(drawn.size, Scale, HeightStretch);
+            var shape = SlicedKeyGeometry.Fit(target, sprite.border, sprite.pixelsPerUnit, borderThicknessInKeyUnits * Scale);
+            renderer.enabled = true;
+            renderer.sprite = sprite;
+            renderer.drawMode = SpriteDrawMode.Sliced;
+            renderer.size = shape.RendererSize;
+            renderer.transform.localPosition = GridUtils.ToLocal(Layout, Scale, drawn.center, HeightStretch);
+            renderer.transform.localScale = new Vector3(shape.Scale, shape.Scale, 1f);
         }
 
         /// <summary>Draws a key of several rectangles with one sprite over the whole of it (the L-shaped Enter). The first part carries it, the others are hidden.</summary>
@@ -83,6 +99,7 @@ namespace DetectiveDave.KeyboardGrid
             var bounds = GridUtils.KeyBounds(cell.Def.Rects, gap);
             var renderer = cell.Parts[0];
             renderer.enabled = true;
+            renderer.drawMode = SpriteDrawMode.Simple;
             renderer.sprite = sprite;
             renderer.transform.localPosition = GridUtils.ToLocal(Layout, Scale, bounds.center, HeightStretch);
             renderer.transform.localScale = GridUtils.ScaleToFit(GridUtils.ToLocalSize(bounds.size, Scale, HeightStretch), sprite.bounds.size);
