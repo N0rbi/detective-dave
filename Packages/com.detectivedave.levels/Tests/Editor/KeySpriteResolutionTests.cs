@@ -138,7 +138,7 @@ namespace DetectiveDave.Levels.Tests
         }
 
         [Test]
-        public void NewKeyArtHasTheDefaultBorderThickness() => Assert.AreEqual(0.12f, make.KeyArt().BorderThicknessInKeyUnits, 1e-6f);
+        public void NewKeyArtHasTheDefaultBorderThickness() => Assert.AreEqual(0.1875f, make.KeyArt().BorderThicknessInKeyUnits, 1e-6f);
 
         [Test]
         public void ATypeWithNoBoxAndNoShapesIsWarned()

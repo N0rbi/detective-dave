@@ -22,8 +22,8 @@ namespace DetectiveDave.Levels
         [SerializeField] Color backgroundTint = Color.white;
 
         [Header("Keys")]
-        [Tooltip("How thick the 9-sliced Box border is drawn, as a share of one key's width. 0.12 means a border of 12% of a letter key. The border never stretches with the key height.")]
-        [SerializeField, Range(0.02f, 0.5f)] float borderThicknessInKeyUnits = 0.12f;
+        [Tooltip("How thick the 9-sliced Box border is drawn, as a share of one key's width. 0.1875 (3/16) draws a 3 pixel border of 16 pixel art at its own size. The border never stretches with the key height.")]
+        [SerializeField, Range(0.02f, 0.5f)] float borderThicknessInKeyUnits = 0.1875f;
 
         [Tooltip("How each kind of key looks: a tint and a sprite per key shape. One entry per Tile Type.")]
         [SerializeField] TileStyle[] tileStyles = Array.Empty<TileStyle>();
