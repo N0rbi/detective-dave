@@ -32,21 +32,52 @@ namespace DetectiveDave.EditorTools
         public static string ApplyOrError(out string summary)
         {
             summary = string.Empty;
+            var error = ApplyWalkableOrError(out var walkableSummary);
+            if (error != null) return error;
+            var lines = new List<string> { walkableSummary };
+            foreach (var row in KeyArtTileTable.Boxes) lines.Add(ApplyBox(row));
+            lines.Add(UnassignedLine());
+            AssetDatabase.SaveAssets();
+            summary = string.Join("\n\n", lines);
+            return null;
+        }
+
+        static string ApplyWalkableOrError(out string summary)
+        {
+            summary = string.Empty;
             var tile = AssetDatabase.LoadAssetAtPath<TileType>(KeyArtSetupPaths.WalkableTilePath);
             if (!tile) return $"Nothing was changed. The Walkable tile type is missing at {KeyArtSetupPaths.WalkableTilePath}.";
             var box = Classify(KeyArtSetupPaths.StagedBoxPath, KeyArtSetupPaths.BoxPath);
             var enter = Classify(KeyArtSetupPaths.StagedEnterPath, KeyArtSetupPaths.EnterPath);
             var blocked = Blockers(box, enter);
             if (blocked.Count > 0) return "Nothing was changed.\n" + string.Join("\n", blocked);
-            var moveError = Move(box, KeyArtSetupPaths.StagedBoxPath, KeyArtSetupPaths.BoxPath) ?? Move(enter, KeyArtSetupPaths.StagedEnterPath, KeyArtSetupPaths.EnterPath);
+            var moveError = Move(box, KeyArtSetupPaths.StagedBoxPath, KeyArtSetupPaths.BoxPath, KeyArtSetupPaths.WalkableFolder) ?? Move(enter, KeyArtSetupPaths.StagedEnterPath, KeyArtSetupPaths.EnterPath, KeyArtSetupPaths.WalkableFolder);
             if (moveError != null) return moveError;
             var importError = Configure(KeyArtSetupPaths.BoxPath, out var borderPixels) ?? Configure(KeyArtSetupPaths.EnterPath, out _);
             if (importError != null) return importError;
             var assigned = AssignWalkable(tile, LoadSprite(KeyArtSetupPaths.BoxPath), LoadSprite(KeyArtSetupPaths.EnterPath));
-            AssetDatabase.SaveAssets();
             summary = Summary(borderPixels, assigned);
             return null;
         }
+
+        static string ApplyBox(KeyArtTileRow row)
+        {
+            var tile = AssetDatabase.LoadAssetAtPath<TileType>(row.TilePath);
+            if (!tile) return $"{row.TileName}: skipped, the tile type is missing at {row.TilePath}.";
+            var state = Classify(row.StagedPath, row.TargetPath);
+            if (state == KeyArtSlotState.Missing) return $"{row.TileName}: skipped, {row.StagedName} is not in {KeyArtSetupPaths.StagingFolder} and {row.TargetName} is not in {row.Folder}.";
+            if (state == KeyArtSlotState.Conflict) return $"{row.TileName}: skipped, {row.StagedName} is in {KeyArtSetupPaths.StagingFolder} but {row.TargetName} already exists in {row.Folder}. Remove one of them first.";
+            var moveError = Move(state, row.StagedPath, row.TargetPath, row.Folder);
+            if (moveError != null) return $"{row.TileName}: skipped, {moveError}";
+            var configureError = ConfigureBox(row, out var applied);
+            if (configureError != null) return $"{row.TileName}: skipped, {configureError}";
+            var assigned = AssignBox(tile, LoadSprite(row.TargetPath));
+            var where = assigned.Count == 0 ? "No Key Art has this style, so nothing was assigned." : "Box set on: " + string.Join(", ", assigned) + ".";
+            return $"{row.TileName}: {row.StagedName} is now {row.TargetName} in {row.Folder}, border {applied.x:0}, {applied.y:0}, {applied.z:0}, {applied.w:0} px (left, bottom, right, top). {where} Tint set to white and the per-size sprites cleared; the Enter was left as it is.";
+        }
+
+        static string UnassignedLine() =>
+            $"{KeyArtTileTable.UnassignedStagedName}: not assigned to any tile type. It is already part of the climb art, so it stays in {KeyArtSetupPaths.StagingFolder}.";
 
         static KeyArtSlotState Classify(string stagedPath, string targetPath) =>
             KeyArtSlot.Classify(Exists(stagedPath), Exists(targetPath));
@@ -67,10 +98,10 @@ namespace DetectiveDave.EditorTools
             if (state == KeyArtSlotState.Conflict) blockers.Add($"{stagedName} is in {KeyArtSetupPaths.StagingFolder} but {targetName} already exists in {KeyArtSetupPaths.WalkableFolder}. Remove one of them first.");
         }
 
-        static string Move(KeyArtSlotState state, string from, string to)
+        static string Move(KeyArtSlotState state, string from, string to, string folder)
         {
             if (state != KeyArtSlotState.NeedsMove) return null;
-            if (!AssetDatabase.IsValidFolder(KeyArtSetupPaths.WalkableFolder)) return $"The folder {KeyArtSetupPaths.WalkableFolder} is missing.";
+            if (!AssetDatabase.IsValidFolder(folder)) return $"The folder {folder} is missing.";
             var error = AssetDatabase.MoveAsset(from, to);
             return string.IsNullOrEmpty(error) ? null : $"{from} could not be moved: {error}";
         }
@@ -78,13 +109,29 @@ namespace DetectiveDave.EditorTools
         static string Configure(string path, out int borderPixels)
         {
             borderPixels = 0;
-            if (!(AssetImporter.GetAtPath(path) is TextureImporter importer)) return $"{path} is not an imported texture.";
-            if (!IsConfigured(importer)) ApplyImportSettings(importer);
-            var sprite = LoadSprite(path);
-            if (!sprite) return $"{path} did not import as a sprite.";
+            var error = EnsureImported(path, out var sprite);
+            if (error != null) return error;
             if (path != KeyArtSetupPaths.BoxPath) return null;
             borderPixels = KeyArtBorder.RimPixels((int)sprite.rect.width, (int)sprite.rect.height);
             return BoxSpriteCheck.TrySetBorder(sprite, borderPixels, out var message) ? null : message;
+        }
+
+        static string ConfigureBox(KeyArtTileRow row, out Vector4 border)
+        {
+            border = default;
+            var error = EnsureImported(row.TargetPath, out var sprite);
+            if (error != null) return error;
+            border = KeyArtBorder.BoxBorder((int)sprite.rect.width, (int)sprite.rect.height, row.TopBorderPixels);
+            return BoxSpriteCheck.TrySetBorder(sprite, border, out var message) ? null : message;
+        }
+
+        static string EnsureImported(string path, out Sprite sprite)
+        {
+            sprite = null;
+            if (!(AssetImporter.GetAtPath(path) is TextureImporter importer)) return $"{path} is not an imported texture.";
+            if (!IsConfigured(importer)) ApplyImportSettings(importer);
+            sprite = LoadSprite(path);
+            return sprite ? null : $"{path} did not import as a sprite.";
         }
 
         static bool IsConfigured(TextureImporter importer) =>
@@ -145,6 +192,44 @@ namespace DetectiveDave.EditorTools
                 return true;
             }
             return false;
+        }
+
+        static List<string> AssignBox(TileType tile, Sprite box)
+        {
+            var assigned = new List<string>();
+            foreach (var guid in AssetDatabase.FindAssets("t:KeyArt"))
+            {
+                var keyArt = AssetDatabase.LoadAssetAtPath<KeyArt>(AssetDatabase.GUIDToAssetPath(guid));
+                if (keyArt && AssignBoxStyle(keyArt, tile, box)) assigned.Add(keyArt.name);
+            }
+            return assigned;
+        }
+
+        static bool AssignBoxStyle(KeyArt keyArt, TileType tile, Sprite box)
+        {
+            var serialized = new SerializedObject(keyArt);
+            var styles = serialized.FindProperty("tileStyles");
+            for (int index = 0; index < styles.arraySize; index++)
+            {
+                var style = styles.GetArrayElementAtIndex(index);
+                if (style.FindPropertyRelative("type").objectReferenceValue != tile) continue;
+                style.FindPropertyRelative("box").objectReferenceValue = box;
+                style.FindPropertyRelative("tint").colorValue = Color.white;
+                RemoveSingleKeyShapes(style.FindPropertyRelative("shapes"));
+                serialized.ApplyModifiedPropertiesWithoutUndo();
+                EditorUtility.SetDirty(keyArt);
+                return true;
+            }
+            return false;
+        }
+
+        static void RemoveSingleKeyShapes(SerializedProperty shapes)
+        {
+            var wholeKeyFlags = new List<bool>();
+            for (int index = 0; index < shapes.arraySize; index++)
+                wholeKeyFlags.Add(shapes.GetArrayElementAtIndex(index).FindPropertyRelative("wholeKey").boolValue);
+            foreach (var index in KeyArtShapeFilter.SingleKeyIndicesLastFirst(wholeKeyFlags))
+                shapes.DeleteArrayElementAtIndex(index);
         }
 
         static string Summary(int borderPixels, List<string> assigned)

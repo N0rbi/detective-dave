@@ -4,7 +4,8 @@ namespace DetectiveDave.EditorTools
     {
         public const string StagingFolder = "Assets/Staging/Tiles";
         public const string WalkableFolder = "Assets/Key Art/Walkable";
-        public const string WalkableTilePath = "Assets/Tiles/Walkable.asset";
+        public const string TilesFolder = "Assets/Tiles";
+        public const string WalkableTilePath = TilesFolder + "/Walkable.asset";
         public const string StagedBoxName = "keyboard_stealth_platform.png";
         public const string StagedEnterName = "keyboard_stealth_platform_enter.png";
         public const string BoxName = "walkable_box.png";
