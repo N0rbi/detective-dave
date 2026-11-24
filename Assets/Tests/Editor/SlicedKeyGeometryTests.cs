@@ -61,11 +61,27 @@ namespace DetectiveDave.Tests
         }
 
         [Test]
-        public void ThickerBordersThanTheSpriteHasStillScaleUniformly()
+        public void TheThinnestBorderSetsTheScaleSoEveryTileOfOneArtShareTheSamePixelSize()
         {
             var shape = SlicedKeyGeometry.Fit(new Vector2(2f, 2f), new Vector4(4f, 8f, 12f, 8f), 16f, 0.2f);
 
-            Assert.AreEqual(0.2f * 16f / 12f, shape.Scale, 1e-6f);
+            Assert.AreEqual(0.2f * 16f / 4f, shape.Scale, 1e-6f);
+        }
+
+        [Test]
+        public void ATallerTopRimKeepsTheScaleOfTheOtherRims()
+        {
+            var plain = SlicedKeyGeometry.Fit(new Vector2(1f, 2f), new Vector4(65f, 65f, 65f, 65f), 16f, 0.1875f);
+            var withPipe = SlicedKeyGeometry.Fit(new Vector2(1f, 2f), new Vector4(65f, 65f, 65f, 97f), 16f, 0.1875f);
+
+            Assert.AreEqual(plain.Scale, withPipe.Scale, 1e-6f);
+        }
+
+        [Test]
+        public void TheReferenceBorderIgnoresSidesWithoutABorder()
+        {
+            Assert.AreEqual(6f, SlicedKeyGeometry.ReferenceBorderPixels(new Vector4(0f, 6f, 0f, 9f)));
+            Assert.AreEqual(float.MaxValue, SlicedKeyGeometry.ReferenceBorderPixels(Vector4.zero));
         }
 
         [Test]

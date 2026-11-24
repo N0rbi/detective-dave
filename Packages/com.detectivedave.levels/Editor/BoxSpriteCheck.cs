@@ -31,7 +31,10 @@ namespace DetectiveDave.Levels.Editor
             Mathf.Max(1, Mathf.Min(spriteWidth, spriteHeight) / 3);
 
         internal static bool NeedsChange(Vector4 currentBorder, SpriteMeshType meshType, int borderPixels) =>
-            currentBorder != BorderOf(borderPixels) || meshType != SpriteMeshType.FullRect;
+            NeedsChange(currentBorder, meshType, BorderOf(borderPixels));
+
+        internal static bool NeedsChange(Vector4 currentBorder, SpriteMeshType meshType, Vector4 borderPixels) =>
+            currentBorder != borderPixels || meshType != SpriteMeshType.FullRect;
 
         internal static string Describe(BoxSpriteProblem problem)
         {
@@ -80,7 +83,10 @@ namespace DetectiveDave.Levels.Editor
             return true;
         }
 
-        internal static bool TrySetBorder(Sprite sprite, int borderPixels, out string message)
+        internal static bool TrySetBorder(Sprite sprite, int borderPixels, out string message) =>
+            TrySetBorder(sprite, BorderOf(borderPixels), out message);
+
+        internal static bool TrySetBorder(Sprite sprite, Vector4 borderPixels, out string message)
         {
             if (!CanSetBorder(sprite, out message)) return false;
             var importer = ImporterOf(sprite);
@@ -89,13 +95,13 @@ namespace DetectiveDave.Levels.Editor
                 message = "Already set.";
                 return true;
             }
-            importer.spriteBorder = BorderOf(borderPixels);
+            importer.spriteBorder = borderPixels;
             var settings = new TextureImporterSettings();
             importer.ReadTextureSettings(settings);
             settings.spriteMeshType = SpriteMeshType.FullRect;
             importer.SetTextureSettings(settings);
             importer.SaveAndReimport();
-            message = $"Border set to {borderPixels} px and Mesh Type to Full Rect.";
+            message = $"Border set to {borderPixels.x:0}, {borderPixels.y:0}, {borderPixels.z:0}, {borderPixels.w:0} px (left, bottom, right, top) and Mesh Type to Full Rect.";
             return true;
         }
     }

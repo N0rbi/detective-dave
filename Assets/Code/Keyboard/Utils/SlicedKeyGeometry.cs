@@ -20,12 +20,14 @@ namespace DetectiveDave.KeyboardGrid
             borderPixels.x > 0f || borderPixels.y > 0f || borderPixels.z > 0f || borderPixels.w > 0f;
 
         public static float ReferenceBorderPixels(Vector4 borderPixels) =>
-            Mathf.Max(Mathf.Max(borderPixels.x, borderPixels.z), Mathf.Max(borderPixels.y, borderPixels.w));
+            Mathf.Min(Mathf.Min(PositiveOrMax(borderPixels.x), PositiveOrMax(borderPixels.z)), Mathf.Min(PositiveOrMax(borderPixels.y), PositiveOrMax(borderPixels.w)));
+
+        static float PositiveOrMax(float pixels) => pixels > 0f ? pixels : float.MaxValue;
 
         public static SlicedKeyShape Fit(Vector2 targetSize, Vector4 borderPixels, float pixelsPerUnit, float borderThickness)
         {
             float reference = ReferenceBorderPixels(borderPixels);
-            if (reference <= 0f || pixelsPerUnit <= 0f || targetSize.x <= 0f || targetSize.y <= 0f)
+            if (reference >= float.MaxValue || pixelsPerUnit <= 0f || targetSize.x <= 0f || targetSize.y <= 0f)
                 return new SlicedKeyShape(1f, targetSize);
 
             float scale = borderThickness * pixelsPerUnit / reference;
