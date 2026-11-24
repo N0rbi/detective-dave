@@ -92,20 +92,22 @@ namespace DetectiveDave.KeyboardGrid
             windowStart = Time.unscaledTime;
         }
 
-        // Per key one line whenever one of four things changes: the Input System says it is down, the key source holds it,
-        // the input component marks it lit, and its sprite really has the lit color. A key that stays dark shows up as a line where one of them disagrees.
+        // Per key one line whenever one of these changes: the Input System says it is down, the key source holds it, the input component marks it lit,
+        // its sprite really has the lit color, it is tinted as a neighbour, its first sprite is visible and drawn 9-sliced. A key that stays dark or blinks shows up as a line where one of them disagrees.
         void LateUpdate()
         {
             if (trace == null || view.Layout == null) return;
             var keyboard = Keyboard.current;
             foreach (var cell in view.Cells.Values)
             {
+                var part = cell.Parts[0];
                 int state = (IsRawDown(keyboard, cell) ? 1 : 0) | (sourceDown.Contains(cell.InputKey) ? 2 : 0)
-                          | (cell.Active ? 4 : 0) | (cell.Parts[0].color == view.Palette.accent ? 8 : 0);
+                          | (cell.Active ? 4 : 0) | (part.color == view.Palette.accent ? 8 : 0)
+                          | (cell.Neighbour ? 16 : 0) | (part.enabled ? 32 : 0) | (part.drawMode == SpriteDrawMode.Sliced ? 64 : 0);
                 traced.TryGetValue(cell.InputKey, out var before);
                 if (state == before) continue;
                 traced[cell.InputKey] = state;
-                trace.Log($"{cell.InputKey,-12} raw={state & 1} board={(state >> 1) & 1} lit={(state >> 2) & 1} drawn={(state >> 3) & 1}");
+                trace.Log($"{cell.InputKey,-12} raw={state & 1} board={(state >> 1) & 1} lit={(state >> 2) & 1} drawn={(state >> 3) & 1} neighbour={(state >> 4) & 1} visible={(state >> 5) & 1} sliced={(state >> 6) & 1}");
             }
         }
 
