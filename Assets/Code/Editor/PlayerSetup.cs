@@ -38,7 +38,7 @@ namespace DetectiveDave.EditorTools
             var prefab = PlayerPrefabBuilder.Ensure();
             var wiringError = PlayerSceneWiring.Wire(prefab, settings, tiles);
             AssetDatabase.SaveAssets();
-            return wiringError ?? GuardSetup.ApplyOrError() ?? DogSetup.ApplyOrError() ?? LightingSetup.ApplyOrError() ?? MusicSetup.ApplyOrError() ?? CheatSetup.ApplyOrError();
+            return wiringError ?? GuardSetup.ApplyOrError() ?? DogSetup.ApplyOrError() ?? BackgroundSetup.ApplyOrError(out _) ?? LightingSetup.ApplyOrError() ?? MusicSetup.ApplyOrError() ?? CheatSetup.ApplyOrError();
         }
 
         static TileType[] LoadTiles() => PlayerSetupPaths.TileNames.Select(LoadTile).ToArray();

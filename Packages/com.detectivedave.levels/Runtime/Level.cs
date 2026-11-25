@@ -42,6 +42,9 @@ namespace DetectiveDave.Levels
         [Tooltip("Drawn behind the keyboard. Its sprite and colour are the level's background; with no sprite the Key Art's default background is used.")]
         [SerializeField] SpriteRenderer background;
 
+        [Tooltip("Where the background sits: move it, zoom it, mirror it, or hide it for this level.")]
+        [SerializeField] BackgroundPlacement backgroundPlacement = new BackgroundPlacement();
+
         [Tooltip("How the 2D lights look in this level: their brightness and colour, and an optional flicker.")]
         [SerializeField] LevelLightingSettings lighting = new LevelLightingSettings();
 
@@ -77,6 +80,9 @@ namespace DetectiveDave.Levels
 
         /// <summary>The background sprite: the renderer's, else the Key Art's default. Null when neither has one.</summary>
         public Sprite Background => background && background.sprite ? background.sprite : keyArt ? keyArt.DefaultBackground : null;
+
+        /// <summary>Where the background sits on the screen.</summary>
+        public BackgroundPlacement BackgroundPlacement => backgroundPlacement ??= new BackgroundPlacement();
 
         /// <summary>The tint that goes with <see cref="Background"/>.</summary>
         public Color BackgroundTint => background && background.sprite ? background.color : keyArt ? keyArt.DefaultBackgroundTint : Color.white;

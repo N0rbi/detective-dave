@@ -1,10 +1,11 @@
+using DetectiveDave.Levels;
 using UnityEngine;
 
 namespace DetectiveDave.LevelPlay
 {
     /// <summary>
     /// Draws the level's background (the sprite of its Background renderer, else its Key Art's default background) behind everything,
-    /// scaled to cover the main camera's view and kept centred on it. Nothing is drawn when the level has no background.
+    /// scaled to cover the main camera's view, placed as the level's Background Placement says (offset, zoom, mirrored, hidden). Nothing is drawn when the level has no background.
     /// The sprite lives on its own root object, so the keyboard's screen fit does not scale it. Needs an orthographic main camera.
     /// </summary>
     [RequireComponent(typeof(LevelLoader))]
@@ -54,7 +55,10 @@ namespace DetectiveDave.LevelPlay
             background.sortingOrder = sortingOrder;
             background.sprite = sprite;
             background.color = level ? level.BackgroundTint : Color.white;
-            background.enabled = sprite;
+            var placement = level ? level.BackgroundPlacement : null;
+            background.enabled = sprite && (placement == null || placement.Visible);
+            background.flipX = placement != null && placement.FlipX;
+            background.flipY = placement != null && placement.FlipY;
             var camera = Camera.main;
             if (camera) Fit(camera);
         }
@@ -68,9 +72,10 @@ namespace DetectiveDave.LevelPlay
             if (!sprite || !camera.orthographic) return;
             var size = (Vector2)sprite.bounds.size;
             if (size.x <= 0f || size.y <= 0f) return;
-            float scale = Mathf.Max(fittedView.x / size.x, fittedView.y / size.y);
-            background.transform.position = new Vector3(fittedCamera.x, fittedCamera.y, 0f);
-            background.transform.localScale = new Vector3(scale, scale, 1f);
+            var level = loader.Current;
+            var fit = BackgroundFit.Of(size, fittedView, level ? level.BackgroundPlacement : new BackgroundPlacement());
+            background.transform.position = new Vector3(fittedCamera.x + fit.Shift.x, fittedCamera.y + fit.Shift.y, 0f);
+            background.transform.localScale = new Vector3(fit.Scale, fit.Scale, 1f);
         }
 
         static Vector2 ViewSize(Camera camera) => new Vector2(camera.orthographicSize * 2f * camera.aspect, camera.orthographicSize * 2f);
