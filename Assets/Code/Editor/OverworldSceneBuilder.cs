@@ -30,7 +30,7 @@ namespace DetectiveDave.EditorTools
             AssetDatabase.CopyAsset(PlayerSetupPaths.ScenePath, OverworldSetupPaths.ScenePath);
         }
 
-        public static string WireOrError(PlayerView playerPrefab, PlayerMovementSettings magnifier, OverworldSettings settings)
+        public static string WireOrError(PlayerView playerPrefab, PlayerMovementSettings magnifier, OverworldSettings settings, SmokingSprites smoking)
         {
             EnsureStubScene();
             if (!AssetDatabase.LoadAssetAtPath<SceneAsset>(OverworldSetupPaths.ScenePath)) return "Assets/Scenes/Game.unity is missing, so the overworld scene could not be created.";
@@ -41,6 +41,7 @@ namespace DetectiveDave.EditorTools
                 var board = scene.GetRootGameObjects().Select(root => root.GetComponentInChildren<KeyboardBoard>(true)).FirstOrDefault(found => found);
                 if (!board) return "The overworld scene has no keyboard board object.";
                 Wire(board.gameObject, playerPrefab, magnifier, settings);
+                SmokingDetectiveWiring.Ensure(scene, smoking);
                 EditorSceneManager.SaveScene(scene);
                 return null;
             }
