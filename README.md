@@ -248,7 +248,7 @@ Making a level (Levels window, Key brush, Play This Level, live reload) is descr
 
 Guards: open a level, press **Add Guard** in the Levels window (or **Edit Patrol** on a Guard in the Inspector). The Scene view turns orange: click a key for START, then keys for END. Right-click, Esc or Exit leaves; picking another guard in the Hierarchy edits that one. Warnings show in the Scene view and Levels window (every keyboard layout is checked).
 
-A guard looks for the player every frame: standing next to either key it is between starts the chase at once (it finishes its current step, turning back if it had walked less than half), and stepping onto either of those keys is a catch.
+A guard occupies exactly one key: the key it is leaving, until it reaches the middle of the next key. It looks for the player every frame from that key only: standing next to the occupied key starts the chase at once (it finishes its current step at chase speed, then follows the shortest key path), standing next to the key it is walking towards changes nothing until it arrives, and only the player on the occupied key is caught. Walking towards the player never catches; the catch happens on arrival.
 
 The lock lives in a static, so it is gone after leaving Play Mode, and there is no way to change it while the game runs.
 

@@ -62,30 +62,23 @@ namespace DetectiveDave.GuardPlay
 
         GuardAction TickMidMove(Key playerKey)
         {
-            if (playerKey == Current || playerKey == arrivalKey) return CatchPlayer();
-            if (!ShouldStartChaseMidMove(playerKey)) return GuardAction.Stay();
+            if (playerKey == Current) return CatchPlayer();
+            if (!ShouldStartChaseFromOccupiedKey(playerKey)) return GuardAction.Stay();
             Mode = GuardMode.Chasing;
-            return RedirectToNearestEnd();
+            return ContinueStepAtChaseSpeed();
         }
 
-        bool ShouldStartChaseMidMove(Key playerKey)
+        bool ShouldStartChaseFromOccupiedKey(Key playerKey)
         {
             if (Mode == GuardMode.Chasing) return false;
-            bool nearAnEnd = board.IsNeighbour(Current, playerKey) || board.IsNeighbour(arrivalKey, playerKey);
-            return nearAnEnd && pathfinder.HasPath(NearestEnd(), playerKey);
+            return board.IsNeighbour(Current, playerKey) && pathfinder.HasPath(Current, playerKey);
         }
 
         float MovingProgress() => movingTotal > 0f ? 1f - movingRemaining / movingTotal : 1f;
 
-        Key NearestEnd() => MovingProgress() < 0.5f ? Current : arrivalKey;
-
-        GuardAction RedirectToNearestEnd()
+        GuardAction ContinueStepAtChaseSpeed()
         {
-            float progress = MovingProgress();
-            bool turnBack = progress < 0.5f;
-            float share = turnBack ? progress : 1f - progress;
-            float seconds = share * settings.ChaseSecondsPerKey;
-            if (turnBack) arrivalKey = Current;
+            float seconds = (1f - MovingProgress()) * settings.ChaseSecondsPerKey;
             movingRemaining = seconds;
             movingTotal = seconds;
             return GuardAction.Redirect(arrivalKey, seconds, true);
