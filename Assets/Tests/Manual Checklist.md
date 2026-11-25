@@ -55,7 +55,7 @@ Play with F5 on a level with a Gap and a WallGutter key between the two Shifts. 
 - [ ] Step onto a Wall key (or an empty key): the player leans towards it, squashes face-first (about 0.6 scale), then slides back to the centre of the key it was on. Nothing resets, and the keys work again straight away.
 - [ ] Every move leaves three thin wind lines that stay attached to the player (never ahead of it), parallel to the move, with the top line at the shoulders and the bottom line at the upper legs (not at the feet), at slightly different heights and thicknesses; they grow out of the start as the player moves, then shorten and fade within a quarter of a second after it arrives. A wall bump leaves short lines, a step onto a gap or the goal leaves full-length lines. Pressing the key the player stands on, or any key before the game started, shows none. Changing the list in the "Dash gust" section of the player settings changes them.
 - [ ] Standing still on any key (also on the start Shift before the game starts, and on a gutter), the player breathes: a slow, gentle up and down with the feet fixed. It stops while moving and never leaves the player stretched.
-- [ ] Step onto a Gap key: the player walks onto it, fades out (about 0.8 s), then drops in from above onto the start Shift.
+- [ ] Step onto a Gap key: there is a dog on it. The player walks onto it, falls flat in the death pose, then the screen wipes and the player drops in on the start Shift. The dog is calm while the player lies there.
 - [ ] Step onto the End Shift: the star spins behind the player and the evidence (folder with magnifying glass) pops up above the player's head. Keys are ignored from now on until the next level has started.
 - [ ] At the goal the evidence pops up above the player's head, then the camera zooms in on the player holding it (the evidence stays in the hand and grows a little; it does not fly to the screen centre).
 - [ ] After the zoom a chunky spiral of dark strips winds from the outer edge of the screen inwards like a snail house and ends on the player. Then the next level loads (the first again after the last; the same level when started with Play This Level).
@@ -183,3 +183,12 @@ Play with F5 on a level with a Gap and a WallGutter key between the two Shifts. 
 - [ ] On the overworld, before moving, press a key far from the magnifying glass (not Shift, not a neighbour): the start Shift keycap punches and the pressed key lights red and fades. Nothing else happens.
 - [ ] Press a neighbour of the start: the glass moves; pressing wrong keys afterwards no longer punches or lights anything.
 - [ ] Press the start Shift itself: no hint. Turn "Start Hint Enabled" off in Overworld Settings: no hint at all.
+
+## Dogs, skyline, overworld board
+
+- [ ] Run `Set Up Player` (or `Set Up Dogs`, `Set Up Background`, `Set Up Overworld`): no error dialog; Game.unity has a `DogController` with Dog Settings filled.
+- [ ] Every Gap key shows a dog and no hole art. The dog does not move.
+- [ ] Walk next to a dog: it turns angry and its frames go 1-2-3-2-1 and loop. Walk away: it calms down.
+- [ ] Step onto a dog: the player dies (death sprite) and the dog is calm meanwhile; after the wipe the level restarts and the dog is angry or calm by where the player stands.
+- [ ] Every level shows the skyline behind the keys. Change Offset, Zoom, Flip and Visible under Background Placement on a level: the picture moves, zooms, mirrors or disappears and never shows an edge.
+- [ ] Overworld: the stealth board covers the whole screen without stretching. The smoking detective stands on the right; every few seconds the arm comes up to the mouth with a small tilt, waits, and goes down. Moving the `Arm Pivot` changes where it turns; running `Set Up Overworld` again changes nothing you moved.
