@@ -326,3 +326,7 @@ Typewriter sound plays on every valid letter key, on Backspace, and softly while
 ### Wrong key stun and death pose
 
 A key that is not a neighbour of the player stuns the detective: the player stays on its key, shows the death pose (`Death Sprite`, `stealth_detective_death.png` in `Assets/Player/Art`) with a short wobble for `Wrong Key Stun Seconds` (default 0.8, 0 turns the stun off), ignores keys meanwhile, then stands up again. A guard can still catch a stunned player. Being caught shows the same pose, popped by `Death Pop Scale` and settling, before the spiral restart. The magnifying glass (`Forgiving Moves`) never stuns and needs no death sprite. Run `Window > Detective Dave > Set Up Player` to import the sprite and assign it. The old settings `Slip Seconds`, `Slip Distance In Keys`, `Slip Tilt Degrees` and `Fall Forward Degrees` are gone.
+
+### Overworld start hint
+
+Before the magnifying glass has moved for the first time, pressing a key that is not the start Shift and not next to it punches the start Shift keycap (`ShiftKeycapsView.Punch`) and lights the pressed key with a red, fading copy of the keycap picture (`WrongKeyGhostView`), so the player learns where to go without a tutorial. `StartHintGate` decides what counts as wrong (armed when the overworld starts, disarmed by the first move or a restart; unit tested). The "Start hint" section of Overworld Settings holds the on/off switch, punch size and time, the colour and the fade time. Existing settings assets get the defaults automatically.

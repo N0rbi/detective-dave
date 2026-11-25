@@ -51,6 +51,13 @@ namespace DetectiveDave.OverworldPlay
         [SerializeField, Tooltip("How fast the dashes run towards the case, in key widths per second. 0 keeps them still.")] float routeFlowKeysPerSecond = 0.6f;
         [SerializeField] [Tooltip("Colour of the dashes.")] Color routeColor = new Color(1f, 0.85f, 0.2f, 0.9f);
 
+        [Header("Start hint")]
+        [SerializeField] [Tooltip("Before the player has moved, pressing a key that is not next to the start key punches the start Shift keycap and lights the pressed key, so the player learns where to go without a tutorial.")] bool startHintEnabled = true;
+        [SerializeField, Range(0f, 1f)] [Tooltip("How much the start Shift keycap grows in its punch, as a share of its size.")] float startHintPunchScale = 0.3f;
+        [SerializeField, Min(0.05f)] [Tooltip("Seconds the punch of the start Shift keycap takes.")] float startHintPunchSeconds = 0.4f;
+        [SerializeField] [Tooltip("Colour of the keycap that lights up on the wrong key the player pressed. It fades out. The keycap picture is tinted with it.")] Color startHintWrongKeyColor = new Color(0.9f, 0.2f, 0.2f, 0.85f);
+        [SerializeField, Min(0.05f)] [Tooltip("Seconds the lit wrong key takes to fade out.")] float startHintWrongKeyFadeSeconds = 0.7f;
+
         [Header("Dwell")]
         [SerializeField, Min(0.1f)] [Tooltip("Seconds the magnifying glass has to stay on a case before the briefing opens.")] float dwellSeconds = 2f;
         [SerializeField, Min(0.1f)] [Tooltip("Radius of the ring around the magnifying glass, in key widths.")] float ringRadiusInKeys = 1f;
@@ -116,6 +123,11 @@ namespace DetectiveDave.OverworldPlay
         public float RouteWidthInKeys => routeWidthInKeys;
         public float RouteFlowKeysPerSecond => routeFlowKeysPerSecond;
         public Color RouteColor => routeColor;
+        public bool StartHintEnabled => startHintEnabled;
+        public float StartHintPunchScale => startHintPunchScale;
+        public float StartHintPunchSeconds => startHintPunchSeconds;
+        public Color StartHintWrongKeyColor => startHintWrongKeyColor;
+        public float StartHintWrongKeyFadeSeconds => startHintWrongKeyFadeSeconds;
         public Font FontFor(FontSlot slot)
         {
             switch (slot)

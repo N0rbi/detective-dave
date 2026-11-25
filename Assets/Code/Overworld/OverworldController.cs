@@ -39,6 +39,9 @@ namespace DetectiveDave.OverworldPlay
         DwellRingView ringView;
         RouteHint routeHint;
         RouteHintView routeView;
+        ShiftKeycapsView keycaps;
+        WrongKeyGhostView wrongKeyGhost;
+        StartHintGate startHintGate;
         SpriteRenderer backdrop;
         string pendingReportCaseId;
         bool subscribed;
@@ -191,9 +194,13 @@ namespace DetectiveDave.OverworldPlay
 
         void BuildKeyboardLook()
         {
-            var keycaps = new GameObject("Shift Keycaps").AddComponent<ShiftKeycapsView>();
+            keycaps = new GameObject("Shift Keycaps").AddComponent<ShiftKeycapsView>();
             keycaps.transform.SetParent(transform, false);
             keycaps.Configure(gridView, overworldSettings.ShiftKeycapSprite, overworldSettings.ShiftKeycapColor, overworldSettings.ShiftKeycapSizeShare);
+            wrongKeyGhost = new GameObject("Wrong Key Ghost View").AddComponent<WrongKeyGhostView>();
+            wrongKeyGhost.transform.SetParent(transform, false);
+            wrongKeyGhost.Configure(gridView, overworldSettings);
+            startHintGate = new StartHintGate(board);
         }
 
         void BuildFloating()
@@ -250,6 +257,7 @@ namespace DetectiveDave.OverworldPlay
 
         void ResetToStart()
         {
+            startHintGate.Disarm();
             ringView.Hide();
             wipeView.Cancel();
             zoomView.Restore();
@@ -258,7 +266,11 @@ namespace DetectiveDave.OverworldPlay
 
         void StartPlaying()
         {
-            if (level.TryGetEnds(out var startKey, out _)) game.OnKeyPressed(startKey);
+            if (level.TryGetEnds(out var startKey, out _))
+            {
+                game.OnKeyPressed(startKey);
+                startHintGate.Arm(startKey);
+            }
             BeginRouteHint();
             PlayPendingReport();
         }
@@ -302,6 +314,7 @@ namespace DetectiveDave.OverworldPlay
             subscribed = true;
             keys.KeyPressed += OnKeyPressed;
             game.Moved += flow.OnMoved;
+            game.Moved += DisarmStartHint;
             game.Moved += routeHint.OnMoved;
             game.StateChanged += flow.OnPlayerStateChanged;
         }
@@ -312,15 +325,26 @@ namespace DetectiveDave.OverworldPlay
             subscribed = false;
             keys.KeyPressed -= OnKeyPressed;
             game.Moved -= flow.OnMoved;
+            game.Moved -= DisarmStartHint;
             game.Moved -= routeHint.OnMoved;
             game.StateChanged -= flow.OnPlayerStateChanged;
         }
 
         void ForwardMoveAttempted(MoveAttempt attempt) => MoveAttempted?.Invoke(attempt);
 
+        void DisarmStartHint(Key key) => startHintGate.Disarm();
+
+        void ShowStartHint(Key wrongKey)
+        {
+            if (level.TryGetEnds(out var startKey, out _)) keycaps.Punch(startKey, overworldSettings.StartHintPunchScale, overworldSettings.StartHintPunchSeconds);
+            wrongKeyGhost.Show(wrongKey);
+        }
+
         void OnKeyPressed(Key key)
         {
-            if (!intro.IsRunning && flow.AcceptsMoves) game.OnKeyPressed(key);
+            if (intro.IsRunning || !flow.AcceptsMoves) return;
+            if (overworldSettings.StartHintEnabled && startHintGate.IsWrongStartKey(key)) ShowStartHint(key);
+            game.OnKeyPressed(key);
         }
     }
 }

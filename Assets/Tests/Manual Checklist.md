@@ -175,3 +175,9 @@ Play with F5 on a level with a Gap and a WallGutter key between the two Shifts. 
 - Type resetplayer while a letter paper is open: the letters are typed into the paper and the overworld loads anyway.
 - Turn Cheats Enabled off: typing resetplayer does nothing.
 
+
+## Overworld start hint
+
+- [ ] On the overworld, before moving, press a key far from the magnifying glass (not Shift, not a neighbour): the start Shift keycap punches and the pressed key lights red and fades. Nothing else happens.
+- [ ] Press a neighbour of the start: the glass moves; pressing wrong keys afterwards no longer punches or lights anything.
+- [ ] Press the start Shift itself: no hint. Turn "Start Hint Enabled" off in Overworld Settings: no hint at all.
