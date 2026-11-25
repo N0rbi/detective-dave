@@ -13,7 +13,6 @@ namespace DetectiveDave.OverworldPlay
     [RequireComponent(typeof(KeyboardGridScreenFit))]
     public sealed class OverworldController : MonoBehaviour, ICaseLauncher, IMoveAttemptSource
     {
-        const float DeskOverscan = 3f;
         const int DeskBackdropSortingOrder = -50;
 
         [SerializeField] PlayerView playerPrefab;
@@ -158,9 +157,9 @@ namespace DetectiveDave.OverworldPlay
             var camera = Camera.main;
             var content = new Vector2(gridView.ContentWidth, gridView.ContentHeight);
             var view = camera && camera.orthographic ? new Vector2(2f * camera.orthographicSize * camera.aspect, 2f * camera.orthographicSize) : content;
-            var size = Vector2.Max(view, content) * DeskOverscan;
-            var spriteSize = backdrop.sprite.bounds.size;
-            backdrop.transform.localScale = new Vector3(size.x / spriteSize.x, size.y / spriteSize.y, 1f);
+            var spriteSize = (Vector2)backdrop.sprite.bounds.size;
+            var scale = Mathf.Max(view.x / spriteSize.x, view.y / spriteSize.y);
+            backdrop.transform.localScale = new Vector3(scale, scale, 1f);
             backdrop.transform.position = camera ? new Vector3(camera.transform.position.x, camera.transform.position.y, 0f) : Vector3.zero;
         }
 

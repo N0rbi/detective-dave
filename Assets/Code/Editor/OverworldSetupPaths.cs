@@ -17,7 +17,9 @@ namespace DetectiveDave.EditorTools
         public const string ArtFolder = OverworldFolder + "/Art";
         public const string AudioFolder = OverworldFolder + "/Audio";
         public const string FontFolder = OverworldFolder + "/Fonts";
-        public const string DeskTopPath = ArtFolder + "/placeholder_desk_top.png";
+        public const string BoardPath = ArtFolder + "/keyboard_stealth_board.png";
+        public const string SmokingBodyPath = ArtFolder + "/stealth_detective_cigi_body.png";
+        public const string SmokingArmPath = ArtFolder + "/stealth_detective_cigi_arm.png";
         public const string DescriptionPaperPath = ArtFolder + "/placeholder_paper_description.png";
         public const string LetterPaperPath = ArtFolder + "/placeholder_paper_letter.png";
         public const string RingPath = ArtFolder + "/placeholder_ring.png";
@@ -39,11 +41,13 @@ namespace DetectiveDave.EditorTools
 
         public static readonly string[] PlaceholderPaths =
         {
-            DeskTopPath, DescriptionPaperPath, LetterPaperPath, RingPath, KeycapPath, BackspacePath,
+            DescriptionPaperPath, LetterPaperPath, RingPath, KeycapPath, BackspacePath,
             ClickPaths[0], ClickPaths[1], ClickPaths[2],
         };
 
         public static readonly string[] SpritePaths = { GlassPath, FolderPath, SolvedPath };
+
+        public static readonly string[] SceneArtPaths = { BoardPath, SmokingBodyPath, SmokingArmPath };
 
         public static readonly string[] FontPaths = { ReportFontPath, PlaceholderFontPath, TypedFontPath };
     }

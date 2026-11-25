@@ -44,7 +44,7 @@ namespace DetectiveDave.EditorTools
             var playerError = PlayerSetup.ApplyOrError();
             if (playerError != null) return "The player cannot be set up:\n" + playerError;
             AssetDatabase.Refresh();
-            var missing = OverworldSetupPaths.SpritePaths.Concat(OverworldSetupPaths.PlaceholderPaths).Concat(OverworldSetupPaths.FontPaths).Where(path => !AssetImporter.GetAtPath(path)).ToArray();
+            var missing = OverworldSetupPaths.SpritePaths.Concat(OverworldSetupPaths.PlaceholderPaths).Concat(OverworldSetupPaths.SceneArtPaths).Concat(OverworldSetupPaths.FontPaths).Where(path => !AssetImporter.GetAtPath(path)).ToArray();
             if (missing.Length > 0) return "Nothing was changed. Missing assets:\n" + string.Join("\n", missing);
             var level = AssetDatabase.LoadAssetAtPath<Level>(OverworldSetupPaths.LevelPath);
             var sprites = OverworldSetupPaths.SpritePaths.Select(PlayerSpriteImport.ImportDecoration).ToArray();
@@ -60,7 +60,8 @@ namespace DetectiveDave.EditorTools
             AssignDeskIfEmpty(settings, desk);
             AssetDatabase.SaveAssets();
             var playerPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(PlayerSetupPaths.PrefabPath).GetComponent<PlayerView>();
-            return OverworldSceneBuilder.WireOrError(playerPrefab, magnifier, settings) ?? MusicSetup.ApplyOrError() ?? CheatSetup.ApplyOrError();
+            var smoking = new SmokingSprites(PlayerSpriteImport.ImportDecoration(OverworldSetupPaths.SmokingBodyPath), PlayerSpriteImport.ImportDecoration(OverworldSetupPaths.SmokingArmPath));
+            return OverworldSceneBuilder.WireOrError(playerPrefab, magnifier, settings, smoking) ?? MusicSetup.ApplyOrError() ?? CheatSetup.ApplyOrError();
         }
 
         static void EnsureFolder(string path)
@@ -92,6 +93,15 @@ namespace DetectiveDave.EditorTools
             Note("assigned " + field);
         }
 
+        static void ReplacePlaceholder(SerializedObject serialized, string field, Object value)
+        {
+            var property = serialized.FindProperty(field);
+            var current = property.objectReferenceValue;
+            if (current && !current.name.StartsWith("placeholder_")) return;
+            property.objectReferenceValue = value;
+            Note("assigned " + field);
+        }
+
         static void AssignDeskIfEmpty(OverworldSettings settings, DeskLayout desk)
         {
             var serialized = new SerializedObject(settings);
@@ -102,7 +112,7 @@ namespace DetectiveDave.EditorTools
         static void AssignPlaceholders(OverworldSettings settings)
         {
             var serialized = new SerializedObject(settings);
-            FillIfEmpty(serialized, "deskTopSprite", PlayerSpriteImport.ImportDecoration(OverworldSetupPaths.DeskTopPath));
+            ReplacePlaceholder(serialized, "deskTopSprite", PlayerSpriteImport.ImportDecoration(OverworldSetupPaths.BoardPath));
             FillIfEmpty(serialized, "descriptionPaperSprite", PlayerSpriteImport.ImportDecoration(OverworldSetupPaths.DescriptionPaperPath));
             FillIfEmpty(serialized, "letterPaperSprite", PlayerSpriteImport.ImportDecoration(OverworldSetupPaths.LetterPaperPath));
             FillIfEmpty(serialized, "ringSprite", PlayerSpriteImport.ImportDecoration(OverworldSetupPaths.RingPath));
