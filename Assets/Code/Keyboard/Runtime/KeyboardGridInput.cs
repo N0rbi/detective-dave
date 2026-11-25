@@ -14,18 +14,21 @@ namespace DetectiveDave.KeyboardGrid
     public class KeyboardGridInput : MonoBehaviour
     {
         [SerializeField] bool showNeighbours = true;             // tint the keys that touch a lit key
+        [SerializeField, Min(0f)] [Tooltip("Caps Lock stays pressed while it is switched on, so it is drawn lit, with its neighbours, for at most this many seconds after each press, like every other key. 0 lights it only on the press frame. Drawing only: the key events are not changed.")] float capsLockMaxLitSeconds = 0.6f;
 
         readonly HashSet<Key> pressed = new HashSet<Key>();      // between the source's pressed and released events
         readonly List<Key> lit = new List<Key>();
         KeyboardGridView view;
         KeyboardBoard board;
         KeyboardKeySource source;
+        CapsLockLitTimer capsLock;
 
         void Awake()
         {
             view = GetComponent<KeyboardGridView>();
             board = GetComponent<KeyboardBoard>();
             source = GetComponent<KeyboardKeySource>();
+            capsLock = new CapsLockLitTimer(() => Time.unscaledTime, capsLockMaxLitSeconds);
             // A scene saved before these components existed lacks them (RequireComponent only adds on Add Component): say how to fix it, do not throw.
             if (!board || !source)
             {
@@ -50,13 +53,24 @@ namespace DetectiveDave.KeyboardGrid
         {
             if (view.Layout == null) return;
             foreach (var cell in view.Cells.Values)
-                cell.Active = !cell.Def.IsInert && pressed.Contains(cell.InputKey);
+                cell.Active = !cell.Def.IsInert && IsDrawnLit(cell.InputKey);
             MarkNeighbours();
+            capsLock.EndFrame();
         }
 
-        void OnKeyPressed(Key key) => pressed.Add(key);
+        bool IsDrawnLit(Key key) => pressed.Contains(key) && (key != Key.CapsLock || capsLock.IsLit);
 
-        void OnKeyReleased(Key key) => pressed.Remove(key);
+        void OnKeyPressed(Key key)
+        {
+            pressed.Add(key);
+            if (key == Key.CapsLock) capsLock.OnPressed();
+        }
+
+        void OnKeyReleased(Key key)
+        {
+            pressed.Remove(key);
+            if (key == Key.CapsLock) capsLock.OnReleased();
+        }
 
         void MarkNeighbours()
         {
