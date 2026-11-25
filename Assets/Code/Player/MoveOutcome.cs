@@ -6,7 +6,7 @@ namespace DetectiveDave.PlayerPlay
         Step,
         Stun,
         BumpWall,
-        FallIntoGap,
+        LandOnDog,
         HangOnGutter,
         ReachGoal
     }

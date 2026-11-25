@@ -124,7 +124,7 @@ namespace DetectiveDave.PlayerPlay
                 case MoveOutcome.Step: Walk(target, PlayerState.Moving, () => StepTo(target)); break;
                 case MoveOutcome.HangOnGutter: Walk(target, PlayerState.Moving, () => HangOn(target)); break;
                 case MoveOutcome.ReachGoal: Walk(target, PlayerState.Moving, () => FinishGoalWalk(target)); break;
-                case MoveOutcome.FallIntoGap: Walk(target, PlayerState.FallingInGap, FallInGap); break;
+                case MoveOutcome.LandOnDog: Walk(target, PlayerState.LandingOnDog, () => LandOnDog(target)); break;
                 case MoveOutcome.Stun: Stun(); break;
                 case MoveOutcome.BumpWall: BumpInto(target); break;
             }
@@ -198,7 +198,12 @@ namespace DetectiveDave.PlayerPlay
             GoalReached?.Invoke();
         }
 
-        void FallInGap() => animations.FadeIntoGap(Guard(Respawn));
+        void LandOnDog(Key target)
+        {
+            ShowWalkPose();
+            Arrive(target);
+            Die();
+        }
 
         void Stun()
         {
@@ -253,6 +258,11 @@ namespace DetectiveDave.PlayerPlay
             generation++;
             animations.CancelAllWithoutCallbacks();
             gust.Clear();
+            Die();
+        }
+
+        void Die()
+        {
             state.Enter(PlayerState.Caught);
             presentation.SetDeathPose(true);
             animations.FallFlat(Guard(Respawn));

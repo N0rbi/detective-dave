@@ -183,12 +183,12 @@ namespace DetectiveDave.Tests
         }
 
         [Test]
-        public void InputIsIgnoredWhileFallingInGap()
+        public void InputIsIgnoredWhileWalkingOntoDog()
         {
             level.Kinds[Next] = CellKind.Gap;
             Begin();
             game.OnKeyPressed(Next);
-            Assert.AreEqual(PlayerState.FallingInGap, game.State);
+            Assert.AreEqual(PlayerState.LandingOnDog, game.State);
             AssertPressesAreIgnored();
         }
 
@@ -406,7 +406,7 @@ namespace DetectiveDave.Tests
         }
 
         [Test]
-        public void GapFallWalksFadesThenRespawns()
+        public void LandingOnDogWalksThenDiesThenRespawns()
         {
             level.Kinds[Next] = CellKind.Gap;
             Begin();
@@ -414,8 +414,11 @@ namespace DetectiveDave.Tests
             Assert.AreEqual(NextWorld, animations.LastMoveTarget);
             Assert.AreEqual(1, presentation.Frame);
             animations.CompleteLast();
-            Assert.AreEqual(1, CountCalls(nameof(FakeAnimations.FadeIntoGap)));
-            Assert.AreEqual(PlayerState.FallingInGap, game.State);
+            Assert.AreEqual(NextWorld, animations.LastMoveTarget);
+            Assert.AreEqual(Next, game.CurrentKey);
+            Assert.AreEqual(1, CountCalls(nameof(FakeAnimations.FallFlat)));
+            Assert.AreEqual(PlayerState.Caught, game.State);
+            Assert.IsTrue(presentation.DeathPose);
             animations.CompleteLast();
             AssertRespawning();
             game.CompleteRespawn();
@@ -505,13 +508,13 @@ namespace DetectiveDave.Tests
         }
 
         [Test]
-        public void GetCaughtIsIgnoredWhileFallingIntoAGap()
+        public void GetCaughtIsIgnoredWhileWalkingOntoDog()
         {
             level.Kinds[Next] = CellKind.Gap;
             Begin();
             game.OnKeyPressed(Next);
             game.GetCaught();
-            Assert.AreEqual(PlayerState.FallingInGap, game.State);
+            Assert.AreEqual(PlayerState.LandingOnDog, game.State);
             Assert.AreEqual(0, CountCalls(nameof(FakeAnimations.FallFlat)));
         }
 

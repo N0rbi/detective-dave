@@ -22,8 +22,6 @@ namespace DetectiveDave.PlayerPlay
 
         void BumpWall(Vector2 towards, Vector2 home, Action returning, Action done);
 
-        void FadeIntoGap(Action done);
-
         void FallFlat(Action done);
 
         void StartBreathing();

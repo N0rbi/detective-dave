@@ -39,7 +39,7 @@ namespace DetectiveDave.Tests
 
         [TestCase(CellKind.Floor, MoveOutcome.Step)]
         [TestCase(CellKind.Wall, MoveOutcome.BumpWall)]
-        [TestCase(CellKind.Gap, MoveOutcome.FallIntoGap)]
+        [TestCase(CellKind.Gap, MoveOutcome.LandOnDog)]
         [TestCase(CellKind.Gutter, MoveOutcome.HangOnGutter)]
         public void NeighbourOutcomeFollowsItsKind(CellKind kind, MoveOutcome expected)
         {

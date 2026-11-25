@@ -69,16 +69,6 @@ namespace DetectiveDave.PlayerPlay
 
         public void StopBreathing() => KillBreathing();
 
-        public void FadeIntoGap(Action done)
-        {
-            if (!HasSettings()) return;
-            var seconds = Seconds(view.Settings.GapFadeSeconds);
-            var sequence = DOTween.Sequence();
-            sequence.Append(DOVirtual.Float(1f, 0f, seconds, alpha => view.SetAlpha(alpha)));
-            sequence.Join(transform.DOScale(view.BaseLocalScale * 0.6f, seconds).SetEase(Ease.InQuad));
-            Run(sequence, done);
-        }
-
         public void FallFlat(Action done)
         {
             if (!HasSettings()) return;

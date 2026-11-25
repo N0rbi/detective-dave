@@ -18,7 +18,7 @@ namespace DetectiveDave.PlayerPlay
             switch (kind)
             {
                 case CellKind.Wall: return MoveOutcome.BumpWall;
-                case CellKind.Gap: return MoveOutcome.FallIntoGap;
+                case CellKind.Gap: return MoveOutcome.LandOnDog;
                 case CellKind.Gutter: return MoveOutcome.HangOnGutter;
                 default: return MoveOutcome.Step;
             }

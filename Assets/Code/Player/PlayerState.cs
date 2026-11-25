@@ -7,7 +7,7 @@ namespace DetectiveDave.PlayerPlay
         Moving,
         Stunned,
         BumpingWall,
-        FallingInGap,
+        LandingOnDog,
         Caught,
         Respawning,
         Goal

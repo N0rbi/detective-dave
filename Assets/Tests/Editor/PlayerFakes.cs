@@ -151,13 +151,6 @@ namespace DetectiveDave.Tests
 
         public void StopBreathing() => IsBreathing = false;
 
-        public void FadeIntoGap(Action done)
-        {
-            Calls.Add(nameof(FadeIntoGap));
-            IsBreathing = false;
-            pending.Add(done);
-        }
-
         public void FallFlat(Action done)
         {
             Calls.Add(nameof(FallFlat));
