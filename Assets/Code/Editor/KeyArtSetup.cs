@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using DetectiveDave.Levels;
 using DetectiveDave.Levels.Editor;
@@ -66,14 +68,14 @@ namespace DetectiveDave.EditorTools
             if (!tile) return $"{row.TileName}: skipped, the tile type is missing at {row.TilePath}.";
             var state = Classify(row.StagedPath, row.TargetPath);
             if (state == KeyArtSlotState.Missing) return $"{row.TileName}: skipped, {row.StagedName} is not in {KeyArtSetupPaths.StagingFolder} and {row.TargetName} is not in {row.Folder}.";
-            if (state == KeyArtSlotState.Conflict) return $"{row.TileName}: skipped, {row.StagedName} is in {KeyArtSetupPaths.StagingFolder} but {row.TargetName} already exists in {row.Folder}. Remove one of them first.";
             var moveError = Move(state, row.StagedPath, row.TargetPath, row.Folder);
             if (moveError != null) return $"{row.TileName}: skipped, {moveError}";
             var configureError = ConfigureBox(row, out var applied);
             if (configureError != null) return $"{row.TileName}: skipped, {configureError}";
             var assigned = AssignBox(tile, LoadSprite(row.TargetPath));
             var where = assigned.Count == 0 ? "No Key Art has this style, so nothing was assigned." : "Box set on: " + string.Join(", ", assigned) + ".";
-            return $"{row.TileName}: {row.StagedName} is now {row.TargetName} in {row.Folder}, border {applied.x:0}, {applied.y:0}, {applied.z:0}, {applied.w:0} px (left, bottom, right, top). {where} Tint set to white and the per-size sprites cleared; the Enter was left as it is.";
+            var change = state == KeyArtSlotState.NeedsReplace ? $"updated: {row.TargetName} (new pixels from {row.StagedName}, same file and links)" : $"{row.StagedName} is now {row.TargetName}";
+            return $"{row.TileName}: {change} in {row.Folder}, border {applied.x:0}, {applied.y:0}, {applied.z:0}, {applied.w:0} px (left, bottom, right, top). {where} Tint set to white and the per-size sprites cleared; the Enter was left as it is.";
         }
 
         static string UnassignedLine() =>
@@ -95,15 +97,41 @@ namespace DetectiveDave.EditorTools
         static void AddBlocker(List<string> blockers, KeyArtSlotState state, string stagedName, string targetName)
         {
             if (state == KeyArtSlotState.Missing) blockers.Add($"{stagedName} is not in {KeyArtSetupPaths.StagingFolder} and {targetName} is not in {KeyArtSetupPaths.WalkableFolder}.");
-            if (state == KeyArtSlotState.Conflict) blockers.Add($"{stagedName} is in {KeyArtSetupPaths.StagingFolder} but {targetName} already exists in {KeyArtSetupPaths.WalkableFolder}. Remove one of them first.");
         }
 
         static string Move(KeyArtSlotState state, string from, string to, string folder)
         {
+            if (state == KeyArtSlotState.NeedsReplace) return ReplacePixels(from, to);
             if (state != KeyArtSlotState.NeedsMove) return null;
             if (!AssetDatabase.IsValidFolder(folder)) return $"The folder {folder} is missing.";
             var error = AssetDatabase.MoveAsset(from, to);
             return string.IsNullOrEmpty(error) ? null : $"{from} could not be moved: {error}";
+        }
+
+        static string ReplacePixels(string from, string to)
+        {
+            try
+            {
+                File.Copy(from, to, true);
+                AssetDatabase.ImportAsset(to, ImportAssetOptions.ForceUpdate);
+                SetAsideStagedCopy(from);
+                return null;
+            }
+            catch (Exception exception)
+            {
+                return $"{from} could not replace {to}: {exception.Message}";
+            }
+        }
+
+        static void SetAsideStagedCopy(string stagedPath)
+        {
+            Directory.CreateDirectory(KeyArtSetupPaths.ReplacedStagingFolder);
+            var stamp = DateTime.Now.ToString("yyyyMMdd-HHmmss");
+            var name = Path.GetFileName(stagedPath);
+            File.Move(stagedPath, Path.Combine(KeyArtSetupPaths.ReplacedStagingFolder, stamp + "-" + name));
+            var metaPath = stagedPath + ".meta";
+            if (File.Exists(metaPath)) File.Move(metaPath, Path.Combine(KeyArtSetupPaths.ReplacedStagingFolder, stamp + "-" + name + ".meta"));
+            AssetDatabase.Refresh();
         }
 
         static string Configure(string path, out int borderPixels)

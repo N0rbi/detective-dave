@@ -4,7 +4,7 @@ namespace DetectiveDave.EditorTools
 {
     static class KeyArtTileTable
     {
-        public const int PipeStripHeightPixels = 97;
+        public const int PipeStripHeightPixels = 172;
         public const string UnassignedStagedName = "keyboard_stealth_pipe.png";
 
         public static readonly IReadOnlyList<KeyArtTileRow> Boxes = new[]

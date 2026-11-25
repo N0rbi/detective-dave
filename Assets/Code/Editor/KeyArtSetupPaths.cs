@@ -14,6 +14,7 @@ namespace DetectiveDave.EditorTools
         public const string StagedEnterPath = StagingFolder + "/" + StagedEnterName;
         public const string BoxPath = WalkableFolder + "/" + BoxName;
         public const string EnterPath = WalkableFolder + "/" + EnterName;
+        public const string ReplacedStagingFolder = "_to_delete";
         public const int PixelsPerUnit = 16;
         public const int MaxTextureSize = 1024;
     }

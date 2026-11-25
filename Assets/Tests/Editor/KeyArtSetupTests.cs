@@ -44,9 +44,9 @@ namespace DetectiveDave.Tests
         }
 
         [Test]
-        public void A_file_in_both_places_is_a_conflict()
+        public void A_file_in_both_places_replaces_the_target_pixels()
         {
-            Assert.AreEqual(KeyArtSlotState.Conflict, KeyArtSlot.Classify(true, true));
+            Assert.AreEqual(KeyArtSlotState.NeedsReplace, KeyArtSlot.Classify(true, true));
         }
 
         [Test]
@@ -58,7 +58,7 @@ namespace DetectiveDave.Tests
         [Test]
         public void A_taller_top_rim_keeps_the_pipe_strip_out_of_the_stretched_middle()
         {
-            Assert.AreEqual(new Vector4(65f, 65f, 65f, 97f), KeyArtBorder.BoxBorder(872, 872, KeyArtTileTable.PipeStripHeightPixels));
+            Assert.AreEqual(new Vector4(65f, 65f, 65f, 172f), KeyArtBorder.BoxBorder(872, 872, KeyArtTileTable.PipeStripHeightPixels));
         }
 
         [Test]

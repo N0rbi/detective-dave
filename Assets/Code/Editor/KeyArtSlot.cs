@@ -5,14 +5,14 @@ namespace DetectiveDave.EditorTools
         Missing,
         NeedsMove,
         InPlace,
-        Conflict,
+        NeedsReplace,
     }
 
     static class KeyArtSlot
     {
         public static KeyArtSlotState Classify(bool stagedExists, bool targetExists)
         {
-            if (stagedExists && targetExists) return KeyArtSlotState.Conflict;
+            if (stagedExists && targetExists) return KeyArtSlotState.NeedsReplace;
             if (stagedExists) return KeyArtSlotState.NeedsMove;
             return targetExists ? KeyArtSlotState.InPlace : KeyArtSlotState.Missing;
         }
