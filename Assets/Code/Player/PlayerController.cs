@@ -37,8 +37,11 @@ namespace DetectiveDave.PlayerPlay
         public event Action GoalReached;
         public event Action WorldReset;
         public event Action<MoveAttempt> MoveAttempted;
+        public event Action<Key> PlayerMoved;
 
         public bool GuardsMayMove => game != null && restartSequence != null && game.IsActive && !SequenceRunning && game.IsVulnerable;
+
+        public bool HasPlayer => game != null;
 
         public Key PlayerKey => game.CurrentKey;
 
@@ -169,6 +172,7 @@ namespace DetectiveDave.PlayerPlay
             game.GoalReached += ForwardGoalReached;
             game.Failed += BeginRestart;
             game.MoveAttempted += ForwardMoveAttempted;
+            game.Moved += ForwardPlayerMoved;
         }
 
         void BuildDecorations()
@@ -240,6 +244,8 @@ namespace DetectiveDave.PlayerPlay
         }
 
         void ForwardMoveAttempted(MoveAttempt attempt) => MoveAttempted?.Invoke(attempt);
+
+        void ForwardPlayerMoved(Key key) => PlayerMoved?.Invoke(key);
 
         void ForwardGoalReached()
         {
