@@ -6,6 +6,7 @@ namespace DetectiveDave.EditorTools
         public const string ArtFolder = PlayerFolder + "/Art";
         public const string WalkFramePattern = ArtFolder + "/stealth_detective_walk_cycle_{0}.png";
         public const string ClimbFramePattern = ArtFolder + "/stealth_detective_climb_cycle_{0}.png";
+        public const string DeathSpritePath = ArtFolder + "/stealth_detective_death.png";
         public const string DecorationsFolder = "Assets/Decorations";
         public const string StartGratePath = DecorationsFolder + "/stealth_start_grate.png";
         public const string GoalIconPath = DecorationsFolder + "/stealth_goal_both.png";

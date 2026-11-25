@@ -29,7 +29,7 @@ namespace DetectiveDave.Tests
             board.Connect(Next, Goal);
             level = new FakeLevel();
             animations = new FakeAnimations();
-            var game = new PlayerGame(board, level, animations, new FakePresentation(), new FakeDashGust(), new PlayerGameSettings(3, 3, 0.3f, 0.35f, forgiving));
+            var game = new PlayerGame(board, level, animations, new FakePresentation(), new FakeDashGust(), new PlayerGameSettings(3, 3, 0.35f, forgiving));
             attempts = new List<MoveAttempt>();
             game.MoveAttempted += attempts.Add;
             return game;
@@ -119,12 +119,23 @@ namespace DetectiveDave.Tests
         }
 
         [Test]
-        public void A_key_that_is_not_next_to_the_player_is_a_move_when_the_player_slips()
+        public void A_key_that_is_not_next_to_the_player_is_blocked_when_the_player_is_stunned()
         {
             var game = Build(false);
             Begin(game);
             game.OnKeyPressed(Far);
-            CollectionAssert.AreEqual(new[] { MoveAttempt.Moved }, attempts);
+            CollectionAssert.AreEqual(new[] { MoveAttempt.Blocked }, attempts);
+        }
+
+        [Test]
+        public void Presses_while_the_player_is_stunned_report_nothing_more()
+        {
+            var game = Build(false);
+            Begin(game);
+            game.OnKeyPressed(Far);
+            game.OnKeyPressed(Far);
+            game.OnKeyPressed(Next);
+            CollectionAssert.AreEqual(new[] { MoveAttempt.Blocked }, attempts);
         }
 
         [Test]

@@ -14,7 +14,10 @@ namespace DetectiveDave.PlayerPlay
         float spriteHeight;
         Sprite[] walkFrames;
         Sprite[] climbFrames;
+        Sprite deathSprite;
         bool climbing;
+        bool deathPose;
+        int currentFrame;
 
         public Vector3 BaseLocalScale { get; private set; } = Vector3.one;
 
@@ -43,6 +46,8 @@ namespace DetectiveDave.PlayerPlay
             Settings = settings;
             walkFrames = settings.WalkFrames;
             climbFrames = settings.ClimbFrames;
+            deathSprite = settings.DeathSprite;
+            deathPose = false;
             spriteHeight = walkFrames[0].bounds.size.y;
             SetClimbing(false);
             SetFrame(0);
@@ -63,16 +68,37 @@ namespace DetectiveDave.PlayerPlay
 
         public void SetFrame(int frame)
         {
-            var frames = climbing ? climbFrames : walkFrames;
+            var frames = ActiveFrames();
             if (frames == null || frame < 0 || frame >= frames.Length)
             {
                 Debug.LogError($"PlayerView: frame {frame} is outside the configured frames.", this);
                 return;
             }
-            sprite.sprite = frames[frame];
+            currentFrame = frame;
+            ShowCurrentSprite();
         }
 
-        void ApplyClimbDrop() => drawing.localPosition = new Vector3(0f, climbing ? -Settings.ClimbDropInHeights * spriteHeight : 0f, 0f);
+        public void SetDeathPose(bool shown)
+        {
+            if (shown && !deathSprite)
+            {
+                Debug.LogError("PlayerView: the player settings have no Death Sprite.", this);
+                return;
+            }
+            deathPose = shown;
+            ShowCurrentSprite();
+            ApplyClimbDrop();
+        }
+
+        Sprite[] ActiveFrames() => climbing ? climbFrames : walkFrames;
+
+        void ShowCurrentSprite()
+        {
+            var frames = ActiveFrames();
+            sprite.sprite = deathPose ? deathSprite : frames[Mathf.Min(currentFrame, frames.Length - 1)];
+        }
+
+        void ApplyClimbDrop() => drawing.localPosition = new Vector3(0f, climbing && !deathPose ? -Settings.ClimbDropInHeights * spriteHeight : 0f, 0f);
 
         public void SetFacing(Facing facing) => sprite.flipX = Settings.FlipsWithFacing && (Settings.ArtFacesRight ? facing == Facing.Left : facing == Facing.Right);
 

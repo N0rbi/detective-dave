@@ -24,28 +24,6 @@ namespace DetectiveDave.Tests
         }
 
         [Test]
-        public void BackwardsIsOppositeAlsoAfterVerticalMove()
-        {
-            facing.Set(Facing.Right);
-            facing.ResolveMove(Vector2.zero, Vector2.up);
-            Assert.AreEqual(Facing.Left, facing.Backwards);
-        }
-
-        [Test]
-        public void BackwardsOfRightIsLeft()
-        {
-            facing.Set(Facing.Right);
-            Assert.AreEqual(Facing.Left, facing.Backwards);
-        }
-
-        [Test]
-        public void BackwardsOfLeftIsRight()
-        {
-            facing.Set(Facing.Left);
-            Assert.AreEqual(Facing.Right, facing.Backwards);
-        }
-
-        [Test]
         public void DefaultFacesTowardsGoal()
         {
             facing.SetTowardsGoal(new Vector2(5f, 0f), new Vector2(1f, 0f));
@@ -67,15 +45,6 @@ namespace DetectiveDave.Tests
             facing.ResolveMove(Vector2.zero, Vector2.right);
             facing.ResetToDefault();
             Assert.AreEqual(Facing.Left, facing.Current);
-        }
-
-        [Test]
-        public void BackwardsDirectionOppositeToFacing()
-        {
-            facing.Set(Facing.Right);
-            Assert.AreEqual(Vector2.left, facing.BackwardsDirection());
-            facing.Set(Facing.Left);
-            Assert.AreEqual(Vector2.right, facing.BackwardsDirection());
         }
     }
 }

@@ -33,6 +33,7 @@ namespace DetectiveDave.EditorTools
             var settings = PlayerSettingsAsset.EnsureWithSprites(
                 PlayerSpriteImport.ImportFrames(PlayerSetupPaths.WalkFramePattern),
                 PlayerSpriteImport.ImportFrames(PlayerSetupPaths.ClimbFramePattern),
+                PlayerSpriteImport.ImportDeath(),
                 PlayerSetupPaths.DecorationPaths.Select(PlayerSpriteImport.ImportDecoration).ToArray());
             var prefab = PlayerPrefabBuilder.Ensure();
             var wiringError = PlayerSceneWiring.Wire(prefab, settings, tiles);
@@ -45,13 +46,16 @@ namespace DetectiveDave.EditorTools
         static string[] FindMissingAssets(TileType[] tiles)
         {
             var missingTiles = PlayerSetupPaths.TileNames.Where((name, index) => !tiles[index]).Select(name => string.Format(PlayerSetupPaths.TilePattern, name));
-            var missingFrames = MissingFrames(PlayerSetupPaths.WalkFramePattern).Concat(MissingFrames(PlayerSetupPaths.ClimbFramePattern));
+            var missingFrames = MissingFrames(PlayerSetupPaths.WalkFramePattern).Concat(MissingFrames(PlayerSetupPaths.ClimbFramePattern)).Concat(MissingDeathSprite());
             var missingDecorations = PlayerSetupPaths.DecorationPaths.Where(path => !AssetImporter.GetAtPath(path));
             return missingTiles.Concat(missingFrames).Concat(missingDecorations).Concat(MissingScene()).ToArray();
         }
 
         static IEnumerable<string> MissingFrames(string pathPattern) =>
             Enumerable.Range(1, PlayerSetupPaths.FrameCount).Select(index => string.Format(pathPattern, index)).Where(path => !AssetImporter.GetAtPath(path));
+
+        static IEnumerable<string> MissingDeathSprite() =>
+            AssetImporter.GetAtPath(PlayerSetupPaths.DeathSpritePath) ? Enumerable.Empty<string>() : new[] { PlayerSetupPaths.DeathSpritePath };
 
         static IEnumerable<string> MissingScene() =>
             AssetDatabase.LoadAssetAtPath<SceneAsset>(PlayerSetupPaths.ScenePath) ? Enumerable.Empty<string>() : new[] { PlayerSetupPaths.ScenePath };

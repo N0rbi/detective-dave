@@ -1,5 +1,4 @@
 using UnityEngine;
-using UnityEngine.Serialization;
 
 namespace DetectiveDave.PlayerPlay
 {
@@ -12,27 +11,26 @@ namespace DetectiveDave.PlayerPlay
         [SerializeField] Sprite[] walkFrames;
         [Tooltip("Climb cycle sprites shown while the player is on a gutter. At least one.")]
         [SerializeField] Sprite[] climbFrames;
+        [SerializeField] [Tooltip("Pose shown when a guard catches the player and while the player is stunned by pressing a key that is not a neighbour. Needed for the detective; the magnifying glass never uses it.")] Sprite deathSprite;
 
         [SerializeField] [Tooltip("Turn on if the walk cycle art looks to the right when not flipped.")] bool artFacesRight = false;
         [SerializeField] [Tooltip("Turn off for a player that has no left or right, like the magnifying glass.")] bool flipsWithFacing = true;
 
         [Header("Timing")]
         [SerializeField, Min(0.01f)] [Tooltip("Seconds to walk onto a neighbouring key.")] float stepSeconds = 0.2f;
-        [SerializeField, Min(0.01f)] [Tooltip("Seconds of the backwards wobble after pressing a key that is not a neighbour.")] float slipSeconds = 0.4f;
+        [SerializeField, Min(0f)] [Tooltip("Seconds the player is stunned in the death pose after pressing a key that is not a neighbour. 0 turns the stun off. Keys cannot be pressed while stunned.")] float wrongKeyStunSeconds = 0.8f;
         [SerializeField, Min(0.01f)] [Tooltip("Seconds of the whole bump when walking into a wall: lean in, squash, return.")] float wallSquashSeconds = 0.5f;
         [SerializeField, Min(0.01f)] [Tooltip("Seconds the player takes to fade away in a gap.")] float gapFadeSeconds = 0.8f;
-        [SerializeField, Min(0.01f)] [Tooltip("Seconds the player takes to fall flat on the face when a guard catches them.")] float fallForwardSeconds = 0.45f;
+        [SerializeField, Min(0.01f)] [Tooltip("Seconds the death pose takes to settle when a guard catches the player.")] float fallForwardSeconds = 0.45f;
         [SerializeField, Min(0f)] [Tooltip("Seconds the player lies there before the screen spirals away.")] float fallForwardHoldSeconds = 0.4f;
 
         [Header("Distances")]
-        [SerializeField, Min(0f)] [FormerlySerializedAs("slipDistance")] [Tooltip("Key sizes the player is thrown backwards when slipping.")] float slipDistanceInKeys = 0.3f;
         [SerializeField, Min(0f)] [Tooltip("Key sizes the player leans towards a wall before squashing against it.")] float bumpDistanceInKeys = 0.35f;
-        [SerializeField, Range(30f, 100f)] [Tooltip("Degrees the player tips over when a guard catches them.")] float fallForwardDegrees = 90f;
+        [SerializeField, Range(1f, 2f)] [Tooltip("How much bigger the death pose starts, as a multiple of the player size, before it settles when a guard catches the player.")] float deathPopScale = 1.2f;
         [SerializeField, Range(0.2f, 1f)] [Tooltip("Scale factor the player is squashed to when walking into a wall.")] float squashScale = 0.6f;
-        [SerializeField, Min(0f)] [Tooltip("Degrees the player tilts backwards when slipping.")] float slipTiltDegrees = 15f;
 
         [Header("Rules")]
-        [SerializeField] [Tooltip("Off: pressing a key that is not a neighbour makes the player slip back. On: nothing happens.")] bool forgivingMoves = false;
+        [SerializeField] [Tooltip("Off: pressing a key that is not a neighbour stuns the player. On: nothing happens.")] bool forgivingMoves = false;
 
         [Header("Dash gust")]
         [SerializeField] [Tooltip("Turns the whole dash gust on or off. The detective dashes, the magnifying glass does not.")] bool dashGustEnabled = true;
@@ -79,17 +77,17 @@ namespace DetectiveDave.PlayerPlay
         public float HeightInKeys => heightInKeys;
         public Sprite[] WalkFrames => walkFrames;
         public Sprite[] ClimbFrames => climbFrames;
+        public Sprite DeathSprite => deathSprite;
         public bool ArtFacesRight => artFacesRight;
         public bool FlipsWithFacing => flipsWithFacing;
         public bool ForgivingMoves => forgivingMoves;
         public float StepSeconds => stepSeconds;
-        public float SlipSeconds => slipSeconds;
+        public float WrongKeyStunSeconds => wrongKeyStunSeconds;
         public float WallSquashSeconds => wallSquashSeconds;
         public float GapFadeSeconds => gapFadeSeconds;
         public float FallForwardSeconds => fallForwardSeconds;
         public float FallForwardHoldSeconds => fallForwardHoldSeconds;
-        public float FallForwardDegrees => fallForwardDegrees;
-        public float SlipDistanceInKeys => slipDistanceInKeys;
+        public float DeathPopScale => deathPopScale;
         public float BumpDistanceInKeys => bumpDistanceInKeys;
         public bool DashGustEnabled => dashGustEnabled;
         public float GustBandCenterInHeights => gustBandCenterInHeights;
@@ -121,10 +119,11 @@ namespace DetectiveDave.PlayerPlay
         public int WipeTurns => wipeTurns;
         public Color WipeColor => wipeColor;
         public float SquashScale => squashScale;
-        public float SlipTiltDegrees => slipTiltDegrees;
 
         public bool HasValidWalkFrames => AreValidFrames(walkFrames);
         public bool HasValidClimbFrames => AreValidFrames(climbFrames);
+        public bool HasDeathSprite => deathSprite;
+        public bool NeedsDeathSprite => !forgivingMoves;
 
         static bool AreValidFrames(Sprite[] frames) => frames != null && frames.Length >= 1 && System.Array.TrueForAll(frames, frame => frame);
 
@@ -132,6 +131,7 @@ namespace DetectiveDave.PlayerPlay
         {
             if (!HasValidWalkFrames) Debug.LogError("PlayerMovementSettings: walkFrames needs at least one non-null sprite.", this);
             if (!HasValidClimbFrames) Debug.LogError("PlayerMovementSettings: climbFrames needs at least one non-null sprite.", this);
+            if (NeedsDeathSprite && !HasDeathSprite) Debug.LogError("PlayerMovementSettings: deathSprite is needed for a detective (Forgiving Moves off).", this);
         }
     }
 }

@@ -35,7 +35,7 @@ namespace DetectiveDave.Tests
         }
 
         [Test]
-        public void KeyThatIsNotANeighbourSlips() => Assert.AreEqual(MoveOutcome.Slip, rule.Decide(board, level, Goal, Here, Far));
+        public void KeyThatIsNotANeighbourStuns() => Assert.AreEqual(MoveOutcome.Stun, rule.Decide(board, level, Goal, Here, Far));
 
         [TestCase(CellKind.Floor, MoveOutcome.Step)]
         [TestCase(CellKind.Wall, MoveOutcome.BumpWall)]

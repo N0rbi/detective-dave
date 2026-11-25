@@ -73,6 +73,8 @@ namespace DetectiveDave.Tests
 
         public bool Climbing { get; private set; }
 
+        public bool DeathPose { get; private set; }
+
         public void SetVisible(bool visible) => Visible = visible;
 
         public void SetFrame(int frame) => Frame = frame;
@@ -80,6 +82,8 @@ namespace DetectiveDave.Tests
         public void SetFacing(Facing facing) => Facing = facing;
 
         public void SetClimbing(bool climbing) => Climbing = climbing;
+
+        public void SetDeathPose(bool shown) => DeathPose = shown;
     }
 
     public sealed class FakeAnimations : IPlayerAnimations
@@ -92,8 +96,6 @@ namespace DetectiveDave.Tests
 
         public Vector2 LastMoveTarget { get; private set; }
 
-        public Vector2 LastSlipOffset { get; private set; }
-
         public Vector2 LastBumpTarget { get; private set; }
 
         public Vector2 LastBumpHome { get; private set; }
@@ -105,8 +107,6 @@ namespace DetectiveDave.Tests
         public bool IsBreathing { get; private set; }
 
         public int BreathingStarts { get; private set; }
-
-        public Vector2 LastFallForward { get; private set; }
 
         public Vector2 LastShownAt { get; private set; }
 
@@ -125,11 +125,10 @@ namespace DetectiveDave.Tests
             pending.Add(done);
         }
 
-        public void SlipBy(Vector2 worldOffset, Action done)
+        public void Stun(Action done)
         {
-            Calls.Add(nameof(SlipBy));
+            Calls.Add(nameof(Stun));
             IsBreathing = false;
-            LastSlipOffset = worldOffset;
             pending.Add(done);
         }
 
@@ -159,11 +158,10 @@ namespace DetectiveDave.Tests
             pending.Add(done);
         }
 
-        public void FallForward(Vector2 forward, Action done)
+        public void FallFlat(Action done)
         {
-            Calls.Add(nameof(FallForward));
+            Calls.Add(nameof(FallFlat));
             IsBreathing = false;
-            LastFallForward = forward;
             pending.Add(done);
         }
 

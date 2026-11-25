@@ -4,7 +4,7 @@ namespace DetectiveDave.PlayerPlay
     {
         Ignored,
         Step,
-        Slip,
+        Stun,
         BumpWall,
         FallIntoGap,
         HangOnGutter,

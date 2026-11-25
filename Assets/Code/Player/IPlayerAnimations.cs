@@ -18,13 +18,13 @@ namespace DetectiveDave.PlayerPlay
 
         void MoveTo(Vector2 world, Action done);
 
-        void SlipBy(Vector2 worldOffset, Action done);
+        void Stun(Action done);
 
         void BumpWall(Vector2 towards, Vector2 home, Action returning, Action done);
 
         void FadeIntoGap(Action done);
 
-        void FallForward(Vector2 forward, Action done);
+        void FallFlat(Action done);
 
         void StartBreathing();
 

@@ -117,6 +117,11 @@ namespace DetectiveDave.PlayerPlay
                 ReportProblem("PlayerMovementSettings: climbFrames needs at least one non-null sprite.");
                 return false;
             }
+            if (settings.NeedsDeathSprite && !settings.HasDeathSprite)
+            {
+                ReportProblem("PlayerMovementSettings: deathSprite is needed for the detective. Run Window > Detective Dave > Set Up Player.");
+                return false;
+            }
             CreateView();
             if (!ResolveAnimations())
             {
@@ -160,7 +165,7 @@ namespace DetectiveDave.PlayerPlay
 
         void BuildGame()
         {
-            game = new PlayerGame(board, level, animations, view, gustView, new PlayerGameSettings(settings.WalkFrames.Length, settings.ClimbFrames.Length, settings.SlipDistanceInKeys, settings.BumpDistanceInKeys, settings.ForgivingMoves));
+            game = new PlayerGame(board, level, animations, view, gustView, new PlayerGameSettings(settings.WalkFrames.Length, settings.ClimbFrames.Length, settings.BumpDistanceInKeys, settings.ForgivingMoves, settings.WrongKeyStunSeconds > 0f));
             game.GoalReached += ForwardGoalReached;
             game.Failed += BeginRestart;
             game.MoveAttempted += ForwardMoveAttempted;

@@ -5,7 +5,7 @@ namespace DetectiveDave.PlayerPlay
         NotStarted,
         Idle,
         Moving,
-        Slipping,
+        Stunned,
         BumpingWall,
         FallingInGap,
         Caught,

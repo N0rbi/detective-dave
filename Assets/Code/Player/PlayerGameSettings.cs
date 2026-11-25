@@ -6,19 +6,19 @@ namespace DetectiveDave.PlayerPlay
 
         public int ClimbFrameCount { get; }
 
-        public float SlipDistanceInKeys { get; }
-
         public float BumpDistanceInKeys { get; }
 
         public bool ForgivingMoves { get; }
 
-        public PlayerGameSettings(int walkFrameCount, int climbFrameCount, float slipDistanceInKeys, float bumpDistanceInKeys, bool forgivingMoves = false)
+        public bool WrongKeyStunEnabled { get; }
+
+        public PlayerGameSettings(int walkFrameCount, int climbFrameCount, float bumpDistanceInKeys, bool forgivingMoves = false, bool wrongKeyStunEnabled = true)
         {
             WalkFrameCount = walkFrameCount;
             ClimbFrameCount = climbFrameCount;
-            SlipDistanceInKeys = slipDistanceInKeys;
             BumpDistanceInKeys = bumpDistanceInKeys;
             ForgivingMoves = forgivingMoves;
+            WrongKeyStunEnabled = wrongKeyStunEnabled;
         }
     }
 }

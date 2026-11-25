@@ -6,7 +6,7 @@ namespace DetectiveDave.EditorTools
 {
     static class PlayerSettingsAsset
     {
-        public static PlayerMovementSettings EnsureWithSprites(Sprite[] walkFrames, Sprite[] climbFrames, Sprite[] decorations)
+        public static PlayerMovementSettings EnsureWithSprites(Sprite[] walkFrames, Sprite[] climbFrames, Sprite deathSprite, Sprite[] decorations)
         {
             var settings = AssetDatabase.LoadAssetAtPath<PlayerMovementSettings>(PlayerSetupPaths.SettingsPath);
             if (!settings)
@@ -17,6 +17,7 @@ namespace DetectiveDave.EditorTools
             var serialized = new SerializedObject(settings);
             AssignFrames(serialized.FindProperty("walkFrames"), walkFrames);
             AssignFrames(serialized.FindProperty("climbFrames"), climbFrames);
+            serialized.FindProperty("deathSprite").objectReferenceValue = deathSprite;
             serialized.FindProperty("startGrate").objectReferenceValue = decorations[0];
             serialized.FindProperty("goalIcon").objectReferenceValue = decorations[1];
             serialized.FindProperty("goalBurst").objectReferenceValue = decorations[2];

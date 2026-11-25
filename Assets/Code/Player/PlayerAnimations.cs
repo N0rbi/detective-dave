@@ -8,6 +8,9 @@ namespace DetectiveDave.PlayerPlay
     public sealed class PlayerAnimations : MonoBehaviour, IPlayerAnimations
     {
         const float MinSeconds = 0.01f;
+        const float StunWobbleDegrees = 12f;
+        const int StunWobbleVibrato = 8;
+        const float StunWobbleElasticity = 0.6f;
 
         PlayerView view;
         Tween active;
@@ -32,16 +35,11 @@ namespace DetectiveDave.PlayerPlay
             Run(transform.DOMove(WithCurrentDepth(world), Seconds(view.Settings.StepSeconds)).SetEase(Ease.InOutSine), done);
         }
 
-        public void SlipBy(Vector2 worldOffset, Action done)
+        public void Stun(Action done)
         {
             if (!HasSettings()) return;
-            var half = Seconds(view.Settings.SlipSeconds * 0.5f);
-            var tilt = (worldOffset.x >= 0f ? -1f : 1f) * view.Settings.SlipTiltDegrees;
-            var sequence = DOTween.Sequence();
-            sequence.Append(transform.DOMove(transform.position + (Vector3)worldOffset, half).SetEase(Ease.OutQuad));
-            sequence.Join(transform.DORotate(new Vector3(0f, 0f, tilt), half).SetEase(Ease.OutQuad));
-            sequence.Append(transform.DORotate(Vector3.zero, half).SetEase(Ease.OutBounce));
-            Run(sequence, done);
+            var seconds = Seconds(view.Settings.WrongKeyStunSeconds);
+            Run(transform.DOPunchRotation(new Vector3(0f, 0f, StunWobbleDegrees), seconds, StunWobbleVibrato, StunWobbleElasticity), done);
         }
 
         public void BumpWall(Vector2 towards, Vector2 home, Action returning, Action done)
@@ -81,13 +79,13 @@ namespace DetectiveDave.PlayerPlay
             Run(sequence, done);
         }
 
-        public void FallForward(Vector2 forward, Action done)
+        public void FallFlat(Action done)
         {
             if (!HasSettings()) return;
             var settings = view.Settings;
-            var tipDirection = forward.x >= 0f ? -1f : 1f;
+            transform.localScale = view.BaseLocalScale * settings.DeathPopScale;
             var sequence = DOTween.Sequence();
-            sequence.Append(transform.DORotate(new Vector3(0f, 0f, tipDirection * settings.FallForwardDegrees), Seconds(settings.FallForwardSeconds)).SetEase(Ease.InQuad));
+            sequence.Append(transform.DOScale(view.BaseLocalScale, Seconds(settings.FallForwardSeconds)).SetEase(Ease.OutBounce));
             sequence.AppendInterval(settings.FallForwardHoldSeconds);
             Run(sequence, done);
         }

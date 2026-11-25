@@ -8,7 +8,7 @@ namespace DetectiveDave.PlayerPlay
         public MoveOutcome Decide(IKeyboardBoard board, IPlayerLevel level, Key goal, Key current, Key pressed)
         {
             if (current == pressed) return MoveOutcome.Ignored;
-            if (!board.IsNeighbour(current, pressed)) return MoveOutcome.Slip;
+            if (!board.IsNeighbour(current, pressed)) return MoveOutcome.Stun;
             if (pressed == goal) return MoveOutcome.ReachGoal;
             return OutcomeOfEntering(level.KindOf(pressed));
         }

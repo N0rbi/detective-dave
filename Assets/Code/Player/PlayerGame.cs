@@ -118,22 +118,23 @@ namespace DetectiveDave.PlayerPlay
         void PerformOutcome(MoveOutcome outcome, Key target)
         {
             MoveAttempted?.Invoke(AttemptOf(outcome));
-            if (outcome == MoveOutcome.Slip && settings.ForgivingMoves) return;
+            if (outcome == MoveOutcome.Stun && !StunApplies) return;
             switch (outcome)
             {
                 case MoveOutcome.Step: Walk(target, PlayerState.Moving, () => StepTo(target)); break;
                 case MoveOutcome.HangOnGutter: Walk(target, PlayerState.Moving, () => HangOn(target)); break;
                 case MoveOutcome.ReachGoal: Walk(target, PlayerState.Moving, () => FinishGoalWalk(target)); break;
                 case MoveOutcome.FallIntoGap: Walk(target, PlayerState.FallingInGap, FallInGap); break;
-                case MoveOutcome.Slip: Slip(); break;
+                case MoveOutcome.Stun: Stun(); break;
                 case MoveOutcome.BumpWall: BumpInto(target); break;
             }
         }
 
+        bool StunApplies => !settings.ForgivingMoves && settings.WrongKeyStunEnabled;
+
         MoveAttempt AttemptOf(MoveOutcome outcome)
         {
-            if (outcome == MoveOutcome.Ignored || outcome == MoveOutcome.BumpWall) return MoveAttempt.Blocked;
-            if (outcome == MoveOutcome.Slip && settings.ForgivingMoves) return MoveAttempt.Blocked;
+            if (outcome == MoveOutcome.Ignored || outcome == MoveOutcome.BumpWall || outcome == MoveOutcome.Stun) return MoveAttempt.Blocked;
             return MoveAttempt.Moved;
         }
 
@@ -199,13 +200,17 @@ namespace DetectiveDave.PlayerPlay
 
         void FallInGap() => animations.FadeIntoGap(Guard(Respawn));
 
-        void Slip()
+        void Stun()
         {
-            var home = WorldOf(currentKey);
-            var offset = facing.BackwardsDirection() * settings.SlipDistanceInKeys * board.KeyWorldSize;
-            state.Enter(PlayerState.Slipping);
-            gust.Show(home, home + offset, climbPoseShown);
-            animations.SlipBy(offset, Guard(Respawn));
+            state.Enter(PlayerState.Stunned);
+            presentation.SetDeathPose(true);
+            animations.Stun(Guard(RecoverFromStun));
+        }
+
+        void RecoverFromStun()
+        {
+            presentation.SetDeathPose(false);
+            state.Enter(PlayerState.Idle);
         }
 
         void BumpInto(Key wall)
@@ -249,7 +254,8 @@ namespace DetectiveDave.PlayerPlay
             animations.CancelAllWithoutCallbacks();
             gust.Clear();
             state.Enter(PlayerState.Caught);
-            animations.FallForward(facing.ForwardDirection(), Guard(Respawn));
+            presentation.SetDeathPose(true);
+            animations.FallFlat(Guard(Respawn));
         }
 
         public void CompleteRespawn()
@@ -260,7 +266,7 @@ namespace DetectiveDave.PlayerPlay
             state.Enter(PlayerState.Idle);
         }
 
-        public bool IsVulnerable => state.State == PlayerState.Idle || state.State == PlayerState.Moving || state.State == PlayerState.Slipping || state.State == PlayerState.BumpingWall;
+        public bool IsVulnerable => state.State == PlayerState.Idle || state.State == PlayerState.Moving || state.State == PlayerState.Stunned || state.State == PlayerState.BumpingWall;
 
         void Respawn()
         {
@@ -289,6 +295,7 @@ namespace DetectiveDave.PlayerPlay
 
         void ShowStartPose()
         {
+            presentation.SetDeathPose(false);
             ShowWalkPose();
             presentation.SetFacing(facing.Current);
         }

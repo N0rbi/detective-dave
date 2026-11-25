@@ -10,16 +10,12 @@ namespace DetectiveDave.PlayerPlay
 
         public Facing Current { get; private set; } = Facing.Right;
 
-        public Facing Backwards => Current == Facing.Right ? Facing.Left : Facing.Right;
-
         public void ResolveMove(Vector2 from, Vector2 to)
         {
             float dx = to.x - from.x;
             if (dx > HorizontalEpsilon) Current = Facing.Right;
             else if (dx < -HorizontalEpsilon) Current = Facing.Left;
         }
-
-        public Vector2 BackwardsDirection() => Backwards == Facing.Right ? Vector2.right : Vector2.left;
 
         public Vector2 ForwardDirection() => Current == Facing.Right ? Vector2.right : Vector2.left;
 

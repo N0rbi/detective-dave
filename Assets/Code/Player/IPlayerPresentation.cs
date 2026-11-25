@@ -9,5 +9,7 @@ namespace DetectiveDave.PlayerPlay
         void SetFacing(Facing facing);
 
         void SetClimbing(bool climbing);
+
+        void SetDeathPose(bool shown);
     }
 }

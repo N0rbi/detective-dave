@@ -11,6 +11,8 @@ namespace DetectiveDave.EditorTools
         public static Sprite[] ImportFrames(string pathPattern) =>
             Enumerable.Range(1, PlayerSetupPaths.FrameCount).Select(index => ImportFrame(string.Format(pathPattern, index))).ToArray();
 
+        public static Sprite ImportDeath() => ImportFrame(PlayerSetupPaths.DeathSpritePath);
+
         public static Sprite ImportDecoration(string path) => Import(path, SpriteAlignment.Center);
 
         static Sprite ImportFrame(string path) => Import(path, SpriteAlignment.BottomCenter);
