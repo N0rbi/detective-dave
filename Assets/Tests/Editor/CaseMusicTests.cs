@@ -93,5 +93,33 @@ namespace DetectiveDave.Tests
         {
             Assert.IsNull(CaseMusicCheck.Problem(WithClip(60f, false), 25.6));
         }
-    }
+    
+        [Test]
+        public void HookStartTimeWrapsAtTheLoopLengthNotTheHookLength()
+        {
+            Assert.AreEqual(0.4, LoopFollower.WantedClipTime(26.0, 25.6, 26.0, 0.0), 1e-9);
+            Assert.AreEqual(12.8, LoopFollower.WantedClipTime(12.8, 25.6, 26.0, 0.0), 1e-9);
+        }
+
+        [Test]
+        public void HookStartTimeAddsTheOffsetAndWrapsBothWays()
+        {
+            Assert.AreEqual(0.1, LoopFollower.WantedClipTime(25.5, 25.6, 26.0, 0.2), 1e-9);
+            Assert.AreEqual(25.5, LoopFollower.WantedClipTime(0.1, 25.6, 26.0, -0.2), 1e-9);
+        }
+
+        [Test]
+        public void HookReachesTheCycleEndAtTheLoopLengthNotTheFileEnd()
+        {
+            Assert.IsFalse(LoopFollower.ReachedCycleEnd(25.5, 25.6, 26.0));
+            Assert.IsTrue(LoopFollower.ReachedCycleEnd(25.6, 25.6, 26.0));
+        }
+
+        [Test]
+        public void HookDriftAcrossTheWrapIsNotACorrection()
+        {
+            Assert.IsFalse(LoopFollower.NeedsCorrection(25.59, 0.01, 25.6, 0.04));
+            Assert.IsTrue(LoopFollower.NeedsCorrection(10.0, 10.1, 25.6, 0.04));
+        }
+}
 }

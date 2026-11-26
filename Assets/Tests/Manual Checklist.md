@@ -226,4 +226,5 @@ Play with F5 on a level with a Gap and a WallGutter key between the two Shifts. 
 - Press a wrong key (stumble) and reach the goal: no trumpet.
 - Die twice in a row: the trumpet restarts from the beginning each time. Untick Restart Hook On Every Death: a sounding hook keeps going.
 - Type resetplayer while the trumpet plays: it stops at once and the music is at full volume.
+- Die at different moments of the loop (bar 1, bar 5, bar 8): the trumpet comes in on the beat of the music that was playing, and stays on it for a long wait. If it is early or late, change Hook Sync Offset Seconds. Untick Sync To Loop: it starts from its beginning again.
 - Remove the Hook Clip: the inspector and the Console warn, and a death changes nothing.

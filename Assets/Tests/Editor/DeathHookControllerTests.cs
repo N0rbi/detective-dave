@@ -251,5 +251,34 @@ namespace DetectiveDave.Tests
             hook.PlayerDied();
             Assert.IsTrue(hook.PianoAllowed);
         }
-    }
+    
+        [Test]
+        public void SyncedHookLoopsWhileWaitingEvenWhenPlayHookOnce()
+        {
+            var hook = Create(new DeathHookSettings(0.25f, 1f, 0.9f, 0f, 0f, false, 0f, true, true, true, 0f, true));
+            hook.PlayerDied();
+            Advance(hook, 0.1f);
+            Assert.IsTrue(output.LastLoop);
+        }
+
+        [Test]
+        public void SyncedHookPlaysOnceWhenLoopWhileWaitingIsOff()
+        {
+            var hook = Create(new DeathHookSettings(0.25f, 1f, 0.9f, 0f, 0f, false, 0f, true, true, true, 0f, false));
+            hook.PlayerDied();
+            Advance(hook, 0.1f);
+            Assert.IsFalse(output.LastLoop);
+        }
+
+        [Test]
+        public void ASecondDeathWhileSyncedStartsTheHookAgain()
+        {
+            var hook = Create(new DeathHookSettings(0.25f, 1f, 0.9f, 0f, 0f, false, 0f, true, true, true, 0f, true));
+            hook.PlayerDied();
+            Advance(hook, 0.5f);
+            hook.PlayerDied();
+            Advance(hook, 0.1f);
+            Assert.AreEqual(2, output.Starts);
+        }
+}
 }

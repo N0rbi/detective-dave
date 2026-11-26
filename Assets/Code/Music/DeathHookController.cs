@@ -93,7 +93,7 @@ namespace DetectiveDave.MusicPlay
                 delayLeft -= seconds;
                 if (delayLeft > 0f) return;
                 seconds = -delayLeft;
-                output.StartHook(!settings.PlayHookOnce);
+                output.StartHook(settings.HookLoops);
                 hookStarted = true;
             }
             amount = Step(amount, 1f, seconds, settings.FadeInSeconds);

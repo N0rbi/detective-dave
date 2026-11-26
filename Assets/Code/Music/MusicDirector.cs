@@ -46,7 +46,28 @@ namespace DetectiveDave.MusicPlay
             hookSource.loop = loopHook;
             hookSource.volume = 0f;
             hookSource.Stop();
+            hookSource.time = HookStartTime();
             hookSource.Play();
+        }
+
+        float HookStartTime()
+        {
+            if (!settings.DeathHook.SyncToLoop || !loop || !loop.clip) return 0f;
+            return (float)LoopFollower.WantedClipTime(LoopSeconds(), loop.clip.length, hookSource.clip.length, settings.DeathHook.HookSyncOffsetSeconds);
+        }
+
+        void FollowLoopWithHook()
+        {
+            if (!settings.DeathHook.SyncToLoop || !hookSource.isPlaying || !loop || !loop.clip) return;
+            if (!hookSource.loop && LoopFollower.ReachedCycleEnd(hookSource.time, loop.clip.length, hookSource.clip.length))
+            {
+                hookSource.Stop();
+                return;
+            }
+            var cycle = Math.Min(loop.clip.length, hookSource.clip.length);
+            var wanted = LoopFollower.WantedClipTime(LoopSeconds(), loop.clip.length, hookSource.clip.length, settings.DeathHook.HookSyncOffsetSeconds);
+            if (!LoopFollower.NeedsCorrection(hookSource.time, wanted, cycle, DriftToleranceSeconds)) return;
+            hookSource.time = (float)wanted;
         }
 
         public void StopHook() => hookSource.Stop();
@@ -107,6 +128,7 @@ namespace DetectiveDave.MusicPlay
         void Update()
         {
             DeathHook.Tick();
+            FollowLoopWithHook();
             ApplyVolumes();
             if (!caseSource || !caseSource.isPlaying) return;
             if (caseMusic != null && caseMusic.SyncToLoop) FollowLoop();
