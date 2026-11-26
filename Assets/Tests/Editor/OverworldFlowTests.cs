@@ -96,6 +96,15 @@ namespace DetectiveDave.Tests
         }
 
         [Test]
+        public void Staying_in_the_briefing_never_cues_the_detective_up()
+        {
+            Dwell();
+            flow.Tick(5f);
+            Assert.AreEqual(0, briefingCue.Closed);
+            Assert.AreEqual(1, briefingCue.Opened);
+        }
+
+        [Test]
         public void Declining_the_request_cues_the_detective_to_come_back()
         {
             Dwell();

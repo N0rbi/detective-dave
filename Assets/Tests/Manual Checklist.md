@@ -208,7 +208,7 @@ Play with F5 on a level with a Gap and a WallGutter key between the two Shifts. 
 
 ## Overworld transitions
 - [ ] Press Play Overworld: the screen starts dark and the Sprite Light 2D fades from 0 to `Light Full Intensity` in `Light Fade In Seconds`. Change the full intensity to 0.5: it ends at 0.5.
-- [ ] Hold the magnifier on an open case until the briefing opens: the detective drops 3 units with a bounce, then bounces back up to exactly his old place.
+- [ ] Hold the magnifier on an open case until the briefing opens: the detective drops 3 units with a bounce, and stays down while the letter and the typing are open; when the briefing closes he bounces back up to exactly his old place.
 - [ ] Open a message and decline it while the detective is still going down: he comes back up from where he is and ends in his old place. Open and close messages quickly several times: he never ends lower or higher than at the start.
 - [ ] Open a solved case (review) and a case with a report: the detective also drops and returns.
 - [ ] Accept a case: the light fades down to 0 in `Light Fade Out Seconds` with the wipe, and the level loads only after both. Set both fade seconds to 3: the level waits 3 seconds.

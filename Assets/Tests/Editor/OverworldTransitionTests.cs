@@ -65,15 +65,35 @@ namespace DetectiveDave.Tests
         }
 
         [Test]
-        public void After_the_drop_the_return_targets_the_rest_height()
+        public void After_the_drop_he_stays_down_until_the_close_cue()
         {
             var drop = new DetectiveDrop(2f, 3f);
             drop.BeginDrop();
+            drop.FinishDrop();
+            Assert.AreEqual(DropPhase.Down, drop.Phase);
             Assert.IsTrue(drop.TryStartReturn(out var target));
             Assert.AreEqual(2f, target);
             Assert.AreEqual(DropPhase.Returning, drop.Phase);
             drop.FinishReturn();
             Assert.AreEqual(DropPhase.AtRest, drop.Phase);
+        }
+
+        [Test]
+        public void Finishing_the_drop_does_not_start_the_return()
+        {
+            var drop = new DetectiveDrop(2f, 3f);
+            drop.BeginDrop();
+            drop.FinishDrop();
+            Assert.AreEqual(DropPhase.Down, drop.Phase);
+        }
+
+        [Test]
+        public void Opening_again_while_down_stays_at_the_same_low_height()
+        {
+            var drop = new DetectiveDrop(2f, 3f);
+            var first = drop.BeginDrop();
+            drop.FinishDrop();
+            Assert.AreEqual(first, drop.BeginDrop());
         }
 
         [Test]

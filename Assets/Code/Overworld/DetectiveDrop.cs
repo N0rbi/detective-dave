@@ -21,10 +21,15 @@ namespace DetectiveDave.OverworldPlay
             return LowY;
         }
 
+        public void FinishDrop()
+        {
+            if (Phase == DropPhase.Dropping) Phase = DropPhase.Down;
+        }
+
         public bool TryStartReturn(out float targetY)
         {
             targetY = RestY;
-            if (Phase != DropPhase.Dropping) return false;
+            if (Phase != DropPhase.Dropping && Phase != DropPhase.Down) return false;
             Phase = DropPhase.Returning;
             return true;
         }

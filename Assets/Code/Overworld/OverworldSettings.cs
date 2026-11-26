@@ -116,7 +116,7 @@ namespace DetectiveDave.OverworldPlay
         [SerializeField, Min(0f)] [Tooltip("Seconds the Sprite Light 2D takes to go down to 0 when the overworld is left. The next scene loads only after it.")] float lightFadeOutSeconds = 0.6f;
         [SerializeField, Min(0f)] [Tooltip("World units the detective moves down when a message (briefing) opens. 3 moves him from y to y - 3.")] float detectiveDropDistance = 3f;
         [SerializeField, Min(0.01f)] [Tooltip("Seconds the detective takes to go down.")] float detectiveDropSeconds = 0.9f;
-        [SerializeField, Min(0.01f)] [Tooltip("Seconds the detective takes to come back up. It starts when the drop has finished, or at once when the message is closed early.")] float detectiveReturnSeconds = 0.9f;
+        [SerializeField, Min(0.01f)] [Tooltip("Seconds the detective takes to come back up. It starts when the message view closes, also when that happens before the drop has finished.")] float detectiveReturnSeconds = 0.9f;
         [SerializeField] [Tooltip("Easing of the way down. OutBounce lands and bounces; OutBack overshoots.")] Ease detectiveDropEase = Ease.OutBounce;
         [SerializeField] [Tooltip("Easing of the way back up.")] Ease detectiveReturnEase = Ease.OutBounce;
 

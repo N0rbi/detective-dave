@@ -63,7 +63,7 @@ namespace DetectiveDave.OverworldPlay
         public void BriefingOpened()
         {
             dropTween?.Kill();
-            MoveTo(drop.BeginDrop(), dropSettings.DropSeconds, dropSettings.DropEase, ReturnAfterDrop);
+            MoveTo(drop.BeginDrop(), dropSettings.DropSeconds, dropSettings.DropEase, drop.FinishDrop);
         }
 
         public void BriefingClosed()
@@ -71,11 +71,6 @@ namespace DetectiveDave.OverworldPlay
             if (!drop.TryStartReturn(out var restY)) return;
             dropTween?.Kill();
             MoveTo(restY, dropSettings.ReturnSeconds, dropSettings.ReturnEase, drop.FinishReturn);
-        }
-
-        void ReturnAfterDrop()
-        {
-            if (drop.TryStartReturn(out var restY)) MoveTo(restY, dropSettings.ReturnSeconds, dropSettings.ReturnEase, drop.FinishReturn);
         }
 
         void MoveTo(float y, float seconds, Ease ease, TweenCallback done)

@@ -4,6 +4,7 @@ namespace DetectiveDave.OverworldPlay
     {
         AtRest,
         Dropping,
+        Down,
         Returning
     }
 }
