@@ -15,6 +15,9 @@ namespace DetectiveDave.LevelPlay
             return Overscanned(home.Union(board.Expanded(zoomedHalf)), overscanShare);
         }
 
+        public static ScreenRect IncludingLiveView(ScreenRect planned, ScreenRect liveView, float overscanShare) =>
+            planned.Union(Overscanned(liveView, overscanShare));
+
         static ScreenRect HomeFrustum(Vector2 center, float orthographicSize, float aspect) =>
             ScreenRect.Around(center, new Vector2(orthographicSize * aspect, orthographicSize));
 

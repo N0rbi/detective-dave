@@ -1,3 +1,4 @@
+using System.IO;
 using DetectiveDave.KeyboardGrid;
 using DetectiveDave.Levels;
 using DetectiveDave.PlayerPlay;
@@ -26,7 +27,13 @@ namespace DetectiveDave.LevelPlay
         [Tooltip("A warning is logged when the picture has to be drawn larger than this many times its imported size to cover the camera. A larger texture avoids a blurry background.")]
         [SerializeField, Min(1f)] float maxUpscale = 3f;
 
+        [Tooltip("Writes Temp/background-trace.log every frame while the camera is zoomed or zooming: the camera, the view, the planned coverage, the picture's rectangle and whether the keyboard panel shows. A line ends with OUTSIDE when the view shows beyond the picture.")]
+        [SerializeField] bool traceBackground;
+
+        const string TracePath = "Temp/background-trace.log";
+
         LevelLoader loader;
+        bool traceStarted;
         KeyboardGridView grid;
         SpriteRenderer background;
         ScreenRect fittedCoverage;
@@ -57,7 +64,11 @@ namespace DetectiveDave.LevelPlay
             if (background) Destroy(background.gameObject);
         }
 
-        void LateUpdate() => FitIfChanged();
+        void LateUpdate()
+        {
+            FitIfChanged();
+            if (traceBackground) TraceFrame();
+        }
 
         void OnDrawGizmosSelected()
         {
@@ -104,10 +115,34 @@ namespace DetectiveDave.LevelPlay
                 size = homeSize;
             }
             reference = new Vector2(size * 2f * camera.aspect, size * 2f);
-            coverage = zoom
+            var planned = zoom
                 ? BackgroundCoverage.Zooming(center, size, camera.aspect, BoardBounds(), zoom.ZoomFactor, overscanShare)
                 : BackgroundCoverage.Still(center, size, camera.aspect, overscanShare);
+            coverage = BackgroundCoverage.IncludingLiveView(planned, LiveView(camera), overscanShare);
             return true;
+        }
+
+        static ScreenRect LiveView(Camera camera) =>
+            ScreenRect.Around(camera.transform.position, new Vector2(camera.orthographicSize * camera.aspect, camera.orthographicSize));
+
+        void TraceFrame()
+        {
+            var camera = Camera.main;
+            if (!camera || !camera.orthographic || !background.sprite) return;
+            var zoom = CameraZoomView.Current;
+            if (!zoom || !zoom.TryGetHome(out var home, out var homeSize)) return;
+            var live = LiveView(camera);
+            var atHome = (Vector2)camera.transform.position == home && Mathf.Approximately(camera.orthographicSize, homeSize);
+            if (atHome) return;
+            if (!traceStarted)
+            {
+                File.WriteAllText(TracePath, BackgroundTraceLine.Header + "\n");
+                traceStarted = true;
+            }
+            var bounds = background.bounds;
+            var sprite = new ScreenRect(bounds.min, bounds.max);
+            var line = BackgroundTraceLine.Format(Time.time, camera.transform.position, camera.orthographicSize, camera.aspect, live, fittedCoverage, sprite, grid.BackdropVisible);
+            File.AppendAllText(TracePath, line + (BackgroundTraceLine.ViewIsInside(live, sprite) ? "" : ";OUTSIDE") + "\n");
         }
 
         ScreenRect BoardBounds()

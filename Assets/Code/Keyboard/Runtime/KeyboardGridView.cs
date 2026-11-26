@@ -112,6 +112,8 @@ namespace DetectiveDave.KeyboardGrid
             if (background) background.enabled = drawKeys && visible;
         }
 
+        public bool BackdropVisible => background && background.enabled;
+
         public Vector3 CenterWorldPosition(KeyCell cell) => transform.TransformPoint(cell.Center);
 
         /// <summary>Where the player stands on a key, in world space. False for a key the layout does not have.</summary>

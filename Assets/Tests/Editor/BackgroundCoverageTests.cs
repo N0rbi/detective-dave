@@ -118,5 +118,66 @@ namespace DetectiveDave.Tests
             Assert.AreEqual(new Vector2(4f, 4f), rect.Size);
             AssertRect(rect.Expanded(new Vector2(1f, 2f)), new Vector2(-2f, 0f), new Vector2(4f, 8f));
         }
+
+        [Test]
+        public void ALiveViewBeyondThePlanKeepsTheCoverageGrowing()
+        {
+            var planned = BackgroundCoverage.Still(Vector2.zero, Size, Aspect, 0f);
+            var live = ScreenRect.Around(new Vector2(14f, -8f), new Vector2(3f, 1.5f));
+            AssertRect(BackgroundCoverage.IncludingLiveView(planned, live, 0f), new Vector2(-10f, -9.5f), new Vector2(17f, 5f));
+        }
+
+        [Test]
+        public void ALiveViewInsideThePlanChangesNothing()
+        {
+            var planned = BackgroundCoverage.Still(Vector2.zero, Size, Aspect, 0f);
+            var live = ScreenRect.Around(new Vector2(2f, 1f), new Vector2(3f, 1.5f));
+            AssertRect(BackgroundCoverage.IncludingLiveView(planned, live, 0f), planned.Min, planned.Max);
+        }
+
+        [Test]
+        public void EveryFrameOfTheZoomOnTheLeftBottomKeyStaysInsideTheCoverage()
+        {
+            var focus = Board.Min + new Vector2(0.5f, 0.5f);
+            var coverage = BackgroundCoverage.Zooming(Vector2.zero, Size, Aspect, Board, Zoom, 0f);
+            for (float progress = 0f; progress <= 1f; progress += 0.05f)
+            {
+                var position = Vector2.Lerp(Vector2.zero, focus, progress);
+                var size = Mathf.Lerp(Size, Size * Zoom, progress);
+                var view = ScreenRect.Around(position, new Vector2(size * Aspect, size));
+                Assert.IsTrue(BackgroundTraceLine.ViewIsInside(view, coverage), "progress " + progress);
+            }
+        }
+
+        [Test]
+        public void EveryFrameOfTheZoomStaysInsideTheCoverageOnExtremeAspects([Values(0.5f, 1f, 2f, 3.5f)] float aspect)
+        {
+            var board = ScreenRect.Around(new Vector2(1f, -1f), new Vector2(9f, 3f));
+            var coverage = BackgroundCoverage.Zooming(Vector2.zero, Size, aspect, board, Zoom, 0f);
+            var targets = new[] { board.Min, board.Max, new Vector2(board.Min.x, board.Max.y), new Vector2(board.Max.x, board.Min.y) };
+            foreach (var focus in targets)
+                for (float progress = 0f; progress <= 1f; progress += 0.1f)
+                {
+                    var size = Mathf.Lerp(Size, Size * Zoom, progress);
+                    var view = ScreenRect.Around(Vector2.Lerp(Vector2.zero, focus, progress), new Vector2(size * aspect, size));
+                    Assert.IsTrue(BackgroundTraceLine.ViewIsInside(view, coverage));
+                }
+        }
+
+        [Test]
+        public void TheTraceLineListsEveryValueAndTheBackdropState()
+        {
+            var rect = new ScreenRect(new Vector2(-1f, -2f), new Vector2(3f, 4f));
+            var line = BackgroundTraceLine.Format(1.5f, new Vector2(0.25f, 0f), 2f, 1.5f, rect, rect, rect, true);
+            Assert.AreEqual("1.5;0.25;0;2;1.5;-1,-2;3,4;-1,-2;3,4;-1,-2;3,4;yes", line);
+        }
+
+        [Test]
+        public void AViewBeyondThePictureIsOutside()
+        {
+            var sprite = new ScreenRect(Vector2.zero, new Vector2(4f, 4f));
+            Assert.IsFalse(BackgroundTraceLine.ViewIsInside(new ScreenRect(new Vector2(-0.1f, 1f), new Vector2(2f, 2f)), sprite));
+            Assert.IsTrue(BackgroundTraceLine.ViewIsInside(new ScreenRect(new Vector2(1f, 1f), new Vector2(2f, 2f)), sprite));
+        }
     }
 }
