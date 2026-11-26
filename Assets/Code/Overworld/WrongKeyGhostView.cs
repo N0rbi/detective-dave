@@ -39,7 +39,7 @@ namespace DetectiveDave.OverworldPlay
             ghost.DOKill();
             ghost.color = color;
             ghost.enabled = true;
-            ghost.DOFade(0f, fadeSeconds).SetEase(Ease.InQuad).OnComplete(() => ghost.enabled = false);
+            DOTween.ToAlpha(() => ghost.color, tint => ghost.color = tint, 0f, fadeSeconds).SetEase(Ease.InQuad).SetTarget(ghost).OnComplete(() => ghost.enabled = false);
         }
 
         void OnDestroy()
