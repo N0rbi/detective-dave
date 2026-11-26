@@ -20,6 +20,10 @@ namespace DetectiveDave.LevelPlay
                  "Ignored while the level's shape is empty (all keys stay visible).")]
         [SerializeField] bool hideKeysOutsideLevel = true;
 
+        [Tooltip("Hide the dark backdrop behind the keys while the level shows a background picture, so the picture is seen. " +
+                 "Turn off to keep the backdrop over the background.")]
+        [SerializeField] bool hideBackdropOverBackground = true;
+
         readonly HashSet<string> reported = new HashSet<string>();
         KeyboardGridView view;
         LevelLoader loader;
@@ -55,6 +59,7 @@ namespace DetectiveDave.LevelPlay
             if (view.Layout == null) return;
             var level = loader.Current;
             var art = CurrentArt;
+            view.SetBackdropVisible(KeyboardBackdropRule.IsVisible(hideBackdropOverBackground, LevelShowsBackground(level)));
             if (level && !art) ReportOnce($"Level '{level.DisplayName}' has no Key Art: keys are drawn as flat squares.");
             bool hideEmpty = hideKeysOutsideLevel && level && !loader.Terrain.IsEmpty;
 
@@ -68,6 +73,8 @@ namespace DetectiveDave.LevelPlay
                     foreach (var part in cell.Parts) part.enabled = false;
             }
         }
+
+        static bool LevelShowsBackground(Level level) => level && level.Background && level.BackgroundPlacement.Visible;
 
         // The key art is an asset: editing it (in the inspector, even while playing) redraws the keys.
         void Watch(KeyArt art)

@@ -106,6 +106,12 @@ namespace DetectiveDave.KeyboardGrid
             for (int part = 1; part < cell.Parts.Length; part++) cell.Parts[part].enabled = false;
         }
 
+        /// <summary>Shows or hides the dark backdrop behind the keys. Hidden, whatever is drawn behind the keyboard (a level background) shows through. Nothing is drawn while Draw Keys is off.</summary>
+        public void SetBackdropVisible(bool visible)
+        {
+            if (background) background.enabled = drawKeys && visible;
+        }
+
         public Vector3 CenterWorldPosition(KeyCell cell) => transform.TransformPoint(cell.Center);
 
         /// <summary>Where the player stands on a key, in world space. False for a key the layout does not have.</summary>
