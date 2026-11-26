@@ -11,6 +11,8 @@ namespace DetectiveDave.PlayerPlay
         const float ZoomedProgress = 1f;
         const float HomeProgress = 0f;
 
+        public static CameraZoomView Current { get; private set; }
+
         PlayerMovementSettings settings;
         KeyboardGridScreenFit screenFit;
         Tween travel;
@@ -18,6 +20,8 @@ namespace DetectiveDave.PlayerPlay
         Vector3 homePosition;
         float homeSize;
         Vector2 zoomFocus;
+
+        public float ZoomFactor => settings ? settings.CameraZoomFactor : 1f;
 
         public void Configure(PlayerMovementSettings movementSettings, KeyboardGridScreenFit fit)
         {
@@ -67,6 +71,14 @@ namespace DetectiveDave.PlayerPlay
             return BoundsOf(camera.transform.position, camera.orthographicSize, camera.aspect);
         }
 
+        public bool TryGetHome(out Vector2 position, out float orthographicSize)
+        {
+            var camera = Camera.main;
+            position = homeKnown ? (Vector2)homePosition : camera ? (Vector2)camera.transform.position : Vector2.zero;
+            orthographicSize = homeKnown ? homeSize : camera ? camera.orthographicSize : 0f;
+            return homeKnown || (camera && camera.orthographic);
+        }
+
         public ScreenRect ReachableBounds()
         {
             var current = CurrentBounds();
@@ -75,7 +87,13 @@ namespace DetectiveDave.PlayerPlay
             return current.Union(BoundsOf(homePosition, homeSize, camera.aspect));
         }
 
-        void OnDisable() => Restore();
+        void OnEnable() => Current = this;
+
+        void OnDisable()
+        {
+            if (Current == this) Current = null;
+            Restore();
+        }
 
         void OnDestroy() => Restore();
 
