@@ -7,6 +7,7 @@ using DetectiveDave.MusicPlay;
 using DetectiveDave.PlayerPlay;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.Rendering.Universal;
 
 namespace DetectiveDave.OverworldPlay
 {
@@ -43,6 +44,8 @@ namespace DetectiveDave.OverworldPlay
         ShiftKeycapsView keycaps;
         WrongKeyGhostView wrongKeyGhost;
         StartHintGate startHintGate;
+        OverworldLightView lightView;
+        SmokingDetective detective;
         SpriteRenderer backdrop;
         string pendingReportCaseId;
         bool subscribed;
@@ -72,6 +75,7 @@ namespace DetectiveDave.OverworldPlay
             Subscribe();
             ResetToStart();
             intro.Begin(StartPlaying);
+            lightView.FadeIn();
         }
 
         void Update()
@@ -101,7 +105,9 @@ namespace DetectiveDave.OverworldPlay
         public void Launch(string caseId)
         {
             CaseSession.Begin(casesById[caseId]);
-            wipeView.Out(view.transform.position, () => SceneLoader.Load(GameScene.Game));
+            var exit = new CompletionLatch(2, () => SceneLoader.Load(GameScene.Game));
+            wipeView.Out(view.transform.position, exit.Complete);
+            lightView.FadeOut(exit.Complete);
         }
 
         bool Build()
@@ -130,6 +136,8 @@ namespace DetectiveDave.OverworldPlay
             BuildFloating();
             BuildPlayer();
             BuildScreenEffects();
+            BuildLight();
+            BuildDetective();
             BuildFlow();
             return true;
         }
@@ -242,6 +250,26 @@ namespace DetectiveDave.OverworldPlay
             intro = new IntroSequence(board, level, wipeView, zoomView, focus);
         }
 
+        void BuildLight()
+        {
+            var spriteLights = FindObjectsByType<Light2D>(FindObjectsSortMode.None).Where(light => light.lightType == Light2D.LightType.Sprite).ToArray();
+            if (spriteLights.Length == 0) Debug.LogError("The Overworld scene has no Sprite Light 2D, so the light cannot fade in or out.", this);
+            lightView = new GameObject("Overworld Light Fade").AddComponent<OverworldLightView>();
+            lightView.transform.SetParent(transform, false);
+            lightView.Configure(spriteLights, overworldSettings.LightFade);
+        }
+
+        void BuildDetective()
+        {
+            detective = FindAnyObjectByType<SmokingDetective>();
+            if (!detective)
+            {
+                Debug.LogError("The Overworld scene has no Smoking Detective, so he cannot drop when a message opens. Run Window > Detective Dave > Set Up Smoking Detective.", this);
+                return;
+            }
+            detective.ConfigureDrop(overworldSettings.DetectiveDrop);
+        }
+
         void BuildFlow()
         {
             ringView = new GameObject("Dwell Ring").AddComponent<DwellRingView>();
@@ -257,7 +285,7 @@ namespace DetectiveDave.OverworldPlay
             briefing.transform.SetParent(transform, false);
             briefing.Configure(overworldSettings, FindCase, transform, sound);
             caseMusic = new CaseMusicCues(MusicOf, () => MusicDirector.CaseMusicPlayer);
-            flow = new OverworldFlow(deskCases, new DwellTimer(overworldSettings.DwellSeconds), ringView, briefing, this, caseMusic);
+            flow = new OverworldFlow(deskCases, new DwellTimer(overworldSettings.DwellSeconds), ringView, briefing, this, caseMusic, detective ? (IBriefingCue)detective : new NoBriefingCue());
         }
 
         CaseFile FindCase(string caseId) => casesById[caseId];

@@ -14,10 +14,11 @@ namespace DetectiveDave.OverworldPlay
         readonly IBriefingScreen briefing;
         readonly ICaseLauncher launcher;
         readonly ICaseMusicCues music;
+        readonly IBriefingCue briefingCue;
         string dwellCaseId;
         CaseState dwellState;
 
-        public OverworldFlow(DeskCases cases, DwellTimer dwell, IDwellIndicator indicator, IBriefingScreen briefing, ICaseLauncher launcher, ICaseMusicCues music = null)
+        public OverworldFlow(DeskCases cases, DwellTimer dwell, IDwellIndicator indicator, IBriefingScreen briefing, ICaseLauncher launcher, ICaseMusicCues music = null, IBriefingCue briefingCue = null)
         {
             this.cases = cases;
             this.dwell = dwell;
@@ -25,9 +26,19 @@ namespace DetectiveDave.OverworldPlay
             this.briefing = briefing;
             this.launcher = launcher;
             this.music = music ?? new NoCaseMusicCues();
+            this.briefingCue = briefingCue ?? new NoBriefingCue();
         }
 
         public OverworldStage Stage { get; private set; } = OverworldStage.Desk;
+
+        void SetStage(OverworldStage next)
+        {
+            var wasInBriefing = Stage == OverworldStage.Briefing;
+            Stage = next;
+            var isInBriefing = Stage == OverworldStage.Briefing;
+            if (isInBriefing && !wasInBriefing) briefingCue.BriefingOpened();
+            if (wasInBriefing && !isInBriefing) briefingCue.BriefingClosed();
+        }
 
         public bool AcceptsMoves => Stage == OverworldStage.Desk || Stage == OverworldStage.Dwelling;
 
@@ -37,7 +48,7 @@ namespace DetectiveDave.OverworldPlay
             if (!TryGetVisitableCase(key, out var caseId, out var state)) return;
             dwellCaseId = caseId;
             dwellState = state;
-            Stage = OverworldStage.Dwelling;
+            SetStage(OverworldStage.Dwelling);
             dwell.Start();
             indicator.Show(0f);
         }
@@ -56,14 +67,14 @@ namespace DetectiveDave.OverworldPlay
 
         public void PlayReport(string caseId, Action completed)
         {
-            Stage = OverworldStage.Briefing;
+            SetStage(OverworldStage.Briefing);
             music.CaseEnded();
             briefing.OpenReport(caseId, () => briefing.Close(() => FinishReport(completed)));
         }
 
         void ReviewReport(string caseId)
         {
-            Stage = OverworldStage.Briefing;
+            SetStage(OverworldStage.Briefing);
             briefing.OpenReview(caseId, () => briefing.Close(FinishReview));
         }
 
@@ -82,7 +93,7 @@ namespace DetectiveDave.OverworldPlay
             dwell.Cancel();
             indicator.Hide();
             dwellCaseId = null;
-            Stage = OverworldStage.Desk;
+            SetStage(OverworldStage.Desk);
         }
 
         void OpenBriefing()
@@ -94,14 +105,14 @@ namespace DetectiveDave.OverworldPlay
                 ReviewReport(caseId);
                 return;
             }
-            Stage = OverworldStage.Briefing;
+            SetStage(OverworldStage.Briefing);
             music.CaseOpened(caseId);
             briefing.Open(caseId, outcome => FinishLetter(caseId, outcome));
         }
 
         void FinishReport(Action completed)
         {
-            Stage = OverworldStage.Desk;
+            SetStage(OverworldStage.Desk);
             completed?.Invoke();
         }
 
@@ -117,18 +128,18 @@ namespace DetectiveDave.OverworldPlay
             briefing.Close(() => LeaveBriefing(caseId, outcome));
         }
 
-        void ReturnToDesk() => Stage = OverworldStage.Desk;
+        void ReturnToDesk() => SetStage(OverworldStage.Desk);
 
         void LeaveBriefing(string caseId, LetterOutcome outcome)
         {
             if (outcome == LetterOutcome.Accepted)
             {
-                Stage = OverworldStage.Leaving;
+                SetStage(OverworldStage.Leaving);
                 launcher.Launch(caseId);
                 return;
             }
             music.CaseEnded();
-            Stage = OverworldStage.Desk;
+            SetStage(OverworldStage.Desk);
         }
     }
 }

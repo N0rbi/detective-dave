@@ -206,6 +206,15 @@ Play with F5 on a level with a Gap and a WallGutter key between the two Shifts. 
 - [ ] Overworld board size: in `Overworld Settings.config.asset`, group `Board (desk top picture)`: with `Fit Inside` the whole board shows inside the Game view with a small free edge, at a wide, a tall and a square window, never cut off or stretched. `Cover` fills the view. `Board Scale Multiplier` 0.8 makes it smaller, 1.2 bigger; `Board Margin Share` 0.1 leaves a wider free edge; `Board Offset Share` moves it. Papers and cases do not move.
 - [ ] Overworld: the stealth board is not stretched; its size follows the Board settings. The smoking detective stands on the right; every few seconds the arm comes up to the mouth with a small tilt, waits, and goes down. Moving the `Arm Pivot` changes where it turns; running `Set Up Overworld` again changes nothing you moved.
 
+## Overworld transitions
+- [ ] Press Play Overworld: the screen starts dark and the Sprite Light 2D fades from 0 to `Light Full Intensity` in `Light Fade In Seconds`. Change the full intensity to 0.5: it ends at 0.5.
+- [ ] Hold the magnifier on an open case until the briefing opens: the detective drops 3 units with a bounce, then bounces back up to exactly his old place.
+- [ ] Open a message and decline it while the detective is still going down: he comes back up from where he is and ends in his old place. Open and close messages quickly several times: he never ends lower or higher than at the start.
+- [ ] Open a solved case (review) and a case with a report: the detective also drops and returns.
+- [ ] Accept a case: the light fades down to 0 in `Light Fade Out Seconds` with the wipe, and the level loads only after both. Set both fade seconds to 3: the level waits 3 seconds.
+- [ ] Change `Detective Drop Distance`, the two seconds and the two eases (`OutBack`): the movement follows. The smoking arm keeps its puffs while the detective is down and after.
+- [ ] Delete the Sprite Light 2D or the Smoking Detective from Overworld.unity (do not save): the Console shows one error saying what is missing.
+
 ## Case music
 - Give Kidnapped a Music Clip. Open its briefing: the music fades in and the jazz gets quieter.
 - Decline the request: the music fades out. Accept: it keeps playing through the level.

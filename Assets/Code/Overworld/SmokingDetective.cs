@@ -10,7 +10,7 @@ namespace DetectiveDave.OverworldPlay
     /// </summary>
     [DisallowMultipleComponent]
     [AddComponentMenu("Detective Dave/Smoking Detective")]
-    public sealed class SmokingDetective : MonoBehaviour
+    public sealed class SmokingDetective : MonoBehaviour, IBriefingCue
     {
         public const string ArmPivotName = "Arm Pivot";
 
@@ -29,6 +29,9 @@ namespace DetectiveDave.OverworldPlay
         [SerializeField] [Tooltip("Extra degrees the arm tilts back and forth while smoking, like drawing on the cigarette.")] float puffTiltAngle = -8f;
 
         Sequence cycle;
+        Tween dropTween;
+        DetectiveDrop drop;
+        DetectiveDropSettings dropSettings;
         Vector3 restPosition;
         float restAngle;
 
@@ -51,8 +54,53 @@ namespace DetectiveDave.OverworldPlay
             cycle = BuildCycle();
         }
 
+        public void ConfigureDrop(DetectiveDropSettings settings)
+        {
+            dropSettings = settings;
+            drop = new DetectiveDrop(transform.position.y, settings.Distance);
+        }
+
+        public void BriefingOpened()
+        {
+            dropTween?.Kill();
+            MoveTo(drop.BeginDrop(), dropSettings.DropSeconds, dropSettings.DropEase, ReturnAfterDrop);
+        }
+
+        public void BriefingClosed()
+        {
+            if (!drop.TryStartReturn(out var restY)) return;
+            dropTween?.Kill();
+            MoveTo(restY, dropSettings.ReturnSeconds, dropSettings.ReturnEase, drop.FinishReturn);
+        }
+
+        void ReturnAfterDrop()
+        {
+            if (drop.TryStartReturn(out var restY)) MoveTo(restY, dropSettings.ReturnSeconds, dropSettings.ReturnEase, drop.FinishReturn);
+        }
+
+        void MoveTo(float y, float seconds, Ease ease, TweenCallback done)
+        {
+            dropTween = DOTween.To(() => transform.position.y, SetWorldY, y, seconds).SetEase(ease).SetLink(gameObject).OnComplete(done);
+        }
+
+        void SetWorldY(float y)
+        {
+            var position = transform.position;
+            position.y = y;
+            transform.position = position;
+        }
+
+        void SnapToDropRest()
+        {
+            dropTween?.Kill();
+            if (drop == null) return;
+            drop.ResetToRest();
+            SetWorldY(drop.RestY);
+        }
+
         void OnDisable()
         {
+            SnapToDropRest();
             if (cycle == null) return;
             cycle.Kill();
             cycle = null;

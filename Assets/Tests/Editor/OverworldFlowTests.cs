@@ -50,6 +50,15 @@ namespace DetectiveDave.Tests
             public void CaseEnded() => Ended++;
         }
 
+        sealed class FakeBriefingCue : IBriefingCue
+        {
+            public int Opened;
+            public int Closed;
+            public void BriefingOpened() => Opened++;
+            public void BriefingClosed() => Closed++;
+        }
+
+        FakeBriefingCue briefingCue;
         FakeCues cues;
         FakeIndicator indicator;
         FakeBriefing briefing;
@@ -68,13 +77,48 @@ namespace DetectiveDave.Tests
             var centres = new System.Collections.Generic.Dictionary<Key, Vector2> { { Key.J, Vector2.zero }, { Key.K, new Vector2(5f, 0f) } };
             var cases = new DeskCases(new DeskKeyMap(markers, centres), id => state);
             cues = new FakeCues();
-            flow = new OverworldFlow(cases, new DwellTimer(2f), indicator, briefing, launcher, cues);
+            briefingCue = new FakeBriefingCue();
+            flow = new OverworldFlow(cases, new DwellTimer(2f), indicator, briefing, launcher, cues, briefingCue);
         }
 
         void Dwell()
         {
             flow.OnMoved(Key.J);
             flow.Tick(2.5f);
+        }
+
+        [Test]
+        public void Opening_the_briefing_cues_the_detective_once()
+        {
+            Dwell();
+            Assert.AreEqual(1, briefingCue.Opened);
+            Assert.AreEqual(0, briefingCue.Closed);
+        }
+
+        [Test]
+        public void Declining_the_request_cues_the_detective_to_come_back()
+        {
+            Dwell();
+            briefing.Finished(LetterOutcome.Declined);
+            Assert.AreEqual(1, briefingCue.Closed);
+        }
+
+        [Test]
+        public void Accepting_the_request_cues_the_detective_to_come_back_before_leaving()
+        {
+            Dwell();
+            briefing.Finished(LetterOutcome.Accepted);
+            Assert.AreEqual(1, briefingCue.Closed);
+            Assert.AreEqual("a", launcher.Launched);
+        }
+
+        [Test]
+        public void Playing_a_report_cues_the_detective_down_and_up()
+        {
+            flow.PlayReport("a", () => { });
+            Assert.AreEqual(1, briefingCue.Opened);
+            briefing.ReportFinished();
+            Assert.AreEqual(1, briefingCue.Closed);
         }
 
         [Test]

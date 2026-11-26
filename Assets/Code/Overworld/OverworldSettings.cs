@@ -1,3 +1,4 @@
+using DG.Tweening;
 using UnityEngine;
 using UnityEngine.Serialization;
 
@@ -109,10 +110,22 @@ namespace DetectiveDave.OverworldPlay
         [SerializeField] [Tooltip("Plays a click for every letter of the description as it types in.")] bool descriptionClicks = true;
         [SerializeField, Range(0f, 1f)] [Tooltip("Volume of the description clicks as a share of the normal click volume.")] float descriptionClickShare = 0.5f;
 
+        [Header("Overworld transitions")]
+        [SerializeField, Min(0f)] [Tooltip("Intensity the overworld's Sprite Light 2D reaches when it has faded in. It starts at 0.")] float lightFullIntensity = 1f;
+        [SerializeField, Min(0f)] [Tooltip("Seconds the Sprite Light 2D takes to go from 0 to Light Full Intensity when the overworld opens.")] float lightFadeInSeconds = 0.8f;
+        [SerializeField, Min(0f)] [Tooltip("Seconds the Sprite Light 2D takes to go down to 0 when the overworld is left. The next scene loads only after it.")] float lightFadeOutSeconds = 0.6f;
+        [SerializeField, Min(0f)] [Tooltip("World units the detective moves down when a message (briefing) opens. 3 moves him from y to y - 3.")] float detectiveDropDistance = 3f;
+        [SerializeField, Min(0.01f)] [Tooltip("Seconds the detective takes to go down.")] float detectiveDropSeconds = 0.9f;
+        [SerializeField, Min(0.01f)] [Tooltip("Seconds the detective takes to come back up. It starts when the drop has finished, or at once when the message is closed early.")] float detectiveReturnSeconds = 0.9f;
+        [SerializeField] [Tooltip("Easing of the way down. OutBounce lands and bounces; OutBack overshoots.")] Ease detectiveDropEase = Ease.OutBounce;
+        [SerializeField] [Tooltip("Easing of the way back up.")] Ease detectiveReturnEase = Ease.OutBounce;
+
         [Header("Typing")]
         [SerializeField] [Tooltip("Punctuation and symbols type themselves, so nobody needs special symbols on a foreign keyboard. Spaces and line breaks always type themselves.")] bool autoTypeFreeCharacters = true;
         [SerializeField] [FormerlySerializedAs("findingsUnit")] [Tooltip("How much of the response one correct word, sentence or letter reveals.")] RevealUnit responseUnit = RevealUnit.Word;
 
+        public LightFade LightFade => new LightFade(lightFullIntensity, lightFadeInSeconds, lightFadeOutSeconds);
+        public DetectiveDropSettings DetectiveDrop => new DetectiveDropSettings(detectiveDropDistance, detectiveDropSeconds, detectiveReturnSeconds, detectiveDropEase, detectiveReturnEase);
         public Sprite FolderSprite => folderSprite;
         public Sprite SolvedSprite => solvedSprite;
         public Sprite DeskTopSprite => deskTopSprite;
