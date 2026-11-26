@@ -91,6 +91,20 @@ namespace DetectiveDave.Tests
         }
 
         [Test]
+        public void Gap_keys_are_drawn_as_walkable_and_need_no_staged_file_of_their_own()
+        {
+            CollectionAssert.Contains(KeyArtTileTable.TilesDrawnAsWalkable, "Gap");
+            CollectionAssert.DoesNotContain(KeyArtTileTable.Boxes.Select(row => row.TileName), "Gap");
+            CollectionAssert.DoesNotContain(KeyArtTileTable.Boxes.Select(row => row.StagedName), "keyboard_stealth_hole.png");
+        }
+
+        [Test]
+        public void A_walkable_looking_tile_is_not_also_a_painted_box_row()
+        {
+            CollectionAssert.IsEmpty(KeyArtTileTable.TilesDrawnAsWalkable.Intersect(KeyArtTileTable.Boxes.Select(row => row.TileName)));
+        }
+
+        [Test]
         public void A_row_reads_its_paths_from_its_names()
         {
             var row = KeyArtTileTable.Boxes.First(candidate => candidate.TileName == "WallGutter");
