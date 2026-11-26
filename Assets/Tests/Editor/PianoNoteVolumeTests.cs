@@ -55,5 +55,13 @@ namespace DetectiveDave.Tests
             var blocked = new PianoNoteVolume(new EdgeRandom(true), 0.6f, 0.1f, 0.5f);
             Assert.AreEqual(moved.For(MoveAttempt.Moved) * 0.5f, blocked.For(MoveAttempt.Blocked), 0.0001f);
         }
-    }
+    
+        [Test]
+        public void A_wrong_key_uses_the_misclick_share()
+        {
+            var volume = new PianoNoteVolume(new EdgeRandom(false), 0.8f, 0f, 0.5f, 0.25f);
+            Assert.AreEqual(0.2f, volume.For(MoveAttempt.WrongKey), 0.0001f);
+            Assert.AreEqual(0.4f, volume.For(MoveAttempt.Blocked), 0.0001f);
+        }
+}
 }

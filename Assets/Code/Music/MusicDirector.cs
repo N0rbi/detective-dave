@@ -147,13 +147,16 @@ namespace DetectiveDave.MusicPlay
                 BuildPicker(chart, hasChords, random, chordPitches, "piano clip"),
                 BuildPicker(chart, hasChords, random, singlePitches, "single note clip"),
                 new DebounceGate(settings.ChordDebounceSeconds, settings.SinglesExtendDebounce),
-                new PianoNoteVolume(random, settings.PianoVolume, settings.PianoVolumeVariance, settings.BlockedMoveVolumeShare),
+                new PianoNoteVolume(random, settings.PianoVolume, settings.PianoVolumeVariance, settings.BlockedMoveVolumeShare, settings.MisclickVolumeShare),
                 new ClickGate(settings.MinSecondsBetweenPianoNotes),
                 this,
                 () => Time.unscaledTime,
                 hasChords ? ChordMomentNow(chart) : () => ChordMoment.Outside,
-                message => Debug.LogWarning($"{LogPrefix} {message}", settings));
+                message => Debug.LogWarning($"{LogPrefix} {message}", settings),
+                settings.DissonantMisclick ? MisclickPickerFactory.Create(settings) ?? NoMisclickPicker : null);
         }
+
+        static readonly IMisclickPicker NoMisclickPicker = new SilentMisclickPicker();
 
         IBassPulse BuildBassPulse()
         {

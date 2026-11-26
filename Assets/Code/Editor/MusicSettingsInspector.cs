@@ -12,6 +12,29 @@ namespace DetectiveDave.EditorTools
             var settings = (MusicSettings)target;
             DrawDefaultInspector();
             DrawDebounce(settings);
+            DrawMisclick(settings);
+        }
+
+        static void DrawMisclick(MusicSettings settings)
+        {
+            EditorGUILayout.Space();
+            EditorGUILayout.LabelField("Most dissonant clip per chord (wrong key)", EditorStyles.boldLabel);
+            if (!settings.DissonantMisclick)
+            {
+                EditorGUILayout.HelpBox("Dissonant Misclick is off: a wrong key plays a normal piano note.", MessageType.Info);
+                return;
+            }
+            var rows = MisclickTable.For(settings);
+            if (rows.Count == 0)
+            {
+                EditorGUILayout.HelpBox("No Chord Chart with chords, so a wrong key plays a normal piano note. Run Window > Detective Dave > Set Up Chord Chart.", MessageType.Warning);
+                return;
+            }
+            foreach (var row in rows)
+            {
+                var tied = row.TiedCount > 1 ? $" (+{row.TiedCount - 1} tied, they take turns)" : string.Empty;
+                EditorGUILayout.LabelField(row.Chord, $"{row.Clip}  score {row.Score:0.00}{tied}");
+            }
         }
 
         static void DrawDebounce(MusicSettings settings)

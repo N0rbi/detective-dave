@@ -25,6 +25,12 @@ namespace DetectiveDave.MusicPlay
         [SerializeField] [Tooltip("What plays when the chord of that moment has no clip whose notes all fit its scale (or the loop position is outside every chord). Play Closest To Chord plays the clip with the most notes inside the scale, never the same clip as the move before, and the lowest name wins a tie. Play Next Clip plays the next clip in name order. A move is never silent while there is a piano clip.")] WhenNoClipFits whenNoClipFits = WhenNoClipFits.PlayClosestToChord;
         [SerializeField, Range(1f, 10f)] [Tooltip("How much more likely a clip made of chord notes is than a clip that only fits the scale, on strong beats and at the start of a chord. 1 treats them the same. Only used by Chord Aware.")] float chordToneWeight = 3f;
 
+        [Header("Wrong key")]
+        [SerializeField] [Tooltip("When the player presses a key that is not next to them (the key that also stuns them), the piano plays the most dissonant clip for the chord playing at that moment. Needs a Chord Chart with clip notes. Off: a wrong key plays a normal note.")] bool dissonantMisclick = true;
+        [SerializeField, Range(0f, 1f)] [Tooltip("Volume share of the dissonant note, like Blocked Move Volume Share. 0.5 halves the volume.")] float misclickVolumeShare = 0.5f;
+        [SerializeField] [Tooltip("How dissonant each kind of note is against the chord. A clip scores the sum over its notes; the clip with the highest score plays.")] DissonanceWeights dissonanceWeights = new DissonanceWeights();
+        [SerializeField] [Tooltip("On: a clip scores the average of its notes instead of the sum, so chord clips with three notes do not beat single notes only because they have more notes.")] bool normalizeByNoteCount;
+
         [Header("Bass")]
         [SerializeField] [Tooltip("When the upright bass plays a note in the loop. The dogs step their animation on these notes. Optional. Run Window > Detective Dave > Set Up Bass Chart to fill it from bass_onsets.json.")] BassChart bassChart;
 
@@ -48,6 +54,14 @@ namespace DetectiveDave.MusicPlay
         public float PianoVolumeVariance => pianoVolumeVariance;
 
         public float BlockedMoveVolumeShare => blockedMoveVolumeShare;
+
+        public bool DissonantMisclick => dissonantMisclick;
+
+        public float MisclickVolumeShare => misclickVolumeShare;
+
+        public DissonanceWeights DissonanceWeights => dissonanceWeights ?? DissonanceWeights.Defaults;
+
+        public bool NormalizeByNoteCount => normalizeByNoteCount;
 
         public float MinSecondsBetweenPianoNotes => minSecondsBetweenPianoNotes;
 

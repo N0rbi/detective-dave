@@ -20,6 +20,17 @@ namespace DetectiveDave.MusicPlay
             return new PitchClassSet(mask);
         }
 
+        public int Count => BitCount(mask);
+
+        public IEnumerable<int> Notes
+        {
+            get
+            {
+                for (var note = 0; note < PitchClassesPerOctave; note++)
+                    if ((mask & (1 << note)) != 0) yield return note;
+            }
+        }
+
         public bool Contains(int note) => (mask & BitOf(note)) != 0;
 
         public bool ContainsAll(PitchClassSet other) => (other.mask & ~mask) == 0;

@@ -210,3 +210,8 @@ Play with F5 on a level with a Gap and a WallGutter key between the two Shifts. 
 - Finish the level: when the findings start typing the music fades out.
 - Walk over a solved case: no music starts.
 - Type resetplayer while it plays: the music stops at once.
+
+## Wrong key dissonance
+- Play a level. Press a key that is not next to the player: the player stumbles and a harsh, quiet piano note plays (half volume), not a normal one. Over the first chords it rotates between Piano 5, 6, 11, 12 (D G# B), over E7 between Piano 1 and 7 (C E G). Bumping a wall or pressing the own key plays the ordinary quiet note.
+- Overworld: press a wrong key before the start (start hint) and a non-neighbour key with the magnifying glass: the same dissonant note.
+- Music Settings: untick Dissonant Misclick: wrong keys play normal notes. Select the asset: the list "Most dissonant clip per chord" shows the winner and score for every chord. Clear the Chord Chart: the list warns and one warning is logged at the first wrong key.
