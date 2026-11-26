@@ -10,6 +10,8 @@ namespace DetectiveDave.EditorTools
         public const string SettingsPath = MusicFolder + "/Music Settings.config.asset";
         public const string ChartPath = MusicFolder + "/Chord Chart.config.asset";
         public const string ChartFilePath = MusicFolder + "/chord_chart.json";
+        public const string StingerFolder = MusicFolder + "/Stingers";
+        public const string DeathHookKeyword = "trumpet";
         public const string BassFolder = MusicFolder + "/Bass";
         public const string BassOnsetsPath = BassFolder + "/bass_onsets.json";
         public const string BassChartPath = BassFolder + "/Bass Chart.config.asset";

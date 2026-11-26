@@ -42,6 +42,8 @@ namespace DetectiveDave.PlayerPlay
         public event Action<MoveAttempt> MoveAttempted;
         public event Action Failed;
         public event Action GoalReached;
+        public event Action Died;
+        public event Action Respawned;
 
         public PlayerState State => state.State;
 
@@ -265,6 +267,7 @@ namespace DetectiveDave.PlayerPlay
         void Die()
         {
             state.Enter(PlayerState.Caught);
+            Died?.Invoke();
             presentation.SetDeathPose(true);
             animations.FallFlat(Guard(Respawn));
         }
@@ -275,6 +278,7 @@ namespace DetectiveDave.PlayerPlay
             ResetToStart();
             animations.ShowResetAt(WorldOf(startKey));
             state.Enter(PlayerState.Idle);
+            Respawned?.Invoke();
         }
 
         public bool IsVulnerable => state.State == PlayerState.Idle || state.State == PlayerState.Moving || state.State == PlayerState.Stunned || state.State == PlayerState.BumpingWall;

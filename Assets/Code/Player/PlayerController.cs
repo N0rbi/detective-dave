@@ -10,7 +10,7 @@ namespace DetectiveDave.PlayerPlay
 {
     [RequireComponent(typeof(KeyboardBoard), typeof(KeyboardKeySource), typeof(LevelCellClassifier))]
     [RequireComponent(typeof(KeyboardGridView), typeof(LevelMessageView), typeof(LevelLoader))]
-    public sealed class PlayerController : MonoBehaviour, IMoveAttemptSource
+    public sealed class PlayerController : MonoBehaviour, IMoveAttemptSource, IPlayerLifeSource
     {
         const string EndsMissingMessage = "This keyboard is missing a Shift key, so this level cannot start.";
 
@@ -38,6 +38,8 @@ namespace DetectiveDave.PlayerPlay
         public event Action WorldReset;
         public event Action<MoveAttempt> MoveAttempted;
         public event Action<Key> PlayerMoved;
+        public event Action Died;
+        public event Action Respawned;
 
         public bool GuardsMayMove => game != null && restartSequence != null && game.IsActive && !SequenceRunning && game.IsVulnerable;
 
@@ -171,6 +173,8 @@ namespace DetectiveDave.PlayerPlay
             game = new PlayerGame(board, level, animations, view, gustView, new PlayerGameSettings(settings.WalkFrames.Length, settings.ClimbFrames.Length, settings.BumpDistanceInKeys, settings.ForgivingMoves, settings.WrongKeyStunSeconds > 0f));
             game.GoalReached += ForwardGoalReached;
             game.Failed += BeginRestart;
+            game.Died += () => Died?.Invoke();
+            game.Respawned += () => Respawned?.Invoke();
             game.MoveAttempted += ForwardMoveAttempted;
             game.Moved += ForwardPlayerMoved;
         }

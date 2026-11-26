@@ -473,6 +473,32 @@ namespace DetectiveDave.Tests
         }
 
         [Test]
+        public void DyingRaisesDiedAndTheRespawnRaisesRespawnedOnlyWhenTheDetectiveCanMoveAgain()
+        {
+            var events = new List<string>();
+            game.Died += () => events.Add("died");
+            game.Respawned += () => events.Add("respawned");
+            Begin();
+            game.GetCaught();
+            animations.CompleteLast();
+            CollectionAssert.AreEqual(new[] { "died" }, events);
+            game.CompleteRespawn();
+            CollectionAssert.AreEqual(new[] { "died", "respawned" }, events);
+        }
+
+        [Test]
+        public void TheWrongKeyStunRaisesNeitherDiedNorRespawned()
+        {
+            var events = 0;
+            game.Died += () => events++;
+            game.Respawned += () => events++;
+            Begin();
+            game.OnKeyPressed(Far);
+            Assert.AreEqual(PlayerState.Stunned, game.State);
+            Assert.AreEqual(0, events);
+        }
+
+        [Test]
         public void GetCaughtInTheMiddleOfAStepCancelsTheStep()
         {
             animations.KeepsPendingOnCancel = true;

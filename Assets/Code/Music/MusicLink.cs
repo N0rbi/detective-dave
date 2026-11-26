@@ -9,6 +9,8 @@ namespace DetectiveDave.MusicPlay
 
         IMoveAttemptSource source;
         IMusicReaction reaction;
+        IPlayerLifeSource life;
+        DeathHookController hook;
 
         void OnEnable()
         {
@@ -25,14 +27,28 @@ namespace DetectiveDave.MusicPlay
                 enabled = false;
                 return;
             }
-            reaction = MusicDirector.Ensure(settings).Reaction;
+            var director = MusicDirector.Ensure(settings);
+            reaction = director.Reaction;
             source.MoveAttempted += reaction.OnMoveAttempted;
+            life = GetComponent<IPlayerLifeSource>();
+            if (life == null) return;
+            hook = director.DeathHook;
+            life.Died += hook.PlayerDied;
+            life.Respawned += hook.PlayerRespawned;
         }
 
         void OnDisable()
         {
             if (source != null && reaction != null) source.MoveAttempted -= reaction.OnMoveAttempted;
             reaction = null;
+            if (life != null && hook != null)
+            {
+                life.Died -= hook.PlayerDied;
+                life.Respawned -= hook.PlayerRespawned;
+                hook.Stop();
+            }
+            life = null;
+            hook = null;
         }
     }
 }

@@ -12,7 +12,7 @@ namespace DetectiveDave.OverworldPlay
 {
     [RequireComponent(typeof(KeyboardBoard), typeof(KeyboardKeySource), typeof(KeyboardGridView))]
     [RequireComponent(typeof(KeyboardGridScreenFit))]
-    public sealed class OverworldController : MonoBehaviour, ICaseLauncher, IMoveAttemptSource
+    public sealed class OverworldController : MonoBehaviour, ICaseLauncher, IMoveAttemptSource, IPlayerLifeSource
     {
         const int DeskBackdropSortingOrder = -50;
 
@@ -48,6 +48,8 @@ namespace DetectiveDave.OverworldPlay
         bool subscribed;
 
         public event System.Action<MoveAttempt> MoveAttempted;
+        public event System.Action Died;
+        public event System.Action Respawned;
 
         public void UseDesk(DeskLayout prefab) => deskOverride = prefab;
 
@@ -224,6 +226,8 @@ namespace DetectiveDave.OverworldPlay
             var animations = view.GetComponent<IPlayerAnimations>();
             game = new PlayerGame(board, level, animations, view, gust, new PlayerGameSettings(playerSettings.WalkFrames.Length, playerSettings.ClimbFrames.Length, playerSettings.BumpDistanceInKeys, playerSettings.ForgivingMoves, playerSettings.WrongKeyStunSeconds > 0f));
             game.Failed += game.CompleteRespawn;
+            game.Died += () => Died?.Invoke();
+            game.Respawned += () => Respawned?.Invoke();
             game.MoveAttempted += ForwardMoveAttempted;
         }
 

@@ -7,7 +7,7 @@ using UnityEngine;
 
 namespace DetectiveDave.MusicPlay
 {
-    public sealed class MusicDirector : MonoBehaviour, IPianoVoices, ICaseMusicPlayer
+    public sealed class MusicDirector : MonoBehaviour, IPianoVoices, ICaseMusicPlayer, IDeathHookOutput
     {
         const string LogPrefix = "[Music]";
         const double DriftToleranceSeconds = 0.04;
@@ -19,6 +19,10 @@ namespace DetectiveDave.MusicPlay
         IReadOnlyList<SingleNoteClip> singleClips;
         AudioSource loop;
         AudioSource caseSource;
+        AudioSource hookSource;
+        float loopHookShare = 1f;
+        float caseHookShare = 1f;
+        float hookVolume;
         CaseMusic caseMusic;
         float loopBaseVolume;
         float loopDuck = 1f;
@@ -29,6 +33,31 @@ namespace DetectiveDave.MusicPlay
         int nextVoice;
 
         public IMusicReaction Reaction { get; private set; }
+
+        public DeathHookController DeathHook { get; private set; }
+
+        public bool HasClip => settings.DeathHook.HookClip;
+
+        public bool HookIsPlaying => hookSource && hookSource.isPlaying;
+
+        public void StartHook(bool loopHook)
+        {
+            hookSource.clip = settings.DeathHook.HookClip;
+            hookSource.loop = loopHook;
+            hookSource.volume = 0f;
+            hookSource.Stop();
+            hookSource.Play();
+        }
+
+        public void StopHook() => hookSource.Stop();
+
+        public void Apply(DeathHookMix mix)
+        {
+            hookVolume = mix.HookVolume;
+            loopHookShare = mix.LoopShare;
+            caseHookShare = mix.CaseMusicShare;
+            ApplyVolumes();
+        }
 
         public IBassPulse BassPulse { get; private set; } = new NoBassPulse();
 
@@ -72,14 +101,22 @@ namespace DetectiveDave.MusicPlay
             caseSource.Stop();
             caseVolume = 0f;
             loopDuck = 1f;
+            DeathHook.Stop();
         }
 
         void Update()
         {
-            if (loop) loop.volume = loopBaseVolume * loopDuck;
+            DeathHook.Tick();
+            ApplyVolumes();
             if (!caseSource || !caseSource.isPlaying) return;
-            caseSource.volume = caseVolume;
             if (caseMusic != null && caseMusic.SyncToLoop) FollowLoop();
+        }
+
+        void ApplyVolumes()
+        {
+            if (loop) loop.volume = loopBaseVolume * loopDuck * loopHookShare;
+            if (caseSource && caseSource.isPlaying) caseSource.volume = caseVolume * caseHookShare;
+            if (hookSource) hookSource.volume = hookVolume;
         }
 
         float StartTime(CaseMusic music)
@@ -129,7 +166,8 @@ namespace DetectiveDave.MusicPlay
             pianoClips = NaturalNameOrder.Sorted(settings.PianoClips.Where(clip => clip), clip => clip.name).ToArray();
             singleClips = SingleNoteOrder.Sorted(settings.SingleNoteClips);
             voices = Enumerable.Range(0, settings.PianoPoolSize).Select(_ => NewVoice()).ToArray();
-            Reaction = BuildReaction();
+            DeathHook = new DeathHookController(settings.DeathHook, this, () => Time.unscaledTime);
+            Reaction = new HookGatedReaction(BuildReaction(), () => DeathHook.PianoAllowed);
             BassPulse = BuildBassPulse();
             StartLoop();
             WarnIfSilent();
@@ -196,6 +234,7 @@ namespace DetectiveDave.MusicPlay
             loop.loop = true;
             loopBaseVolume = settings.FadeInSeconds > 0f ? 0f : settings.LoopVolume;
             caseSource = NewVoice();
+            hookSource = NewVoice();
             if (!loop.clip) return;
             loop.Play();
             if (settings.FadeInSeconds > 0f) FadeLoopIn();
@@ -216,6 +255,7 @@ namespace DetectiveDave.MusicPlay
         void WarnIfSilent()
         {
             if (!settings.LoopClip) Debug.LogWarning($"{LogPrefix} Music Settings has no Loop Clip: there is no background music. Run Window > Detective Dave > Set Up Music.", settings);
+            if (!settings.DeathHook.HookClip) Debug.LogWarning($"{LogPrefix} Music Settings has no Death Hook clip: dying changes nothing in the music. Run Window > Detective Dave > Set Up Music.", settings);
             if (pianoClips.Length == 0) Debug.LogWarning($"{LogPrefix} Music Settings has no Piano Clips: moves are silent, because there is nothing to play. Run Window > Detective Dave > Set Up Music.", settings);
             if (!settings.ChordChart || settings.ChordChart.Segments.Count == 0) Debug.LogWarning($"{LogPrefix} Music Settings has no Chord Chart with chords: piano notes ignore the chords and follow Piano Order over all clips. Run Window > Detective Dave > Set Up Chord Chart.", settings);
             if (!FindAnyObjectByType<AudioListener>()) Debug.LogWarning($"{LogPrefix} The scene has no Audio Listener: nothing can be heard. Add one to the main camera.");

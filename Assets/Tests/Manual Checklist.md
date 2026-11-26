@@ -215,3 +215,15 @@ Play with F5 on a level with a Gap and a WallGutter key between the two Shifts. 
 - Play a level. Press a key that is not next to the player: the player stumbles and a harsh, quiet piano note plays (half volume), not a normal one. Over the first chords it rotates between Piano 5, 6, 11, 12 (D G# B), over E7 between Piano 1 and 7 (C E G). Bumping a wall or pressing the own key plays the ordinary quiet note.
 - Overworld: press a wrong key before the start (start hint) and a non-neighbour key with the magnifying glass: the same dissonant note.
 - Music Settings: untick Dissonant Misclick: wrong keys play normal notes. Select the asset: the list "Most dissonant clip per chord" shows the winner and score for every chord. Clear the Chord Chart: the list warns and one warning is logged at the first wrong key.
+
+## Background and zoom
+- Select the Level Background object's owner (LevelBackgroundView), tick Trace Background, play a level to the end key at the far left (Left Shift): no edge of the picture shows during the zoom. Open Temp/background-trace.log (outside Assets, in the project folder): no line ends with OUTSIDE. If one does, send the file.
+- Resize the Game view to very wide and very tall windows and repeat.
+
+## Death hook
+- Run Set Up Music: Music Settings > Death hook > Hook Clip is Muted trumpet hook (in Assets/Audio/Music/Stingers). Staging no longer has the file.
+- Get caught by a guard: the music fades down in a quarter of a second and the trumpet fades in; when the detective can move again the trumpet fades out over a second and the music comes back. Same for a dog bite.
+- Press a wrong key (stumble) and reach the goal: no trumpet.
+- Die twice in a row: the trumpet restarts from the beginning each time. Untick Restart Hook On Every Death: a sounding hook keeps going.
+- Type resetplayer while the trumpet plays: it stops at once and the music is at full volume.
+- Remove the Hook Clip: the inspector and the Console warn, and a death changes nothing.

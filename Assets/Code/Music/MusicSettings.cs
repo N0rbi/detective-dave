@@ -39,6 +39,11 @@ namespace DetectiveDave.MusicPlay
         [SerializeField] [Tooltip("On: every single note restarts the wait, so a continuous run of moves stays single notes until the player pauses. Off: the wait is measured from the last chord only, so a chord returns that many seconds after the last chord even while the player keeps moving.")] bool singlesExtendDebounce = true;
         [SerializeField] [Tooltip("The single note clips, each with its note. They play instead of the chord clips while the debounce is running, and only over chords whose scale contains the note. Export them as Piano Single - <Note><Octave>.wav (Gs3 is G#3), drop them into Assets/Staging and run Window > Detective Dave > Set Up Music. While this list is empty every note is a chord and one warning is logged.")] SingleNoteClip[] singleNoteClips = new SingleNoteClip[0];
 
+        [Header("Death hook")]
+        [SerializeField] [Tooltip("The muted trumpet that replaces the music from the moment the player is caught or bitten until they can move again. The wrong-key stumble and reaching the goal do not play it.")] DeathHookSettings deathHook = new DeathHookSettings();
+
+        public DeathHookSettings DeathHook => deathHook ?? (deathHook = new DeathHookSettings());
+
         public AudioClip LoopClip => loopClip;
 
         public float LoopVolume => loopVolume;
