@@ -190,5 +190,7 @@ Play with F5 on a level with a Gap and a WallGutter key between the two Shifts. 
 - [ ] Every Gap key shows a dog and no hole art. The dog does not move.
 - [ ] Walk next to a dog: it turns angry and its frames go 1-2-3-2-1 and loop. Walk away: it calms down.
 - [ ] Step onto a dog: the player dies (death sprite) and the dog is calm meanwhile; after the wipe the level restarts and the dog is angry or calm by where the player stands.
+- [ ] Every level shows the skyline behind and around the keys; no dark panel covers it. Untick `Hide Backdrop Over Background` on `KeyTerrainView` and the dark panel is back. A level whose Background renderer holds a `placeholder_*` sprite shows a warning in its checks.
+- [ ] Run `Window > Detective Dave > Set Up Smoking Detective`: Overworld.unity gets a `Smoking Detective` object (the old walk-cycle object is removed) and the dialog says what it did; running it again says nothing needed changing.
 - [ ] Every level shows the skyline behind the keys. Change Offset, Zoom, Flip and Visible under Background Placement on a level: the picture moves, zooms, mirrors or disappears and never shows an edge.
 - [ ] Overworld: the stealth board covers the whole screen without stretching. The smoking detective stands on the right; every few seconds the arm comes up to the mouth with a small tilt, waits, and goes down. Moving the `Arm Pivot` changes where it turns; running `Set Up Overworld` again changes nothing you moved.
