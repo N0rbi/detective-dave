@@ -42,6 +42,15 @@ namespace DetectiveDave.Tests
             public void Launch(string caseId) => Launched = caseId;
         }
 
+        sealed class FakeCues : ICaseMusicCues
+        {
+            public string Opened;
+            public int Ended;
+            public void CaseOpened(string caseId) => Opened = caseId;
+            public void CaseEnded() => Ended++;
+        }
+
+        FakeCues cues;
         FakeIndicator indicator;
         FakeBriefing briefing;
         FakeLauncher launcher;
@@ -58,13 +67,52 @@ namespace DetectiveDave.Tests
             var markers = new[] { new DeskMarker("a", Vector2.zero, Vector2.one, 0f) };
             var centres = new System.Collections.Generic.Dictionary<Key, Vector2> { { Key.J, Vector2.zero }, { Key.K, new Vector2(5f, 0f) } };
             var cases = new DeskCases(new DeskKeyMap(markers, centres), id => state);
-            flow = new OverworldFlow(cases, new DwellTimer(2f), indicator, briefing, launcher);
+            cues = new FakeCues();
+            flow = new OverworldFlow(cases, new DwellTimer(2f), indicator, briefing, launcher, cues);
         }
 
         void Dwell()
         {
             flow.OnMoved(Key.J);
             flow.Tick(2.5f);
+        }
+
+        [Test]
+        public void Opening_the_briefing_starts_the_case_music()
+        {
+            Dwell();
+            Assert.AreEqual("a", cues.Opened);
+        }
+
+        [Test]
+        public void Declining_the_request_ends_the_case_music()
+        {
+            Dwell();
+            briefing.Finished(LetterOutcome.Declined);
+            Assert.AreEqual(1, cues.Ended);
+        }
+
+        [Test]
+        public void Accepting_the_request_keeps_the_case_music_playing()
+        {
+            Dwell();
+            briefing.Finished(LetterOutcome.Accepted);
+            Assert.AreEqual(0, cues.Ended);
+        }
+
+        [Test]
+        public void Typing_the_findings_ends_the_case_music()
+        {
+            flow.PlayReport("a", () => { });
+            Assert.AreEqual(1, cues.Ended);
+        }
+
+        [Test]
+        public void Reviewing_a_solved_case_never_starts_the_case_music()
+        {
+            state = CaseState.Solved;
+            Dwell();
+            Assert.IsNull(cues.Opened);
         }
 
         [Test]

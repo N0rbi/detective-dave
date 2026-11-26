@@ -1,4 +1,5 @@
 using System;
+using DetectiveDave.MusicPlay;
 using DetectiveDave.OverworldPlay;
 using UnityEngine;
 
@@ -21,7 +22,11 @@ namespace DetectiveDave.CheatPlay
             Debug.Log($"{LogPrefix} Reset Player: the solved cases are forgotten.");
         }
 
-        public void ClearCaseSession() => CaseSession.Clear();
+        public void ClearCaseSession()
+        {
+            CaseSession.Clear();
+            MusicDirector.CaseMusicPlayer.StopNow();
+        }
 
         public void LoadOverworld()
         {

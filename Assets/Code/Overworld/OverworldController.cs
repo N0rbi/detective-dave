@@ -3,6 +3,7 @@ using System.Linq;
 using DetectiveDave.KeyboardGrid;
 using DetectiveDave.GuardPlay;
 using DetectiveDave.KeyboardInput;
+using DetectiveDave.MusicPlay;
 using DetectiveDave.PlayerPlay;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -31,6 +32,7 @@ namespace DetectiveDave.OverworldPlay
         CaseProgress progress;
         DeskCases deskCases;
         OverworldFlow flow;
+        ICaseMusicCues caseMusic;
         IntroSequence intro;
         SpiralScreenWipe wipeView;
         CameraZoomView zoomView;
@@ -249,10 +251,13 @@ namespace DetectiveDave.OverworldPlay
             var briefing = new GameObject("Briefing").AddComponent<BriefingView>();
             briefing.transform.SetParent(transform, false);
             briefing.Configure(overworldSettings, FindCase, transform, sound);
-            flow = new OverworldFlow(deskCases, new DwellTimer(overworldSettings.DwellSeconds), ringView, briefing, this);
+            caseMusic = new CaseMusicCues(MusicOf, () => MusicDirector.CaseMusicPlayer);
+            flow = new OverworldFlow(deskCases, new DwellTimer(overworldSettings.DwellSeconds), ringView, briefing, this, caseMusic);
         }
 
         CaseFile FindCase(string caseId) => casesById[caseId];
+
+        CaseMusic MusicOf(string caseId) => casesById.TryGetValue(caseId, out var file) ? file.Music : null;
 
         void ResetToStart()
         {
@@ -278,7 +283,11 @@ namespace DetectiveDave.OverworldPlay
         {
             var caseId = pendingReportCaseId;
             pendingReportCaseId = null;
-            if (string.IsNullOrEmpty(caseId)) return;
+            if (string.IsNullOrEmpty(caseId))
+            {
+                caseMusic.CaseEnded();
+                return;
+            }
             if (!casesById.ContainsKey(caseId))
             {
                 progress.MarkSolved(caseId);

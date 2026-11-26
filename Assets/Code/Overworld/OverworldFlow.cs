@@ -13,16 +13,18 @@ namespace DetectiveDave.OverworldPlay
         readonly IDwellIndicator indicator;
         readonly IBriefingScreen briefing;
         readonly ICaseLauncher launcher;
+        readonly ICaseMusicCues music;
         string dwellCaseId;
         CaseState dwellState;
 
-        public OverworldFlow(DeskCases cases, DwellTimer dwell, IDwellIndicator indicator, IBriefingScreen briefing, ICaseLauncher launcher)
+        public OverworldFlow(DeskCases cases, DwellTimer dwell, IDwellIndicator indicator, IBriefingScreen briefing, ICaseLauncher launcher, ICaseMusicCues music = null)
         {
             this.cases = cases;
             this.dwell = dwell;
             this.indicator = indicator;
             this.briefing = briefing;
             this.launcher = launcher;
+            this.music = music ?? new NoCaseMusicCues();
         }
 
         public OverworldStage Stage { get; private set; } = OverworldStage.Desk;
@@ -55,6 +57,7 @@ namespace DetectiveDave.OverworldPlay
         public void PlayReport(string caseId, Action completed)
         {
             Stage = OverworldStage.Briefing;
+            music.CaseEnded();
             briefing.OpenReport(caseId, () => briefing.Close(() => FinishReport(completed)));
         }
 
@@ -92,6 +95,7 @@ namespace DetectiveDave.OverworldPlay
                 return;
             }
             Stage = OverworldStage.Briefing;
+            music.CaseOpened(caseId);
             briefing.Open(caseId, outcome => FinishLetter(caseId, outcome));
         }
 
@@ -106,6 +110,7 @@ namespace DetectiveDave.OverworldPlay
             if (Stage != OverworldStage.Briefing) return;
             if (outcome == LetterOutcome.Accepted && !launcher.CanLaunch(caseId))
             {
+                music.CaseEnded();
                 briefing.Refuse(NoLevelMessage, () => briefing.Close(ReturnToDesk));
                 return;
             }
@@ -122,6 +127,7 @@ namespace DetectiveDave.OverworldPlay
                 launcher.Launch(caseId);
                 return;
             }
+            music.CaseEnded();
             Stage = OverworldStage.Desk;
         }
     }
