@@ -38,6 +38,7 @@ namespace DetectiveDave.EditorTools
             if (error != null) return error;
             var lines = new List<string> { walkableSummary };
             foreach (var row in KeyArtTileTable.Boxes) lines.Add(ApplyBox(row));
+            foreach (var tileName in KeyArtTileTable.TilesDrawnAsWalkable) lines.Add(ApplyWalkableLook(tileName));
             lines.Add(UnassignedLine());
             AssetDatabase.SaveAssets();
             summary = string.Join("\n\n", lines);
@@ -76,6 +77,18 @@ namespace DetectiveDave.EditorTools
             var where = assigned.Count == 0 ? "No Key Art has this style, so nothing was assigned." : "Box set on: " + string.Join(", ", assigned) + ".";
             var change = state == KeyArtSlotState.NeedsReplace ? $"updated: {row.TargetName} (new pixels from {row.StagedName}, same file and links)" : $"{row.StagedName} is now {row.TargetName}";
             return $"{row.TileName}: {change} in {row.Folder}, border {applied.x:0}, {applied.y:0}, {applied.z:0}, {applied.w:0} px (left, bottom, right, top). {where} Tint set to white and the per-size sprites cleared; the Enter was left as it is.";
+        }
+
+        static string ApplyWalkableLook(string tileName)
+        {
+            var path = KeyArtSetupPaths.TilesFolder + "/" + tileName + ".asset";
+            var tile = AssetDatabase.LoadAssetAtPath<TileType>(path);
+            if (!tile) return $"{tileName}: skipped, the tile type is missing at {path}.";
+            var box = LoadSprite(KeyArtSetupPaths.BoxPath);
+            if (!box) return $"{tileName}: skipped, {KeyArtSetupPaths.BoxPath} is missing. Set up the Walkable art first.";
+            var assigned = AssignBox(tile, box);
+            var where = assigned.Count == 0 ? "No Key Art has this style, so nothing was assigned." : "Box set on: " + string.Join(", ", assigned) + ".";
+            return $"{tileName}: now uses the Walkable box art ({KeyArtSetupPaths.BoxName}, same file, nothing copied), tint white. {where}";
         }
 
         static string UnassignedLine() =>

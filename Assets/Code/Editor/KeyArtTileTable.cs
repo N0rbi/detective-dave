@@ -11,7 +11,8 @@ namespace DetectiveDave.EditorTools
         {
             new KeyArtTileRow("Wall", "keyboard_stealth_brick.png", "Assets/Key Art/Wall", "wall_box.png", 0),
             new KeyArtTileRow("WallGutter", "keyboard_stealth_climb.png", "Assets/Key Art/WallGutter", "wallgutter_box.png", PipeStripHeightPixels),
-            new KeyArtTileRow("Gap", "keyboard_stealth_hole.png", "Assets/Key Art/Gap", "gap_box.png", 0),
         };
+
+        public static readonly IReadOnlyList<string> TilesDrawnAsWalkable = new[] { "Gap" };
     }
 }
