@@ -61,7 +61,7 @@ namespace DetectiveDave.EditorTools
             AssetDatabase.SaveAssets();
             var playerPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(PlayerSetupPaths.PrefabPath).GetComponent<PlayerView>();
             var smoking = new SmokingSprites(PlayerSpriteImport.ImportDecoration(OverworldSetupPaths.SmokingBodyPath), PlayerSpriteImport.ImportDecoration(OverworldSetupPaths.SmokingArmPath));
-            return OverworldSceneBuilder.WireOrError(playerPrefab, magnifier, settings, smoking) ?? MusicSetup.ApplyOrError() ?? CheatSetup.ApplyOrError();
+            return OverworldSceneBuilder.WireOrError(playerPrefab, magnifier, settings, smoking, Note) ?? MusicSetup.ApplyOrError() ?? CheatSetup.ApplyOrError();
         }
 
         static void EnsureFolder(string path)

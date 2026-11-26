@@ -30,7 +30,7 @@ namespace DetectiveDave.EditorTools
             AssetDatabase.CopyAsset(PlayerSetupPaths.ScenePath, OverworldSetupPaths.ScenePath);
         }
 
-        public static string WireOrError(PlayerView playerPrefab, PlayerMovementSettings magnifier, OverworldSettings settings, SmokingSprites smoking)
+        public static string WireOrError(PlayerView playerPrefab, PlayerMovementSettings magnifier, OverworldSettings settings, SmokingSprites smoking, System.Action<string> note)
         {
             EnsureStubScene();
             if (!AssetDatabase.LoadAssetAtPath<SceneAsset>(OverworldSetupPaths.ScenePath)) return "Assets/Scenes/Game.unity is missing, so the overworld scene could not be created.";
@@ -41,7 +41,25 @@ namespace DetectiveDave.EditorTools
                 var board = scene.GetRootGameObjects().Select(root => root.GetComponentInChildren<KeyboardBoard>(true)).FirstOrDefault(found => found);
                 if (!board) return "The overworld scene has no keyboard board object.";
                 Wire(board.gameObject, playerPrefab, magnifier, settings);
-                SmokingDetectiveWiring.Ensure(scene, smoking);
+                SmokingDetectiveWiring.Ensure(scene, smoking, note);
+                EditorSceneManager.SaveScene(scene);
+                return null;
+            }
+            finally
+            {
+                EditorSceneManager.CloseScene(scene, true);
+            }
+        }
+
+        public static string EditOrError(System.Action<Scene> edit)
+        {
+            EnsureStubScene();
+            if (!AssetDatabase.LoadAssetAtPath<SceneAsset>(OverworldSetupPaths.ScenePath)) return "Assets/Scenes/Game.unity is missing, so the overworld scene could not be created.";
+            if (!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo()) return "Cancelled: the open scenes were not saved. Nothing was changed.";
+            var scene = EditorSceneManager.OpenScene(OverworldSetupPaths.ScenePath, OpenSceneMode.Additive);
+            try
+            {
+                edit(scene);
                 EditorSceneManager.SaveScene(scene);
                 return null;
             }

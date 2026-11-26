@@ -12,6 +12,8 @@ namespace DetectiveDave.OverworldPlay
     [AddComponentMenu("Detective Dave/Smoking Detective")]
     public sealed class SmokingDetective : MonoBehaviour
     {
+        public const string ArmPivotName = "Arm Pivot";
+
         [Header("Parts")]
         [SerializeField] [Tooltip("The parent of the arm sprite. This is what moves and turns, so its position is the arm's pivot.")] Transform armPivot;
 
@@ -30,11 +32,17 @@ namespace DetectiveDave.OverworldPlay
         Vector3 restPosition;
         float restAngle;
 
+        void Reset()
+        {
+            var child = transform.Find(ArmPivotName);
+            if (child) armPivot = child;
+        }
+
         void OnEnable()
         {
             if (!armPivot)
             {
-                Debug.LogError("SmokingDetective needs an Arm Pivot. Run Window > Detective Dave > Set Up Overworld.", this);
+                Debug.LogError("SmokingDetective needs an Arm Pivot. Run Window > Detective Dave > Set Up Smoking Detective.", this);
                 enabled = false;
                 return;
             }

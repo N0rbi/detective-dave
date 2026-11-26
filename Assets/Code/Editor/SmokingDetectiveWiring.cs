@@ -11,17 +11,18 @@ namespace DetectiveDave.EditorTools
         const string ObjectName = "Smoking Detective";
         const string ReplacedSceneObjectName = "stealth_detective_walk_cycle_2";
         const string ArmObjectName = "Arm";
-        const string ArmPivotName = "Arm Pivot";
+        const string ArmPivotName = SmokingDetective.ArmPivotName;
         const int BodySortingOrder = 10000;
         static readonly Vector3 DefaultPosition = new Vector3(7.04f, -12.06f, 0f);
         const float DefaultScale = 10.95f;
 
-        public static void Ensure(Scene scene, SmokingSprites sprites)
+        public static void Ensure(Scene scene, SmokingSprites sprites, System.Action<string> note)
         {
             var existing = scene.GetRootGameObjects().Select(root => root.GetComponentInChildren<SmokingDetective>(true)).FirstOrDefault(found => found);
             var detective = existing ? existing.gameObject : Create(scene);
-            FillSprites(detective, sprites);
-            RemoveReplacedSceneObject(scene, detective);
+            if (!existing) note("created the Smoking Detective in the overworld scene");
+            if (FillSprites(detective, sprites)) note("assigned the Smoking Detective sprites");
+            if (RemoveReplacedSceneObject(scene, detective)) note("removed the old " + ReplacedSceneObjectName + " object");
         }
 
         static GameObject Create(Scene scene)
@@ -45,14 +46,20 @@ namespace DetectiveDave.EditorTools
             return detective;
         }
 
-        static void FillSprites(GameObject detective, SmokingSprites sprites)
+        static bool FillSprites(GameObject detective, SmokingSprites sprites)
         {
+            bool changed = false;
             var body = detective.GetComponent<SpriteRenderer>();
-            if (body && !body.sprite) body.sprite = sprites.Body;
+            if (body && !body.sprite)
+            {
+                body.sprite = sprites.Body;
+                changed = true;
+            }
             var armRenderer = detective.GetComponentsInChildren<SpriteRenderer>(true).FirstOrDefault(renderer => renderer.gameObject != detective);
-            if (!armRenderer || armRenderer.sprite) return;
+            if (!armRenderer || armRenderer.sprite) return changed;
             armRenderer.sprite = sprites.Arm;
             PlaceArmPivotAtSleeve(armRenderer.transform.parent, armRenderer);
+            return true;
         }
 
         // The arm art is a long sleeve ending at the bottom of the picture, so it turns best around its bottom edge.
@@ -66,10 +73,12 @@ namespace DetectiveDave.EditorTools
         static GameObject FindReplaced(Scene scene) =>
             scene.GetRootGameObjects().FirstOrDefault(root => root.name == ReplacedSceneObjectName);
 
-        static void RemoveReplacedSceneObject(Scene scene, GameObject detective)
+        static bool RemoveReplacedSceneObject(Scene scene, GameObject detective)
         {
             var replaced = FindReplaced(scene);
-            if (replaced && replaced != detective) Object.DestroyImmediate(replaced);
+            if (!replaced || replaced == detective) return false;
+            Object.DestroyImmediate(replaced);
+            return true;
         }
     }
 }
