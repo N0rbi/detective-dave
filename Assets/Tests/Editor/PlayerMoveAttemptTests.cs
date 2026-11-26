@@ -110,21 +110,21 @@ namespace DetectiveDave.Tests
         }
 
         [Test]
-        public void A_key_that_is_not_next_to_the_player_is_blocked_when_slips_are_forgiven()
+        public void A_key_that_is_not_next_to_the_player_is_a_wrong_key_when_slips_are_forgiven()
         {
             var game = Build(true);
             Begin(game);
             game.OnKeyPressed(Far);
-            CollectionAssert.AreEqual(new[] { MoveAttempt.Blocked }, attempts);
+            CollectionAssert.AreEqual(new[] { MoveAttempt.WrongKey }, attempts);
         }
 
         [Test]
-        public void A_key_that_is_not_next_to_the_player_is_blocked_when_the_player_is_stunned()
+        public void A_key_that_is_not_next_to_the_player_is_a_wrong_key_when_the_player_is_stunned()
         {
             var game = Build(false);
             Begin(game);
             game.OnKeyPressed(Far);
-            CollectionAssert.AreEqual(new[] { MoveAttempt.Blocked }, attempts);
+            CollectionAssert.AreEqual(new[] { MoveAttempt.WrongKey }, attempts);
         }
 
         [Test]
@@ -135,7 +135,7 @@ namespace DetectiveDave.Tests
             game.OnKeyPressed(Far);
             game.OnKeyPressed(Far);
             game.OnKeyPressed(Next);
-            CollectionAssert.AreEqual(new[] { MoveAttempt.Blocked }, attempts);
+            CollectionAssert.AreEqual(new[] { MoveAttempt.WrongKey }, attempts);
         }
 
         [Test]

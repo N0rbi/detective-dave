@@ -134,7 +134,8 @@ namespace DetectiveDave.PlayerPlay
 
         MoveAttempt AttemptOf(MoveOutcome outcome)
         {
-            if (outcome == MoveOutcome.Ignored || outcome == MoveOutcome.BumpWall || outcome == MoveOutcome.Stun) return MoveAttempt.Blocked;
+            if (outcome == MoveOutcome.Stun) return MoveAttempt.WrongKey;
+            if (outcome == MoveOutcome.Ignored || outcome == MoveOutcome.BumpWall) return MoveAttempt.Blocked;
             return MoveAttempt.Moved;
         }
 
