@@ -85,11 +85,6 @@ namespace DetectiveDave.DogPlay
             Debug.LogWarning("[Dogs] Dog Settings steps the dogs on bass notes, but Music Settings has no Bass Chart with notes, so the dogs use the timer. Drop the upright bass .aif or .wav into Assets/Staging, run tools/bass_onsets.py, then Window > Detective Dave > Set Up Bass Chart.", settings);
         }
 
-        void LateUpdate()
-        {
-            if (settings.HideKeyArt) HideKeyArtUnderDogs();
-        }
-
         IDogView CreateView() => DogView.Create(transform, settings, gridView.Scale);
 
         void Subscribe()
@@ -117,14 +112,5 @@ namespace DetectiveDave.DogPlay
         void ShowMoods(Key playerKey) => director.Draw(playerKey);
 
         Key[] GapKeys() => gridView.Cells.Keys.Where(key => classifier.KindOf(key) == CellKind.Gap).ToArray();
-
-        void HideKeyArtUnderDogs()
-        {
-            foreach (var key in director.Keys)
-            {
-                if (!gridView.Cells.TryGetValue(key, out var cell)) continue;
-                foreach (var part in cell.Parts) part.enabled = false;
-            }
-        }
     }
 }
