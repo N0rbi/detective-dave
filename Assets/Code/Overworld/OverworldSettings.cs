@@ -26,6 +26,12 @@ namespace DetectiveDave.OverworldPlay
         [SerializeField, Range(-0.5f, 0.5f)] [Tooltip("Moves the typed letters down (positive) or up (negative), as a share of the text row height. Use it to put the typed font on the same baseline as the placeholder font.")] float typedFontBaselineOffsetShare;
         [SerializeField, Range(-0.5f, 0.5f)] [Tooltip("Moves the grey placeholder letters down (positive) or up (negative), as a share of the text row height.")] float placeholderFontBaselineOffsetShare;
 
+        [Header("Board (desk top picture)")]
+        [SerializeField] [Tooltip("Fit Inside shows the whole board inside the camera view, never cut off. Cover fills the whole view and may cut the edges off.")] BoardFitMode boardFitMode = BoardFitMode.FitInside;
+        [SerializeField, Range(0f, 0.45f)] [Tooltip("Free space kept at every edge of the view as a share of the view size (Fit Inside and Cover both use it).")] float boardMarginShare = 0.03f;
+        [SerializeField, Min(0.01f)] [Tooltip("Makes the board bigger (above 1) or smaller (below 1) after the fit mode has been applied. 1 changes nothing.")] float boardScaleMultiplier = 1f;
+        [SerializeField] [Tooltip("Moves the board as a share of the view size: x to the right, y up. 0 keeps it centred.")] Vector2 boardOffsetShare = Vector2.zero;
+
         [Header("Desk")]
         [SerializeField] [Tooltip("The desk the game starts on.")] DeskLayout desk;
         [SerializeField, Range(0f, 1f)] [Tooltip("How dark a locked case file is. 0 shows it as it is, 1 makes it black.")] float lockedShade = 0.65f;
@@ -110,6 +116,10 @@ namespace DetectiveDave.OverworldPlay
         public Sprite FolderSprite => folderSprite;
         public Sprite SolvedSprite => solvedSprite;
         public Sprite DeskTopSprite => deskTopSprite;
+        public BoardFitMode BoardFitMode => boardFitMode;
+        public float BoardMarginShare => boardMarginShare;
+        public float BoardScaleMultiplier => boardScaleMultiplier;
+        public Vector2 BoardOffsetShare => boardOffsetShare;
         public Sprite DescriptionPaperSprite => descriptionPaperSprite;
         public Sprite LetterPaperSprite => letterPaperSprite;
         public Sprite RingSprite => ringSprite;

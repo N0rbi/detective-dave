@@ -162,9 +162,10 @@ namespace DetectiveDave.OverworldPlay
             var content = new Vector2(gridView.ContentWidth, gridView.ContentHeight);
             var view = camera && camera.orthographic ? new Vector2(2f * camera.orthographicSize * camera.aspect, 2f * camera.orthographicSize) : content;
             var spriteSize = (Vector2)backdrop.sprite.bounds.size;
-            var scale = Mathf.Max(view.x / spriteSize.x, view.y / spriteSize.y);
+            var scale = BoardFit.Scale(spriteSize, view, overworldSettings.BoardFitMode, overworldSettings.BoardMarginShare, overworldSettings.BoardScaleMultiplier);
+            var centre = camera ? (Vector2)camera.transform.position : Vector2.zero;
             backdrop.transform.localScale = new Vector3(scale, scale, 1f);
-            backdrop.transform.position = camera ? new Vector3(camera.transform.position.x, camera.transform.position.y, 0f) : Vector3.zero;
+            backdrop.transform.position = BoardFit.Position(centre, view, overworldSettings.BoardOffsetShare);
         }
 
         void BuildProgress()
