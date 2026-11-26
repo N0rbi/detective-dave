@@ -23,7 +23,7 @@ namespace DetectiveDave.EditorTools
             if (!settings.DeathHook.HookClip)
                 EditorGUILayout.HelpBox("No Hook Clip: dying changes nothing in the music. Put the muted trumpet in Assets/Staging or Assets/Audio/Music/Stingers and run Window > Detective Dave > Set Up Music.", MessageType.Warning);
             else
-                EditorGUILayout.HelpBox("A death (caught by a guard, bitten by a dog) fades the hook in and the music down; when the player can move again the hook fades out and the music back up. The wrong-key stumble and the goal never play it.", MessageType.Info);
+                EditorGUILayout.HelpBox("A death (caught by a guard, bitten by a dog) fades the hook up and the music down; the hook runs silently all the time in step with the loop. When the player can move again it fades back to silence and the music up. The wrong-key stumble and the goal never play it.", MessageType.Info);
         }
 
         static void DrawMisclick(MusicSettings settings)

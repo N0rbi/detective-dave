@@ -11,7 +11,6 @@ namespace DetectiveDave.MusicPlay
         float amount;
         float delayLeft;
         float lastTime;
-        bool hookStarted;
 
         public DeathHookController(DeathHookSettings settings, IDeathHookOutput output, Func<float> clock)
         {
@@ -29,11 +28,7 @@ namespace DetectiveDave.MusicPlay
         public void PlayerDied()
         {
             if (!output.HasClip) return;
-            if (State == DeathHookState.Idle || settings.RestartHookOnEveryDeath)
-            {
-                hookStarted = false;
-                delayLeft = settings.StartDelaySeconds;
-            }
+            if (State == DeathHookState.Idle) delayLeft = settings.StartDelaySeconds;
             lastTime = clock();
             State = DeathHookState.FadingIn;
         }
@@ -41,7 +36,7 @@ namespace DetectiveDave.MusicPlay
         public void PlayerRespawned()
         {
             if (State == DeathHookState.Idle || State == DeathHookState.FadingOut) return;
-            if (!hookStarted)
+            if (delayLeft > 0f)
             {
                 Stop();
                 return;
@@ -53,9 +48,8 @@ namespace DetectiveDave.MusicPlay
         public void Stop()
         {
             if (State == DeathHookState.Idle) return;
-            output.StopHook();
             amount = 0f;
-            hookStarted = false;
+            delayLeft = 0f;
             State = DeathHookState.Idle;
             output.Apply(DeathHookMix.Neutral);
         }
@@ -72,29 +66,18 @@ namespace DetectiveDave.MusicPlay
 
         void Advance(float seconds)
         {
-            switch (State)
-            {
-                case DeathHookState.FadingIn:
-                    FadeIn(seconds);
-                    break;
-                case DeathHookState.Playing:
-                    if (settings.PlayHookOnce && !output.HookIsPlaying) State = DeathHookState.WaitingForRespawn;
-                    break;
-                case DeathHookState.FadingOut:
-                    FadeOut(seconds);
-                    break;
-            }
+            if (State == DeathHookState.FadingIn) FadeIn(seconds);
+            else if (State == DeathHookState.FadingOut) FadeOut(seconds);
         }
 
         void FadeIn(float seconds)
         {
-            if (!hookStarted)
+            if (delayLeft > 0f)
             {
                 delayLeft -= seconds;
                 if (delayLeft > 0f) return;
                 seconds = -delayLeft;
-                output.StartHook(settings.HookLoops);
-                hookStarted = true;
+                delayLeft = 0f;
             }
             amount = Step(amount, 1f, seconds, settings.FadeInSeconds);
             if (amount >= 1f) State = DeathHookState.Playing;
@@ -104,8 +87,6 @@ namespace DetectiveDave.MusicPlay
         {
             amount = Step(amount, 0f, seconds, settings.FadeOutSeconds);
             if (amount > 0f) return;
-            output.StopHook();
-            hookStarted = false;
             State = DeathHookState.Idle;
             output.Apply(DeathHookMix.Neutral);
         }

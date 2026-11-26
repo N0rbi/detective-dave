@@ -95,7 +95,7 @@ namespace DetectiveDave.Tests
         }
     
         [Test]
-        public void HookStartTimeWrapsAtTheLoopLengthNotTheHookLength()
+        public void HookStemStartsAtTheLoopPhaseWrappedAtTheLoopLengthNotTheHookLength()
         {
             Assert.AreEqual(0.4, LoopFollower.WantedClipTime(26.0, 25.6, 26.0, 0.0), 1e-9);
             Assert.AreEqual(12.8, LoopFollower.WantedClipTime(12.8, 25.6, 26.0, 0.0), 1e-9);
@@ -106,13 +106,6 @@ namespace DetectiveDave.Tests
         {
             Assert.AreEqual(0.1, LoopFollower.WantedClipTime(25.5, 25.6, 26.0, 0.2), 1e-9);
             Assert.AreEqual(25.5, LoopFollower.WantedClipTime(0.1, 25.6, 26.0, -0.2), 1e-9);
-        }
-
-        [Test]
-        public void HookReachesTheCycleEndAtTheLoopLengthNotTheFileEnd()
-        {
-            Assert.IsFalse(LoopFollower.ReachedCycleEnd(25.5, 25.6, 26.0));
-            Assert.IsTrue(LoopFollower.ReachedCycleEnd(25.6, 25.6, 26.0));
         }
 
         [Test]

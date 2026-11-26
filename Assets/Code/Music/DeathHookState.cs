@@ -5,7 +5,6 @@ namespace DetectiveDave.MusicPlay
         Idle,
         FadingIn,
         Playing,
-        WaitingForRespawn,
         FadingOut
     }
 }

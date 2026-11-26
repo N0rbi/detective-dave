@@ -40,7 +40,7 @@ namespace DetectiveDave.MusicPlay
         [SerializeField] [Tooltip("The single note clips, each with its note. They play instead of the chord clips while the debounce is running, and only over chords whose scale contains the note. Export them as Piano Single - <Note><Octave>.wav (Gs3 is G#3), drop them into Assets/Staging and run Window > Detective Dave > Set Up Music. While this list is empty every note is a chord and one warning is logged.")] SingleNoteClip[] singleNoteClips = new SingleNoteClip[0];
 
         [Header("Death hook")]
-        [SerializeField] [Tooltip("The muted trumpet that replaces the music from the moment the player is caught or bitten until they can move again. The wrong-key stumble and reaching the goal do not play it.")] DeathHookSettings deathHook = new DeathHookSettings();
+        [SerializeField] [Tooltip("The muted trumpet stem. It runs silently all the time in step with the jazz loop; being caught or bitten fades it up and the music down until the player can move again. The wrong-key stumble and reaching the goal do not touch it.")] DeathHookSettings deathHook = new DeathHookSettings();
 
         public DeathHookSettings DeathHook => deathHook ?? (deathHook = new DeathHookSettings());
 

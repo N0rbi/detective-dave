@@ -8,24 +8,7 @@ namespace DetectiveDave.Tests
         sealed class FakeOutput : IDeathHookOutput
         {
             public bool HasClip { get; set; } = true;
-            public bool HookIsPlaying { get; set; }
-            public int Starts;
-            public int Stops;
-            public bool LastLoop;
             public DeathHookMix Mix = DeathHookMix.Neutral;
-
-            public void StartHook(bool loop)
-            {
-                Starts++;
-                LastLoop = loop;
-                HookIsPlaying = true;
-            }
-
-            public void StopHook()
-            {
-                Stops++;
-                HookIsPlaying = false;
-            }
 
             public void Apply(DeathHookMix mix) => Mix = mix;
         }
@@ -39,7 +22,7 @@ namespace DetectiveDave.Tests
         {
             output = new FakeOutput();
             now = 0f;
-            return new DeathHookController(settings ?? new DeathHookSettings(0.25f, 1f, 0.9f, 0f, 0f, false, 0f, true, true), output, () => now);
+            return new DeathHookController(settings ?? new DeathHookSettings(0.25f, 1f, 0.9f, 0f, 0f, false, 0f), output, () => now);
         }
 
         void Advance(DeathHookController hook, float seconds)
@@ -49,29 +32,29 @@ namespace DetectiveDave.Tests
         }
 
         [Test]
-        public void ItStartsIdleAndTickDoesNothing()
+        public void ItStartsIdleAndTickLeavesTheMixNeutral()
         {
             var hook = Create();
             Advance(hook, 1f);
             Assert.AreEqual(DeathHookState.Idle, hook.State);
-            Assert.AreEqual(0, output.Starts);
+            Assert.AreEqual(0f, output.Mix.HookVolume, Tolerance);
+            Assert.AreEqual(1f, output.Mix.LoopShare, Tolerance);
         }
 
         [Test]
-        public void ADeathStartsTheHookAndFadesItInOverTheFadeInTime()
+        public void ADeathFadesTheHookUpAndTheMusicDownOverTheFadeInTime()
         {
             var hook = Create();
             hook.PlayerDied();
             Advance(hook, 0.125f);
             Assert.AreEqual(DeathHookState.FadingIn, hook.State);
-            Assert.AreEqual(1, output.Starts);
             Assert.AreEqual(0.45f, output.Mix.HookVolume, Tolerance);
             Assert.AreEqual(0.5f, output.Mix.LoopShare, Tolerance);
             Assert.AreEqual(0.5f, output.Mix.CaseMusicShare, Tolerance);
         }
 
         [Test]
-        public void AfterTheFadeInTheHookPlaysAtItsVolumeAndTheMusicIsDown()
+        public void AfterTheFadeInTheHookIsAtItsVolumeAndTheMusicIsDown()
         {
             var hook = Create();
             hook.PlayerDied();
@@ -83,9 +66,9 @@ namespace DetectiveDave.Tests
         }
 
         [Test]
-        public void ALoopShareAboveZeroKeepsThatShareOfTheLoop()
+        public void AShareAboveZeroKeepsThatShareOfTheLoopAndTheCaseMusic()
         {
-            var hook = Create(new DeathHookSettings(0.25f, 1f, 0.9f, 0.3f, 0.1f, false, 0f, true, true));
+            var hook = Create(new DeathHookSettings(0.25f, 1f, 0.9f, 0.3f, 0.1f, false, 0f));
             hook.PlayerDied();
             Advance(hook, 0.5f);
             Assert.AreEqual(0.3f, output.Mix.LoopShare, Tolerance);
@@ -93,7 +76,7 @@ namespace DetectiveDave.Tests
         }
 
         [Test]
-        public void ARespawnFadesTheHookOutAndTheMusicBackUp()
+        public void ARespawnFadesTheHookBackToSilenceAndTheMusicBackUp()
         {
             var hook = Create();
             hook.PlayerDied();
@@ -105,85 +88,69 @@ namespace DetectiveDave.Tests
             Assert.AreEqual(0.5f, output.Mix.LoopShare, Tolerance);
             Advance(hook, 0.6f);
             Assert.AreEqual(DeathHookState.Idle, hook.State);
-            Assert.AreEqual(1, output.Stops);
             Assert.AreEqual(1f, output.Mix.LoopShare, Tolerance);
             Assert.AreEqual(0f, output.Mix.HookVolume, Tolerance);
         }
 
         [Test]
-        public void AHookThatPlaysOnceWaitsForTheRespawnInSilenceWithTheMusicStillDown()
+        public void TheHookStaysUpWhileTheMusicIsDownUntilTheRespawn()
         {
             var hook = Create();
             hook.PlayerDied();
-            Advance(hook, 0.5f);
-            output.HookIsPlaying = false;
-            Advance(hook, 0.1f);
-            Assert.AreEqual(DeathHookState.WaitingForRespawn, hook.State);
+            Advance(hook, 30f);
+            Assert.AreEqual(DeathHookState.Playing, hook.State);
+            Assert.AreEqual(0.9f, output.Mix.HookVolume, Tolerance);
             Assert.AreEqual(0f, output.Mix.LoopShare, Tolerance);
         }
 
         [Test]
-        public void AHookThatLoopsKeepsPlayingWhileTheClipIsStillGoing()
+        public void TheStartDelayHoldsTheFadeBack()
         {
-            var hook = Create(new DeathHookSettings(0.25f, 1f, 0.9f, 0f, 0f, false, 0f, false, true));
-            hook.PlayerDied();
-            Advance(hook, 0.5f);
-            Advance(hook, 5f);
-            Assert.IsTrue(output.LastLoop);
-            Assert.AreEqual(DeathHookState.Playing, hook.State);
-        }
-
-        [Test]
-        public void TheStartDelayHoldsTheHookAndTheMusicBack()
-        {
-            var hook = Create(new DeathHookSettings(0.25f, 1f, 0.9f, 0f, 0f, false, 0.5f, true, true));
+            var hook = Create(new DeathHookSettings(0.25f, 1f, 0.9f, 0f, 0f, false, 0.5f));
             hook.PlayerDied();
             Advance(hook, 0.4f);
-            Assert.AreEqual(0, output.Starts);
+            Assert.AreEqual(0f, output.Mix.HookVolume, Tolerance);
             Assert.AreEqual(1f, output.Mix.LoopShare, Tolerance);
             Advance(hook, 0.35f);
-            Assert.AreEqual(1, output.Starts);
             Assert.AreEqual(0.5f, output.Mix.LoopShare, Tolerance);
         }
 
         [Test]
-        public void ARespawnBeforeTheDelayEndsNeverStartsTheHook()
+        public void ARespawnBeforeTheDelayEndsChangesNothing()
         {
-            var hook = Create(new DeathHookSettings(0.25f, 1f, 0.9f, 0f, 0f, false, 2f, true, true));
+            var hook = Create(new DeathHookSettings(0.25f, 1f, 0.9f, 0f, 0f, false, 2f));
             hook.PlayerDied();
             Advance(hook, 0.5f);
             hook.PlayerRespawned();
             Assert.AreEqual(DeathHookState.Idle, hook.State);
-            Assert.AreEqual(0, output.Starts);
+            Assert.AreEqual(0f, output.Mix.HookVolume, Tolerance);
             Assert.AreEqual(1f, output.Mix.LoopShare, Tolerance);
         }
 
         [Test]
-        public void ASecondDeathRestartsTheHookWhenAsked()
+        public void ASecondDeathWhileFadingOutFadesUpFromWhereItIs()
         {
             var hook = Create();
             hook.PlayerDied();
             Advance(hook, 0.5f);
             hook.PlayerRespawned();
-            Advance(hook, 0.3f);
+            Advance(hook, 0.5f);
             hook.PlayerDied();
-            Advance(hook, 0.01f);
-            Assert.AreEqual(2, output.Starts);
+            Advance(hook, 0.025f);
             Assert.AreEqual(DeathHookState.FadingIn, hook.State);
+            Assert.AreEqual(0.54f, output.Mix.HookVolume, Tolerance);
         }
 
         [Test]
-        public void ASecondDeathKeepsTheSoundingHookWhenRestartIsOff()
+        public void ASecondDeathWhilePlayingChangesNothing()
         {
-            var hook = Create(new DeathHookSettings(0.25f, 1f, 0.9f, 0f, 0f, false, 0f, true, false));
+            var hook = Create();
             hook.PlayerDied();
             Advance(hook, 0.5f);
-            hook.PlayerRespawned();
-            Advance(hook, 0.3f);
             hook.PlayerDied();
-            Advance(hook, 0.3f);
-            Assert.AreEqual(1, output.Starts);
+            Advance(hook, 0.1f);
             Assert.AreEqual(DeathHookState.Playing, hook.State);
+            Assert.AreEqual(0.9f, output.Mix.HookVolume, Tolerance);
         }
 
         [Test]
@@ -194,9 +161,21 @@ namespace DetectiveDave.Tests
             Advance(hook, 0.5f);
             hook.Stop();
             Assert.AreEqual(DeathHookState.Idle, hook.State);
-            Assert.AreEqual(1, output.Stops);
+            Assert.AreEqual(0f, output.Mix.HookVolume, Tolerance);
             Assert.AreEqual(1f, output.Mix.LoopShare, Tolerance);
             Assert.AreEqual(1f, output.Mix.CaseMusicShare, Tolerance);
+        }
+
+        [Test]
+        public void ADeathAfterStopFadesUpAgain()
+        {
+            var hook = Create();
+            hook.PlayerDied();
+            Advance(hook, 0.5f);
+            hook.Stop();
+            hook.PlayerDied();
+            Advance(hook, 0.5f);
+            Assert.AreEqual(0.9f, output.Mix.HookVolume, Tolerance);
         }
 
         [Test]
@@ -207,7 +186,7 @@ namespace DetectiveDave.Tests
             hook.PlayerDied();
             Advance(hook, 1f);
             Assert.AreEqual(DeathHookState.Idle, hook.State);
-            Assert.AreEqual(0, output.Starts);
+            Assert.AreEqual(1f, output.Mix.LoopShare, Tolerance);
         }
 
         [Test]
@@ -216,19 +195,30 @@ namespace DetectiveDave.Tests
             var hook = Create();
             hook.PlayerRespawned();
             Assert.AreEqual(DeathHookState.Idle, hook.State);
-            Assert.AreEqual(0, output.Stops);
         }
 
         [Test]
         public void ZeroFadesSwitchAtOnce()
         {
-            var hook = Create(new DeathHookSettings(0f, 0f, 0.9f, 0f, 0f, false, 0f, true, true));
+            var hook = Create(new DeathHookSettings(0f, 0f, 0.9f, 0f, 0f, false, 0f));
             hook.PlayerDied();
             Advance(hook, 0.01f);
             Assert.AreEqual(DeathHookState.Playing, hook.State);
             hook.PlayerRespawned();
             Advance(hook, 0.01f);
             Assert.AreEqual(DeathHookState.Idle, hook.State);
+        }
+
+        [Test]
+        public void TheLoopTheCaseMusicAndTheHookDucksMultiply()
+        {
+            var hook = Create(new DeathHookSettings(0.25f, 1f, 0.8f, 0.5f, 0.25f, false, 0f));
+            hook.PlayerDied();
+            Advance(hook, 0.5f);
+            const float loopBase = 0.8f;
+            const float caseDuck = 0.4f;
+            Assert.AreEqual(0.16f, loopBase * caseDuck * output.Mix.LoopShare, Tolerance);
+            Assert.AreEqual(0.8f, output.Mix.HookVolume, Tolerance);
         }
 
         [Test]
@@ -247,38 +237,9 @@ namespace DetectiveDave.Tests
         [Test]
         public void PianoWhileTheHookPlaysCanBeAllowed()
         {
-            var hook = Create(new DeathHookSettings(0.25f, 1f, 0.9f, 0f, 0f, true, 0f, true, true));
+            var hook = Create(new DeathHookSettings(0.25f, 1f, 0.9f, 0f, 0f, true, 0f));
             hook.PlayerDied();
             Assert.IsTrue(hook.PianoAllowed);
         }
-    
-        [Test]
-        public void SyncedHookLoopsWhileWaitingEvenWhenPlayHookOnce()
-        {
-            var hook = Create(new DeathHookSettings(0.25f, 1f, 0.9f, 0f, 0f, false, 0f, true, true, true, 0f, true));
-            hook.PlayerDied();
-            Advance(hook, 0.1f);
-            Assert.IsTrue(output.LastLoop);
-        }
-
-        [Test]
-        public void SyncedHookPlaysOnceWhenLoopWhileWaitingIsOff()
-        {
-            var hook = Create(new DeathHookSettings(0.25f, 1f, 0.9f, 0f, 0f, false, 0f, true, true, true, 0f, false));
-            hook.PlayerDied();
-            Advance(hook, 0.1f);
-            Assert.IsFalse(output.LastLoop);
-        }
-
-        [Test]
-        public void ASecondDeathWhileSyncedStartsTheHookAgain()
-        {
-            var hook = Create(new DeathHookSettings(0.25f, 1f, 0.9f, 0f, 0f, false, 0f, true, true, true, 0f, true));
-            hook.PlayerDied();
-            Advance(hook, 0.5f);
-            hook.PlayerDied();
-            Advance(hook, 0.1f);
-            Assert.AreEqual(2, output.Starts);
-        }
-}
+    }
 }

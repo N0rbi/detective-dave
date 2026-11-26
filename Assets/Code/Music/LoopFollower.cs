@@ -14,9 +14,6 @@ namespace DetectiveDave.MusicPlay
             return wanted < 0.0 ? wanted + cycle : wanted;
         }
 
-        public static bool ReachedCycleEnd(double clipTime, double loopLength, double clipLength) =>
-            clipTime >= Math.Min(loopLength, clipLength);
-
         public static bool NeedsCorrection(double clipTime, double wantedClipTime, double cycleLength, double toleranceSeconds)
         {
             var difference = Math.Abs(clipTime - wantedClipTime);

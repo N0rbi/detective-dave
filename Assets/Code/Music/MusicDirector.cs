@@ -38,39 +38,26 @@ namespace DetectiveDave.MusicPlay
 
         public bool HasClip => settings.DeathHook.HookClip;
 
-        public bool HookIsPlaying => hookSource && hookSource.isPlaying;
-
-        public void StartHook(bool loopHook)
+        void StartHookStem()
         {
-            hookSource.clip = settings.DeathHook.HookClip;
-            hookSource.loop = loopHook;
+            var clip = settings.DeathHook.HookClip;
+            if (!clip || !loop || !loop.clip) return;
+            hookSource.clip = clip;
+            hookSource.loop = true;
             hookSource.volume = 0f;
-            hookSource.Stop();
-            hookSource.time = HookStartTime();
+            hookSource.mute = true;
+            hookSource.time = (float)LoopFollower.WantedClipTime(LoopSeconds(), loop.clip.length, clip.length, settings.DeathHook.HookSyncOffsetSeconds);
             hookSource.Play();
-        }
-
-        float HookStartTime()
-        {
-            if (!settings.DeathHook.SyncToLoop || !loop || !loop.clip) return 0f;
-            return (float)LoopFollower.WantedClipTime(LoopSeconds(), loop.clip.length, hookSource.clip.length, settings.DeathHook.HookSyncOffsetSeconds);
         }
 
         void FollowLoopWithHook()
         {
-            if (!settings.DeathHook.SyncToLoop || !hookSource.isPlaying || !loop || !loop.clip) return;
-            if (!hookSource.loop && LoopFollower.ReachedCycleEnd(hookSource.time, loop.clip.length, hookSource.clip.length))
-            {
-                hookSource.Stop();
-                return;
-            }
+            if (!hookSource || !hookSource.isPlaying || !loop || !loop.clip) return;
             var cycle = Math.Min(loop.clip.length, hookSource.clip.length);
             var wanted = LoopFollower.WantedClipTime(LoopSeconds(), loop.clip.length, hookSource.clip.length, settings.DeathHook.HookSyncOffsetSeconds);
             if (!LoopFollower.NeedsCorrection(hookSource.time, wanted, cycle, DriftToleranceSeconds)) return;
             hookSource.time = (float)wanted;
         }
-
-        public void StopHook() => hookSource.Stop();
 
         public void Apply(DeathHookMix mix)
         {
@@ -138,7 +125,9 @@ namespace DetectiveDave.MusicPlay
         {
             if (loop) loop.volume = loopBaseVolume * loopDuck * loopHookShare;
             if (caseSource && caseSource.isPlaying) caseSource.volume = caseVolume * caseHookShare;
-            if (hookSource) hookSource.volume = hookVolume;
+            if (!hookSource) return;
+            hookSource.volume = hookVolume;
+            hookSource.mute = hookVolume <= 0f;
         }
 
         float StartTime(CaseMusic music)
@@ -259,6 +248,7 @@ namespace DetectiveDave.MusicPlay
             hookSource = NewVoice();
             if (!loop.clip) return;
             loop.Play();
+            StartHookStem();
             if (settings.FadeInSeconds > 0f) FadeLoopIn();
         }
 

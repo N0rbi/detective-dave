@@ -176,7 +176,7 @@ Play with F5 on a level with a Gap and a WallGutter key between the two Shifts. 
 - Solve a case in the overworld, then type resetplayer in the overworld: "Progress reset" shows for about 2 seconds, the overworld reloads and every case is locked or unsolved again as in a new game. progress.json is gone.
 - Start a case, and while the level is on screen type resetplayer: the overworld loads, the case is not still active, the music keeps playing without a restart, and there is still only one Cheat Director under DontDestroyOnLoad.
 - Type it during the spiral or while the player falls: the overworld still loads. Type it in capitals, and with a typo fixed with Backspace: it still works. Type half of it, wait 4 seconds, type the rest: nothing happens.
-- Type resetplayer while a letter paper is open: the letters are typed into the paper and the overworld loads anyway.
+- Type resetplayer while the trumpet is up: it is silent at once and the music is at full volume; the trumpet keeps running muted (die again and it fades up on the beat).
 - Turn Cheats Enabled off: typing resetplayer does nothing.
 
 
@@ -209,7 +209,7 @@ Play with F5 on a level with a Gap and a WallGutter key between the two Shifts. 
 - Decline the request: the music fades out. Accept: it keeps playing through the level.
 - Finish the level: when the findings start typing the music fades out.
 - Walk over a solved case: no music starts.
-- Type resetplayer while it plays: the music stops at once.
+- Type resetplayer while the trumpet is up: it is silent at once and the music is at full volume; the trumpet keeps running muted (die again and it fades up on the beat).
 
 ## Wrong key dissonance
 - Play a level. Press a key that is not next to the player: the player stumbles and a harsh, quiet piano note plays (half volume), not a normal one. Over the first chords it rotates between Piano 5, 6, 11, 12 (D G# B), over E7 between Piano 1 and 7 (C E G). Bumping a wall or pressing the own key plays the ordinary quiet note.
@@ -224,7 +224,7 @@ Play with F5 on a level with a Gap and a WallGutter key between the two Shifts. 
 - Run Set Up Music: Music Settings > Death hook > Hook Clip is Muted trumpet hook (in Assets/Audio/Music/Stingers). Staging no longer has the file.
 - Get caught by a guard: the music fades down in a quarter of a second and the trumpet fades in; when the detective can move again the trumpet fades out over a second and the music comes back. Same for a dog bite.
 - Press a wrong key (stumble) and reach the goal: no trumpet.
-- Die twice in a row: the trumpet restarts from the beginning each time. Untick Restart Hook On Every Death: a sounding hook keeps going.
-- Type resetplayer while the trumpet plays: it stops at once and the music is at full volume.
-- Die at different moments of the loop (bar 1, bar 5, bar 8): the trumpet comes in on the beat of the music that was playing, and stays on it for a long wait. If it is early or late, change Hook Sync Offset Seconds. Untick Sync To Loop: it starts from its beginning again.
+- Die twice in a row: the trumpet fades up again each time, from wherever it is, and never restarts; it is the same continuous take.
+- Type resetplayer while the trumpet is up: it is silent at once and the music is at full volume; the trumpet keeps running muted (die again and it fades up on the beat).
+- Die at different moments of the loop (bar 1, bar 5, bar 8): the trumpet is faded up into the music already playing, on the beat, and stays on it for a long wait. If it is early or late, change Hook Sync Offset Seconds.
 - Remove the Hook Clip: the inspector and the Console warn, and a death changes nothing.
