@@ -189,6 +189,11 @@ Play with F5 on a level with a Gap and a WallGutter key between the two Shifts. 
 
 - [ ] Run `Set Up Player` (or `Set Up Dogs`, `Set Up Background`, `Set Up Overworld`): no error dialog; Game.unity has a `DogController` with Dog Settings filled.
 - [ ] Every Gap key shows a dog and no hole art. The dog does not move.
+- [ ] Two dogs side by side never show the same frame for long; reload the level and their start frames change.
+- [ ] With a Bass Chart, a dog changes its frame exactly when the upright bass plays a note; an angry dog on every note, a calm dog on every second note.
+- [ ] Set `Dog Step Mode` to Timer: the dogs animate at `Frames Per Second` again (still out of sync).
+- [ ] Remove the Bass Chart link on Music Settings, play: one warning about the bass, dogs use the timer.
+- [ ] Drop the bass `.aif` or `.wav` (or a changed one), run `tools/bass_onsets.py` and `Set Up Bass Chart`: the dialog shows the number of notes; if the file length is not the loop length it asks which tempo to use.
 - [ ] Walk next to a dog: it turns angry and its frames go 1-2-3-2-1 and loop. Walk away: it calms down.
 - [ ] Step onto a dog: the player dies (death sprite) and the dog is calm meanwhile; after the wipe the level restarts and the dog is angry or calm by where the player stands.
 - [ ] Every level shows the skyline behind and around the keys; no dark panel covers it. Untick `Hide Backdrop Over Background` on `KeyTerrainView` and the dark panel is back. A level whose Background renderer holds a `placeholder_*` sprite shows a warning in its checks.
