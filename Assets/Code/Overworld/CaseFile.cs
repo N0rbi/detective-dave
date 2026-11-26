@@ -19,6 +19,9 @@ namespace DetectiveDave.OverworldPlay
         [SerializeField, TextArea(2, 8)] [Tooltip("The answer the player types on the right paper after reading the findings. Completing it solves the case.")] string response;
         [SerializeField] [Tooltip("The level played when the case is accepted.")] Level level;
         [SerializeField] [Tooltip("Cases that must be solved before this one opens.")] CaseFile[] requires = new CaseFile[0];
+        [Header("Music")]
+        [SerializeField] [Tooltip("Optional music that plays over the jazz loop while this case is open.")] CaseMusic music = new CaseMusic();
+
         [Header("Look")]
         [SerializeField] [Tooltip("Optional colours for the texts of this case. Each line takes its colour from Overworld Settings until you tick it.")] CaseLook look = new CaseLook();
 
@@ -31,6 +34,7 @@ namespace DetectiveDave.OverworldPlay
         public IReadOnlyList<SuspectEntry> Suspects => suspects;
         public Font DescriptionFontOverride => descriptionFontOverride;
         public CaseLook Look => look;
+        public CaseMusic Music => music;
         public Level Level => level;
         public bool HasLevel => level;
         public IReadOnlyList<CaseFile> Requires => requires;

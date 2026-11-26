@@ -7,9 +7,10 @@ using UnityEngine;
 
 namespace DetectiveDave.MusicPlay
 {
-    public sealed class MusicDirector : MonoBehaviour, IPianoVoices
+    public sealed class MusicDirector : MonoBehaviour, IPianoVoices, ICaseMusicPlayer
     {
         const string LogPrefix = "[Music]";
+        const double DriftToleranceSeconds = 0.04;
 
         static MusicDirector instance;
 
@@ -17,6 +18,13 @@ namespace DetectiveDave.MusicPlay
         AudioClip[] pianoClips;
         IReadOnlyList<SingleNoteClip> singleClips;
         AudioSource loop;
+        AudioSource caseSource;
+        CaseMusic caseMusic;
+        float loopBaseVolume;
+        float loopDuck = 1f;
+        float caseVolume;
+        Tween caseTween;
+        Tween duckTween;
         AudioSource[] voices;
         int nextVoice;
 
@@ -25,6 +33,75 @@ namespace DetectiveDave.MusicPlay
         public IBassPulse BassPulse { get; private set; } = new NoBassPulse();
 
         public static IBassPulse CurrentBassPulse => instance ? instance.BassPulse : null;
+
+        public static ICaseMusicPlayer CaseMusicPlayer => instance ? instance : NothingToPlay;
+
+        static readonly ICaseMusicPlayer NothingToPlay = new NoCaseMusicPlayer();
+
+        public void FadeIn(CaseMusic music)
+        {
+            if (!music.HasClip) return;
+            if (caseMusic != null && caseMusic.Clip == music.Clip && caseSource.isPlaying) return;
+            caseTween?.Kill();
+            caseMusic = music;
+            caseSource.clip = music.Clip;
+            caseSource.loop = true;
+            caseSource.time = StartTime(music);
+            caseVolume = 0f;
+            caseSource.volume = 0f;
+            caseSource.Play();
+            caseTween = DOTween.To(() => caseVolume, value => caseVolume = value, music.Volume, music.FadeInSeconds).SetUpdate(true).SetLink(gameObject);
+            TweenDuck(music.LoopVolumeWhilePlaying, music.FadeInSeconds);
+        }
+
+        public void FadeOut()
+        {
+            if (caseMusic == null || !caseSource.isPlaying) return;
+            var seconds = caseMusic.FadeOutSeconds;
+            caseMusic = null;
+            caseTween?.Kill();
+            caseTween = DOTween.To(() => caseVolume, value => caseVolume = value, 0f, seconds).SetUpdate(true).SetLink(gameObject).OnComplete(() => caseSource.Stop());
+            TweenDuck(1f, seconds);
+        }
+
+        public void StopNow()
+        {
+            caseTween?.Kill();
+            duckTween?.Kill();
+            caseMusic = null;
+            caseSource.Stop();
+            caseVolume = 0f;
+            loopDuck = 1f;
+        }
+
+        void Update()
+        {
+            if (loop) loop.volume = loopBaseVolume * loopDuck;
+            if (!caseSource || !caseSource.isPlaying) return;
+            caseSource.volume = caseVolume;
+            if (caseMusic != null && caseMusic.SyncToLoop) FollowLoop();
+        }
+
+        float StartTime(CaseMusic music)
+        {
+            if (!music.SyncToLoop || !loop || !loop.clip) return 0f;
+            return (float)LoopFollower.WantedClipTime(LoopSeconds(), loop.clip.length, music.Clip.length);
+        }
+
+        void FollowLoop()
+        {
+            if (!loop || !loop.clip) return;
+            var cycle = Math.Min(loop.clip.length, caseSource.clip.length);
+            var wanted = LoopFollower.WantedClipTime(LoopSeconds(), loop.clip.length, caseSource.clip.length);
+            if (!LoopFollower.NeedsCorrection(caseSource.time, wanted, cycle, DriftToleranceSeconds)) return;
+            caseSource.time = (float)wanted;
+        }
+
+        void TweenDuck(float target, float seconds)
+        {
+            duckTween?.Kill();
+            duckTween = DOTween.To(() => loopDuck, value => loopDuck = value, target, seconds).SetUpdate(true).SetLink(gameObject);
+        }
 
         public static MusicDirector Ensure(MusicSettings musicSettings)
         {
@@ -114,14 +191,15 @@ namespace DetectiveDave.MusicPlay
             loop = NewVoice();
             loop.clip = settings.LoopClip;
             loop.loop = true;
-            loop.volume = settings.FadeInSeconds > 0f ? 0f : settings.LoopVolume;
+            loopBaseVolume = settings.FadeInSeconds > 0f ? 0f : settings.LoopVolume;
+            caseSource = NewVoice();
             if (!loop.clip) return;
             loop.Play();
             if (settings.FadeInSeconds > 0f) FadeLoopIn();
         }
 
         void FadeLoopIn() =>
-            DOTween.To(() => loop.volume, volume => loop.volume = volume, settings.LoopVolume, settings.FadeInSeconds).SetUpdate(true).SetLink(gameObject);
+            DOTween.To(() => loopBaseVolume, volume => loopBaseVolume = volume, settings.LoopVolume, settings.FadeInSeconds).SetUpdate(true).SetLink(gameObject);
 
         AudioSource NewVoice()
         {

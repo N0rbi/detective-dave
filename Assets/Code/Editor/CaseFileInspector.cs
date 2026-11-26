@@ -1,5 +1,6 @@
 using System.Linq;
 using DetectiveDave.Levels;
+using DetectiveDave.MusicPlay;
 using DetectiveDave.OverworldPlay;
 using UnityEditor;
 using UnityEngine;
@@ -20,6 +21,7 @@ namespace DetectiveDave.EditorTools
             DrawDefaultInspector();
             DrawLevelPicker();
             DrawIdProblems(file);
+            DrawMusicProblem(file);
             DrawLookPreview(file);
             EditorGUILayout.Space();
             EditorGUILayout.LabelField("Letter preview", EditorStyles.boldLabel);
@@ -41,6 +43,14 @@ namespace DetectiveDave.EditorTools
             if (picked == current) return;
             levelProperty.objectReferenceValue = picked == 0 ? null : levels[picked - 1];
             serializedObject.ApplyModifiedProperties();
+        }
+
+        static void DrawMusicProblem(CaseFile file)
+        {
+            var settings = AssetDatabase.LoadAssetAtPath<MusicSettings>(MusicSetupPaths.SettingsPath);
+            var loopSeconds = settings && settings.LoopClip ? settings.LoopClip.length : 0.0;
+            var problem = CaseMusicCheck.Problem(file.Music, loopSeconds);
+            if (problem != null) EditorGUILayout.HelpBox(problem, MessageType.Warning);
         }
 
         static void DrawLookPreview(CaseFile file)
