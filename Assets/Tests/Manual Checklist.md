@@ -202,6 +202,7 @@ Play with F5 on a level with a Gap and a WallGutter key between the two Shifts. 
 - [ ] Every level shows the skyline behind the keys. Change Offset, Zoom, Flip and Visible under Background Placement on a level: the picture moves, zooms, mirrors or disappears and never shows an edge.
 - [ ] Finish a level with the player on a key at the far edge of the board (top row, bottom row, far left and right): while the camera zooms in on the player, no empty clear colour shows at any edge of the screen, and the same during the zoom out when the next level starts. Resize the window to a very wide and a nearly square shape: still no edge.
 - [ ] Select the object with `LevelBackgroundView` while playing: a dashed yellow outline shows the area the camera can reach. A small background picture logs one `Max Upscale` warning that names the sprite.
+- [ ] Run `Window > Detective Dave > Set Up Overworld Board`: the dialog says Desk Top Sprite is now keyboard_stealth_board (or nothing needed changing); `Check Overworld Sprites` no longer lists Desk Top Sprite. Running it again changes nothing. Put `placeholder_desk_top` back on the field and run `Set Up Overworld`: the board returns. A sprite you chose yourself stays.
 - [ ] Overworld: the stealth board covers the whole screen without stretching. The smoking detective stands on the right; every few seconds the arm comes up to the mouth with a small tilt, waits, and goes down. Moving the `Arm Pivot` changes where it turns; running `Set Up Overworld` again changes nothing you moved.
 
 ## Case music

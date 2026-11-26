@@ -51,6 +51,9 @@ namespace DetectiveDave.EditorTools
             EnsureFolder(OverworldSetupPaths.OverworldFolder);
             EnsureFolder(OverworldSetupPaths.CasesFolder);
             var settings = EnsureSettings(sprites[1], sprites[2]);
+            var boardError = OverworldBoardSetup.ApplyOrError(settings, out var boardChanged);
+            if (boardError != null) return boardError;
+            if (boardChanged) Note("assigned deskTopSprite (keyboard_stealth_board)");
             AssignPlaceholders(settings);
             var magnifier = EnsureMagnifierSettings(sprites[0]);
             var sampleCase = EnsureSampleCase(level);
@@ -93,15 +96,6 @@ namespace DetectiveDave.EditorTools
             Note("assigned " + field);
         }
 
-        static void ReplacePlaceholder(SerializedObject serialized, string field, Object value)
-        {
-            var property = serialized.FindProperty(field);
-            var current = property.objectReferenceValue;
-            if (current && !current.name.StartsWith("placeholder_")) return;
-            property.objectReferenceValue = value;
-            Note("assigned " + field);
-        }
-
         static void AssignDeskIfEmpty(OverworldSettings settings, DeskLayout desk)
         {
             var serialized = new SerializedObject(settings);
@@ -112,7 +106,6 @@ namespace DetectiveDave.EditorTools
         static void AssignPlaceholders(OverworldSettings settings)
         {
             var serialized = new SerializedObject(settings);
-            ReplacePlaceholder(serialized, "deskTopSprite", PlayerSpriteImport.ImportDecoration(OverworldSetupPaths.BoardPath));
             FillIfEmpty(serialized, "descriptionPaperSprite", PlayerSpriteImport.ImportDecoration(OverworldSetupPaths.DescriptionPaperPath));
             FillIfEmpty(serialized, "letterPaperSprite", PlayerSpriteImport.ImportDecoration(OverworldSetupPaths.LetterPaperPath));
             FillIfEmpty(serialized, "ringSprite", PlayerSpriteImport.ImportDecoration(OverworldSetupPaths.RingPath));
