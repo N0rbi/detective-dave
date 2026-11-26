@@ -13,6 +13,12 @@ namespace DetectiveDave.DogPlay
         [Tooltip("Calm sprites in order. They play 1-2-3-2-1 and loop. At least one.")]
         [SerializeField] Sprite[] calmFrames;
         [SerializeField, Min(0.5f)] [Tooltip("How many animation frames the dogs show per second.")] float framesPerSecond = 8f;
+        [Header("Animation pace")]
+        [SerializeField] [Tooltip("Timer: every dog steps at Frames Per Second. Bass Notes: every dog steps when the upright bass starts a note in the loop (needs a Bass Chart on Music Settings; without one the Timer is used and one warning is logged).")] DogStepMode stepMode = DogStepMode.BassNotes;
+        [SerializeField, Range(0f, 0.9f)] [Tooltip("Chance that a dog skips a step, so the dogs drift apart. Every dog also starts on its own random frame. 0 keeps them in the same rhythm.")] float skipChance = 0.2f;
+        [SerializeField, Min(1)] [Tooltip("Bass Notes only. A calm dog steps on every Nth bass note. An angry dog steps on every note. 2 makes calm dogs move at half speed.")] int calmEveryNotes = 2;
+
+        [Header("Key art")]
         [SerializeField] [Tooltip("Hide the key art of the key a dog stands on, so only the dog is drawn there.")] bool hideKeyArt = true;
 
         public float HeightInKeys => heightInKeys;
@@ -26,6 +32,10 @@ namespace DetectiveDave.DogPlay
         public float FramesPerSecond => framesPerSecond;
 
         public bool HideKeyArt => hideKeyArt;
+
+        public DogStepMode StepMode => stepMode;
+
+        public DogPacing Pacing => new DogPacing(skipChance, calmEveryNotes);
 
         public bool HasValidFrames => HasSprites(angryFrames) && HasSprites(calmFrames);
 

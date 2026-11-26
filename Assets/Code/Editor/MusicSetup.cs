@@ -45,6 +45,8 @@ namespace DetectiveDave.EditorTools
             var chartError = ChordChartSetup.ApplyOrError(settings, false);
             if (chartError != null) return chartError;
             singles = SingleNoteSetup.Apply(settings);
+            var bassError = BassChartSetup.ApplyIfFileExists(settings);
+            if (bassError != null) return bassError;
             AssetDatabase.SaveAssets();
             return WireScene(PlayerSetupPaths.ScenePath, settings) ?? WireScene(OverworldSetupPaths.ScenePath, settings);
         }

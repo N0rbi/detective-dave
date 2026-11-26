@@ -25,6 +25,9 @@ namespace DetectiveDave.MusicPlay
         [SerializeField] [Tooltip("What plays when the chord of that moment has no clip whose notes all fit its scale (or the loop position is outside every chord). Play Closest To Chord plays the clip with the most notes inside the scale, never the same clip as the move before, and the lowest name wins a tie. Play Next Clip plays the next clip in name order. A move is never silent while there is a piano clip.")] WhenNoClipFits whenNoClipFits = WhenNoClipFits.PlayClosestToChord;
         [SerializeField, Range(1f, 10f)] [Tooltip("How much more likely a clip made of chord notes is than a clip that only fits the scale, on strong beats and at the start of a chord. 1 treats them the same. Only used by Chord Aware.")] float chordToneWeight = 3f;
 
+        [Header("Bass")]
+        [SerializeField] [Tooltip("When the upright bass plays a note in the loop. The dogs step their animation on these notes. Optional. Run Window > Detective Dave > Set Up Bass Chart to fill it from bass_onsets.json.")] BassChart bassChart;
+
         [Header("Debounce")]
         [SerializeField, Range(0f, 3f)] [Tooltip("The first piano note after a pause plays a chord clip. Every move within this many seconds of the previous piano note plays a single note instead, so quick runs of moves stay light. Once no note has played for this long, the next one is a chord again. 0 turns it off: every note is a chord.")] float chordDebounceSeconds = 0.6f;
         [SerializeField] [Tooltip("On: every single note restarts the wait, so a continuous run of moves stays single notes until the player pauses. Off: the wait is measured from the last chord only, so a chord returns that many seconds after the last chord even while the player keeps moving.")] bool singlesExtendDebounce = true;
@@ -57,6 +60,8 @@ namespace DetectiveDave.MusicPlay
         public SingleNoteClip[] SingleNoteClips => singleNoteClips;
 
         public ChordChart ChordChart => chordChart;
+
+        public BassChart BassChart => bassChart;
 
         public WhenNoClipFits WhenNoClipFits => whenNoClipFits;
 

@@ -22,6 +22,10 @@ namespace DetectiveDave.MusicPlay
 
         public IMusicReaction Reaction { get; private set; }
 
+        public IBassPulse BassPulse { get; private set; } = new NoBassPulse();
+
+        public static IBassPulse CurrentBassPulse => instance ? instance.BassPulse : null;
+
         public static MusicDirector Ensure(MusicSettings musicSettings)
         {
             if (instance) return instance;
@@ -49,6 +53,7 @@ namespace DetectiveDave.MusicPlay
             singleClips = SingleNoteOrder.Sorted(settings.SingleNoteClips);
             voices = Enumerable.Range(0, settings.PianoPoolSize).Select(_ => NewVoice()).ToArray();
             Reaction = BuildReaction();
+            BassPulse = BuildBassPulse();
             StartLoop();
             WarnIfSilent();
             WarnAboutChart();
@@ -71,6 +76,14 @@ namespace DetectiveDave.MusicPlay
                 () => Time.unscaledTime,
                 hasChords ? ChordMomentNow(chart) : () => ChordMoment.Outside,
                 message => Debug.LogWarning($"{LogPrefix} {message}", settings));
+        }
+
+        IBassPulse BuildBassPulse()
+        {
+            var bass = settings.BassChart;
+            var chart = settings.ChordChart;
+            if (!bass || !bass.HasOnsets || !chart || !settings.LoopClip) return new NoBassPulse();
+            return new BassPulseSource(bass.CreateClock(chart.LoopLengthBeats, settings.LoopClip.length), LoopSeconds);
         }
 
         IPianoPicker BuildPicker(ChordChart chart, bool hasChords, UnityRandomSource random, IReadOnlyList<PitchClassSet> pitches, string clipKind)

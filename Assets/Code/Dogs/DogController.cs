@@ -1,6 +1,8 @@
 using System.Linq;
 using DetectiveDave.KeyboardGrid;
 using DetectiveDave.LevelPlay;
+using DetectiveDave.MusicPlay;
+using DetectiveDave.OverworldPlay;
 using DetectiveDave.PlayerPlay;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -20,6 +22,9 @@ namespace DetectiveDave.DogPlay
         DogDirector director;
         float clock;
         bool subscribed;
+        bool warnedAboutBass;
+
+        const float SecondsBeforeBassWarning = 2f;
 
         void Awake()
         {
@@ -37,7 +42,7 @@ namespace DetectiveDave.DogPlay
                 enabled = false;
                 return;
             }
-            director = new DogDirector(board, CreateView);
+            director = new DogDirector(board, CreateView, new UnityRandomSource(), settings.Pacing);
             Subscribe();
             Rebuild();
         }
@@ -58,7 +63,26 @@ namespace DetectiveDave.DogPlay
         void Update()
         {
             clock += Time.deltaTime;
-            if (player.HasPlayer) director.ShowStep(DogFrames.StepAt(clock, settings.FramesPerSecond), player.PlayerKey);
+            if (!player.HasPlayer) return;
+            if (UsesBass(out var pulse)) director.HearBassNotes(pulse.Poll(), player.PlayerKey);
+            else director.ShowStep(DogFrames.StepAt(clock, settings.FramesPerSecond), player.PlayerKey);
+        }
+
+        bool UsesBass(out IBassPulse pulse)
+        {
+            pulse = null;
+            if (settings.StepMode != DogStepMode.BassNotes) return false;
+            pulse = MusicDirector.CurrentBassPulse;
+            if (pulse != null && pulse.IsAvailable) return true;
+            WarnAboutMissingBass();
+            return false;
+        }
+
+        void WarnAboutMissingBass()
+        {
+            if (warnedAboutBass || clock < SecondsBeforeBassWarning) return;
+            warnedAboutBass = true;
+            Debug.LogWarning("[Dogs] Dog Settings steps the dogs on bass notes, but Music Settings has no Bass Chart with notes, so the dogs use the timer. Drop the upright bass .aif or .wav into Assets/Staging, run tools/bass_onsets.py, then Window > Detective Dave > Set Up Bass Chart.", settings);
         }
 
         void LateUpdate()

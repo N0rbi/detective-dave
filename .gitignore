@@ -115,3 +115,4 @@ InitTestScene*.unity*
 
 # Local backups waiting to be deleted
 _to_delete/
+__pycache__/
