@@ -205,8 +205,8 @@ namespace DetectiveDave.OverworldPlay
             var view = ViewSize();
             var centre = ViewCentre();
             viewWidth = view.x;
-            var descriptionSpot = BriefingLayout.Place(settings.DescriptionPlacement, centre, view);
-            var letterSpot = BriefingLayout.Place(settings.LetterPlacement, centre, view);
+            var descriptionSpot = PaperFit.Fit(BriefingLayout.Place(settings.DescriptionPlacement, centre, view), descriptionPaper.Aspect, centre, view, settings.PaperScreenMarginShare);
+            var letterSpot = PaperFit.Fit(BriefingLayout.Place(settings.LetterPlacement, centre, view), letterPaper.Aspect, centre, view, settings.PaperScreenMarginShare);
             var left = FitText(descriptionPaper, descriptionSpot, leftBlocks, view.y, caseName);
             var right = FitText(letterPaper, letterSpot, new[] { new TextBlock(rightText, 1f) }, view.y, caseName);
             descriptionPaper.Place(descriptionSpot, TextGridOf(left), settings.PaperPaddingShare);

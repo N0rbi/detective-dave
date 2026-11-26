@@ -40,6 +40,8 @@ namespace DetectiveDave.OverworldPlay
             gameObject.SetActive(false);
         }
 
+        public float Aspect => sheet.sprite.bounds.size.y / sheet.sprite.bounds.size.x;
+
         public Vector2 TextArea(float paperWidth, float paddingShare)
         {
             float aspect = sheet.sprite.bounds.size.y / sheet.sprite.bounds.size.x;
@@ -137,7 +139,7 @@ namespace DetectiveDave.OverworldPlay
                 return;
             }
             float cellWidth = grid.LetterWidth * scales.ShareOf(glyph.Row);
-            float characterSize = cellWidth / (advancePixels[glyph.Slot] * EmScale);
+            float characterSize = GlyphCell.CharacterSize(cellWidth, grid.LineStep * scales.ShareOf(glyph.Row), advancePixels[glyph.Slot], FontSize, EmScale);
             float glyphWidth = WidthPixelsOf(glyph.Slot, glyph.Character) * characterSize * EmScale;
             float x = textOrigin.x + GlyphCell.CentreX(glyph.Column, cellWidth);
             float y = textOrigin.y + GlyphCell.TopY(scales.OffsetOf(glyph.Row), grid.LineStep, settings.BaselineOffsetShareFor(glyph.Slot), scales.ShareOf(glyph.Row));

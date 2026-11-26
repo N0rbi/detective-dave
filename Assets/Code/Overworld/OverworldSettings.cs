@@ -70,6 +70,7 @@ namespace DetectiveDave.OverworldPlay
         [SerializeField, Min(0f)] [Tooltip("Seconds between typing the last letter and the screen sliding away.")] float finishPauseSeconds = 0.6f;
         [SerializeField] [Tooltip("Where the case description paper lies on the screen.")] PaperPlacement descriptionPlacement = new PaperPlacement(-0.25f, 0.02f, 0.4f, -2f);
         [SerializeField] [Tooltip("Where the letter paper lies on the screen.")] PaperPlacement letterPlacement = new PaperPlacement(0.25f, -0.01f, 0.4f, 1.5f);
+        [SerializeField, Range(0f, 0.2f)] [Tooltip("Empty margin kept free between a paper and the edge of the camera view, as a share of the view. A paper that would stick out is moved in or made smaller.")] float paperScreenMarginShare = 0.03f;
         [SerializeField, Range(0f, 0.3f)] [Tooltip("Empty border of the paper picture, as a share of its width. Text starts inside it.")] float paperPaddingShare = 0.09f;
         [SerializeField, Range(0.01f, 0.08f)] [Tooltip("Largest text size, as a share of the screen height. Long texts shrink from here until they fit the paper.")] float textHeightShare = 0.034f;
         [SerializeField, Range(0.002f, 0.05f)] [Tooltip("Smallest text size, as a share of the screen height. Text shrinks down to this to fit the paper. If it still does not fit, a warning naming the case is logged.")] float hardMinTextHeightShare = 0.008f;
@@ -164,6 +165,7 @@ namespace DetectiveDave.OverworldPlay
         public float FinishPauseSeconds => finishPauseSeconds;
         public PaperPlacement DescriptionPlacement => descriptionPlacement;
         public PaperPlacement LetterPlacement => letterPlacement;
+        public float PaperScreenMarginShare => paperScreenMarginShare;
         public float PaperPaddingShare => paperPaddingShare;
         public float TextHeightShare => textHeightShare;
         public float HardMinTextHeightShare => hardMinTextHeightShare;
