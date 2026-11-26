@@ -19,6 +19,7 @@ namespace DetectiveDave.EditorTools
         static readonly Color OutlineColor = new Color(1f, 1f, 1f, 0.6f);
         static readonly Color EmptyColor = new Color(0.5f, 0.5f, 0.5f, 0.8f);
         static readonly Color StartColor = new Color(0.25f, 0.55f, 1f, 1f);
+        static readonly Color DogColor = new Color(1f, 0.55f, 0.1f, 1f);
         static readonly Color EndColor = new Color(0.65f, 0.3f, 0.9f, 1f);
         const float DotSize = 0.08f;     // board units at scale 1
 
@@ -31,6 +32,8 @@ namespace DetectiveDave.EditorTools
             var shape = level.Shape;
             float scale = KeyGeometry.Scale(layout);
 
+            var gapType = LevelSettings.instance.GapType;
+            bool showDogs = LevelPreferences.ShowDogMarkers;
             var matrix = Gizmos.matrix;
             Gizmos.matrix = level.BoardSpace.localToWorldMatrix;
             foreach (var key in layout.UniqueKeys())
@@ -40,6 +43,7 @@ namespace DetectiveDave.EditorTools
                 var tile = shape ? shape.GetTile(KeyGeometry.ReadCell(shape, level.BoardSpace, layout, key)) as TileType : null;
                 Gizmos.color = tile ? tile.EditorColor : EmptyColor;
                 Gizmos.DrawCube(KeyGeometry.Center(layout, key), Vector3.one * (DotSize * scale));
+                if (DogMarkerRule.Marks(showDogs, tile, gapType)) DrawDogMarker(layout, key);
             }
             DrawShiftEnds(level, layout);
             Gizmos.matrix = matrix;
@@ -59,6 +63,13 @@ namespace DetectiveDave.EditorTools
             Gizmos.color = color;
             foreach (var rect in KeyGeometry.Rects(layout, key)) Gizmos.DrawWireCube(rect.center, rect.size);
             Handles.Label(Gizmos.matrix.MultiplyPoint3x4(KeyGeometry.Center(layout, key)), text, MarkerStyle(color));
+        }
+
+        static void DrawDogMarker(KeyboardLayout layout, KeyDef key)
+        {
+            Gizmos.color = DogColor;
+            foreach (var rect in KeyGeometry.Rects(layout, key)) Gizmos.DrawWireCube(rect.center, rect.size * 0.85f);
+            Handles.Label(Gizmos.matrix.MultiplyPoint3x4(KeyGeometry.Center(layout, key)), "DOG", MarkerStyle(DogColor));
         }
 
         static GUIStyle MarkerStyle(Color color)

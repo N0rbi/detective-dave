@@ -121,6 +121,15 @@ namespace DetectiveDave.EditorTools
     {
         const string PreviewLayoutKey = "DetectiveDave.Levels.PreviewLayout";
 
+        const string DogMarkersKey = "DetectiveDave.Levels.ShowDogMarkers";
+
+        /// <summary>Show a DOG marker on every Gap key while a level is open in Prefab Mode. On by default.</summary>
+        public static bool ShowDogMarkers
+        {
+            get => EditorPrefs.GetBool(DogMarkersKey, true);
+            set => EditorPrefs.SetBool(DogMarkersKey, value);
+        }
+
         /// <summary>The layout id used for key outlines, the Key brush and Play This Level. Defaults to UK (ISO).</summary>
         public static string PreviewLayoutId
         {

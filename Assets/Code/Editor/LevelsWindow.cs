@@ -166,6 +166,7 @@ namespace DetectiveDave.EditorTools
                         Defer(() => PlayThisLevel.Play(level));
                 }
                 GUILayout.FlexibleSpace();
+                DrawDogMarkersToggle();
                 DrawLayoutPopup();
             }
         }
@@ -194,6 +195,14 @@ namespace DetectiveDave.EditorTools
             LevelPreferences.PreviewLayoutId = layouts[picked].Id;
             SceneView.RepaintAll();
             MarkDirty();
+        }
+
+        void DrawDogMarkersToggle()
+        {
+            bool shown = EditorGUILayout.ToggleLeft(new GUIContent("Show Dog Markers", "Marks every Gap key with DOG while a level is open in Prefab Mode. Remembered on this computer."), LevelPreferences.ShowDogMarkers, GUILayout.Width(130f));
+            if (shown == LevelPreferences.ShowDogMarkers) return;
+            LevelPreferences.ShowDogMarkers = shown;
+            SceneView.RepaintAll();
         }
 
         void DrawSequence()
