@@ -2,6 +2,9 @@
 
 Run these in the Editor after changes to the level tools. Each line says what to do and what you should see.
 
+## Fresh clone
+- [ ] After a fresh clone with Git LFS installed, opening the project in Unity 6000.6.8f1 shows no missing-script or missing-reference warnings, and `Game.unity` and `Overworld.unity` open and play.
+
 ## Setup
 - [ ] Window > Detective Dave > Levels opens and docks. The list shows `Level 01`; "Keyboard" shows UK.
 - [ ] Project Settings > Detective Dave > Levels shows the folders, template, palette, game scene.
