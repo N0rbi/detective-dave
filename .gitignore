@@ -130,3 +130,9 @@ key-trace.log
 # Editor/IDE
 .vscode/
 *.DotSettings.user
+# Krita autosaves
+*-autosave.kra
+*.kra~
+# Temporary asset drop folder, emptied by the asset step
+/Assets/Staging/
+/Assets/Staging.meta
