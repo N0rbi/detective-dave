@@ -116,3 +116,17 @@ InitTestScene*.unity*
 # Local backups waiting to be deleted
 _to_delete/
 __pycache__/
+
+# --- Project-specific local-only items ---
+# Unity profiler captures and editor backup files
+/ProfilerCaptures/
+*~
+# Generated deliverable: rebuilt by ArtTemplates/KeyArt/make_templates.py
+/ArtTemplates/KeyArt.zip
+# Claude-generated hand-off bundles (rebuildable from the scripts inside)
+/Claude outputs/
+# Trace logs written by the Trace menus
+key-trace.log
+# Editor/IDE
+.vscode/
+*.DotSettings.user
