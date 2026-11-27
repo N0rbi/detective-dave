@@ -107,3 +107,32 @@ InitTestScene*.unity*
 
 # Auto-generated cache in Assets folder
 /[Aa]ssets/[Ss]ceneDependencyCache*
+
+# Ignore JetBrains config
+.idea
+# macOS
+.DS_Store
+
+# Local backups waiting to be deleted
+_to_delete/
+__pycache__/
+
+# --- Project-specific local-only items ---
+# Unity profiler captures and editor backup files
+/ProfilerCaptures/
+*~
+# Generated deliverable: rebuilt by ArtTemplates/KeyArt/make_templates.py
+/ArtTemplates/KeyArt.zip
+# Claude-generated hand-off bundles (rebuildable from the scripts inside)
+/Claude outputs/
+# Trace logs written by the Trace menus
+key-trace.log
+# Editor/IDE
+.vscode/
+*.DotSettings.user
+# Krita autosaves
+*-autosave.kra
+*.kra~
+# Temporary asset drop folder, emptied by the asset step
+/Assets/Staging/
+/Assets/Staging.meta

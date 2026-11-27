@@ -1,0 +1,251 @@
+# Manual checks: making and playing a level
+
+Run these in the Editor after changes to the level tools. Each line says what to do and what you should see.
+
+## Fresh clone
+- [ ] After a fresh clone with Git LFS installed, opening the project in Unity 6000.6.8f1 shows no missing-script or missing-reference warnings, and `Game.unity` and `Overworld.unity` open and play.
+
+## Setup
+- [ ] Window > Detective Dave > Levels opens and docks. The list shows `Level 01`; "Keyboard" shows UK.
+- [ ] Project Settings > Detective Dave > Levels shows the folders, template, palette, game scene.
+
+## New Level
+- [ ] Press New Level: `Assets/Levels/Level 02.prefab` appears, is added at the end of the list, and opens in Prefab Mode.
+- [ ] Every key of the UK keyboard is drawn as an outline with a grey dot in the middle.
+- [ ] The Tile Palette window is open on "Level Tiles" with the "Key" brush selected and Shape as the paint target.
+
+## Paint
+- [ ] Pick Wall, click a key: the whole key fills (the ISO Enter fills both parts). The hovered key is outlined while moving.
+- [ ] Click between keys: nothing is painted. Erase (shift-click or the eraser) clears the whole key.
+- [ ] Undo / Redo restore one key per click.
+- [ ] Checks in the Levels window update as you paint (e.g. a Gap painted on a Shift key is warned).
+- [ ] Switch "Keyboard" to Japanese: outlines change; painting still fills whole keys of that layout.
+- [ ] Paint half a key with the normal brush: the "partly painted or mixed" check appears; "Fill with centre kind" fixes it.
+
+## Background
+- [ ] Drag a sprite from the Project window onto Background: it shows behind the keyboard in Prefab Mode.
+
+## Play This Level
+- [ ] Press F5 (or Play This Level): the game scene starts on this level, on the preview keyboard, with no layout picker.
+  The Console shows `[Play This Level] Before scene load: layout 'uk' locked` and `Scene 'Game' loaded: handing 'Level 02' to the Level Loader`.
+- [ ] No outlines, no debug overlay, no authoring tilemap are drawn in the Game view; keys show the Key Art.
+- [ ] A level with nothing painted shows the red banner "Level 'Level 02': shape is empty".
+- [ ] While playing, paint a key in Prefab Mode (Auto Save on): the key changes in the Game view within a frame; the Console logs `[Live reload]`.
+  Keys stay responsive (the keyboard is not rebuilt; no exception from KeyboardKeySource.Begin).
+- [ ] Edit a sprite or tint in Default Key Art while playing: keys redraw.
+- [ ] Key Art Box and Enter: on a style set a Box (9-sliced, Mesh Type Full Rect) and an Enter. Keys of every width keep the same border thickness and the tall keys do not squash the border; the Enter is stretched over the L.
+- [ ] Put a Box without a border on a style: the inspector and the level checks warn, **Set 9-Slice Border** fixes it (border and Full Rect) and pressing it again changes nothing.
+- [ ] Take the Enter sprite away: the Enter is drawn with the Box in two pieces and the Console warns once.
+- [ ] A style that only has per-size sprites (no Box) still draws as before and shows the "can move to Box + Enter" info; a Shape Override beats the Box for its size.
+- [ ] Painted Walkable art: put `keyboard_stealth_platform.png` and `keyboard_stealth_platform_enter.png` in `Assets/Staging/Tiles`, run `Window > Detective Dave > Set Up Key Art`: the files move to `Assets/Key Art/Walkable` as `walkable_box.png` and `walkable_enter.png`, the Box gets a 65 px border, and the Walkable style of Default Key Art shows them (tint white, old per-size sprites cleared). Running it again changes nothing.
+- [ ] Dogs stand on the walkable floor: run `Set Up Key Art`; the Gap style shows the Walkable box (no hole art), the dog stands on it in game, and running it again changes nothing. In Prefab Mode every Gap key has an orange DOG outline; **Show Dog Markers** in the Levels window turns it off and on.
+- [ ] Put `keyboard_stealth_brick.png` and `keyboard_stealth_climb.png` in `Assets/Staging/Tiles` and run `Set Up Key Art` again: they move to `Assets/Key Art/Wall/wall_box.png`, and `WallGutter/wallgutter_box.png`, and the dialog lists each with its border (the climb art has a 65/65/65/172 px border, pipe included). Wall and Wall Gutter show the painted Box on every key size with an even rim and the pipe on the gutter keys unstretched; their Enter keys look as before; `keyboard_stealth_pipe.png` stays in Staging unassigned.
+- [ ] Repaint `keyboard_stealth_climb.png` into `Assets/Staging/Tiles` and run `Set Up Key Art` again: the dialog says `updated: wallgutter_box.png`, the Wall Gutter keys show the new art with the pipe unstretched, the Key Art assignment is still there, the staged copy is in `_to_delete`, and a second run changes nothing.
+- [ ] Caps Lock lighting: switch Caps Lock on while the key test bench runs: the key and its neighbours light, then go dark after 0.6 seconds (Caps Lock Max Lit Seconds on Keyboard Grid Input) although Caps Lock is still on. Switch it off and on again: it lights again for 0.6 seconds. With 0 it flashes only on the press. Other keys light only while held, as before.
+- [ ] Key trace: with the debug overlay on, press the Tab key while neighbours are shown; `Temp/key-trace.log` now has `neighbour`, `visible` and `sliced` per line. If Tab blinks, a line where `visible` or `neighbour` flips without a key event shows which state toggles.
+- [ ] Change Border Thickness In Key Units while playing: the borders get thicker or thinner on all keys; lit keys still react to the 2D lights.
+- [ ] Stop, then press the normal Play button in KeyboardSelect: the picker shows, and after picking, Game plays Level 01 (first of the sequence).
+- [ ] Rebind F5 in Edit > Shortcuts > Detective Dave > Play This Level; the new key works.
+
+## Player
+Play with F5 on a level with a Gap and a WallGutter key between the two Shifts. The player is wired automatically.
+- [ ] The player is shown on the start Shift. Nothing works before that Shift is pressed: other keys do nothing.
+- [ ] Press the start Shift: the game starts.
+- [ ] Step to a neighbouring walkable key: the three walk frames play as a yoyo (1, 2, 3, 2, 1), the player ends on the key, no pop or stretch.
+- [ ] Press a key that is not a neighbour: the player stays where it is, shows the face-down death pose and wobbles for 0.8 seconds (Wrong Key Stun Seconds), ignores keys meanwhile, then stands up and can move again. No wind lines, no restart.
+- [ ] Get caught by a guard (also while stunned): the death pose pops and settles, then the spiral restart runs. Set Wrong Key Stun Seconds to 0: a wrong key does nothing.
+- [ ] The magnifying glass on the overworld never shows the death pose.
+- [ ] Moving left shows the player flipped; moving right unflipped; the facing persists while standing. The first facing is towards the End.
+- [ ] Step onto a Wall key (or an empty key): the player leans towards it, squashes face-first (about 0.6 scale), then slides back to the centre of the key it was on. Nothing resets, and the keys work again straight away.
+- [ ] Every move leaves three thin wind lines that stay attached to the player (never ahead of it), parallel to the move, with the top line at the shoulders and the bottom line at the upper legs (not at the feet), at slightly different heights and thicknesses; they grow out of the start as the player moves, then shorten and fade within a quarter of a second after it arrives. A wall bump leaves short lines, a step onto a gap or the goal leaves full-length lines. Pressing the key the player stands on, or any key before the game started, shows none. Changing the list in the "Dash gust" section of the player settings changes them.
+- [ ] Standing still on any key (also on the start Shift before the game starts, and on a gutter), the player breathes: a slow, gentle up and down with the feet fixed. It stops while moving and never leaves the player stretched.
+- [ ] Step onto a Gap key: there is a dog on it. The player walks onto it, falls flat in the death pose, then the screen wipes and the player drops in on the start Shift. The dog is calm while the player lies there.
+- [ ] Step onto the End Shift: the star spins behind the player and the evidence (folder with magnifying glass) pops up above the player's head. Keys are ignored from now on until the next level has started.
+- [ ] At the goal the evidence pops up above the player's head, then the camera zooms in on the player holding it (the evidence stays in the hand and grows a little; it does not fly to the screen centre).
+- [ ] After the zoom a chunky spiral of dark strips winds from the outer edge of the screen inwards like a snail house and ends on the player. Then the next level loads (the first again after the last; the same level when started with Play This Level).
+- [ ] Every level start, including the very first one after F5: the screen starts covered and zoomed on the player at the start key, the spiral unwinds outwards while the camera zooms back out, and keys do nothing until it is done. Then press the Start Shift: the game plays.
+- [ ] The keyboard does not change size or jump when the zoom ends.
+- [ ] Stop Play Mode in the middle of the spiral and play again: nothing stays covered.
+- [ ] Step onto a WallGutter key: the player stands on it and the player switches to the arms-up climb pictures, which advance one picture per move while on or leaving the gutter. The climbing player is drawn half a player height lower, so the raised arms stay inside the key (setting Climb Drop In Heights). Stepping back onto a normal key switches to the walk pictures again at normal height.
+- [ ] The drain grate lies on the middle of the start Shift (under the player) and the folder icon on the End Shift. Both follow the Start key setting and disappear when no level is loaded.
+- [ ] Step onto the End Shift: a yellow star grows behind the player and keeps turning slowly. Replaying or changing the level hides it again.
+- [ ] Change the level's Start key: start and goal flip (player shown on the other Shift; the other is the End).
+- [ ] Paint a Gap on a Shift key: it is ignored in play and Level Checks warns, with a "Make it Floor" fix.
+- [ ] Change a value in `Assets/Player/Player Movement Settings.config.asset` (e.g. Step Seconds): the change takes effect (check that the field is read live; otherwise on the next Play).
+
+## Overworld
+- [ ] Set Up Overworld runs without errors; Assets/Scenes/Overworld.unity exists and is in the build list.
+- [ ] Shift+F5 shows the desk and the magnifier; the ring fills on the sample case and resets when leaving.
+- [ ] After 2 s the desk slides left, the description types in, the grey paper shows the letter.
+- [ ] Only valid keys tint and click; Backspace removes a letter; the wrong path stays grey after the split.
+- [ ] Spaces and line breaks are never needed: finish a word and the next one is ready. Before the split the accept answer waits in green and the decline answer in red; after it the other answer fades out but its space stays.
+- [ ] A case whose accept answer is the start of the decline answer (the `Kidnapped` case, `...` and `..............`): typing a dot takes the long answer, Enter or Space takes the short one, and both finish the letter. The case inspector warns about the overlap.
+- [ ] Declining returns to the desk; accepting wipes into the level; reaching the goal returns to the desk with the case solved.
+- [ ] F5 with the sample desk selected plays the overworld; F5 on a level still plays the level.
+
+## Overworld briefing (round 2)
+
+- Run Set Up Overworld twice: the second dialog says nothing needed changing.
+- Fonts: the client's message (the request) and the investigation findings use JMH Typewriter (`Request Font`, `Findings Font`); a case with `Description Font Override` set (the Kidnapped case: `1942_report`) draws its description in that font on every screen, while its findings stay JMH; the grey waiting text uses JMH Typewriter (`Placeholder Font`); the letters you type use Mom's Typewriter (`Typed Font`), so a typed letter changes font where it replaces its grey placeholder. Letters stay on the same spots: each letter sits in a fixed cell, so a typed letter lands exactly on its grey placeholder, the pitch is even across the whole line, and no typed line runs past the right edge of the paper. If the typed and grey letters sit at different heights, adjust `Typed Font Baseline Offset Share` / `Placeholder Font Baseline Offset Share`. A case without a level shows its notice in the 1942 report font. If Console says a font has no letter width, assign a real font on `Overworld Settings.config.asset` (section Fonts); run `Set Up Overworld` if the Font fields are empty. If the findings still show the 1942 font, point `Findings Font` at `jmh_typewriter.ttf`.
+- Case colours: on a case asset open `Look`, tick `Use` on Description and pick red; the description is red on the letter, in the report and in the solved review, while the findings keep the colour of `Findings Text Color`. Untick it: the colour returns to the settings colour. Tick Typed and Placeholder, play the response: typed letters and grey letters use the case colours. Tick Accept and Decline pending: the answers show those colours until the player chooses, and the unchosen one still fades out. `Look preview` shows a sample per colour in the right font on the paper colour; pick a colour close to `Paper Reference Color` and the preview shows a contrast warning. Another case without overrides is unchanged.
+- Results screen fit: open a case briefing and finish a level, in a wide window and then a tall window. Both papers lie fully inside the Game view (thin white camera rect), first text line included, no text above a paper's top edge, no lines on top of each other. Raise `Paper Screen Margin Share` on Overworld Settings: papers shrink away from the edges. Run `Window > Detective Dave > Check Overworld Sprites`: it lists empty or `placeholder_` sprites. Black frames around papers or black blobs at the bottom only inside the Scene view mean lit sprites outside the Sprite Light 2D area; the Game view should show none.
+- Text fit: open a case with long findings (after the level and from a solved case). Nothing runs past the bottom or the right edge of either paper, the findings are a little smaller than the description, and the size does not jump while the findings type in. If a case is too long even at the smallest size, Console shows one warning naming that case.
+- Dwell on a case: the description types at a steady speed with soft clicks (no click faster than the minimum interval, also while skipping); a key press speeds it up; the letter paper appears only afterwards and typing before that does nothing.
+- Both papers are slightly rotated on the desk; untyped text is grey, typed text black; each valid key clicks with a slightly different pitch, volume and clip every time, Backspace plays the softer clip. If anything is silent the Console says why (empty click list, no Audio Listener, volume 0).
+- Finish a level: back in the overworld the left paper already shows the description and the findings type in below it (steady speed, soft clicks, a key press speeds it up). The right paper appears only when the findings are done and typing before that does nothing.
+- Then type the response on the right paper: only the current word (or sentence or character, per `responseUnit`) is visible in grey, typed letters turn black one by one, and the next words are not shown. Backspace turns a letter grey again. Only when the response is finished does the folder show the solved picture.
+- Walk onto the solved case and wait for the dwell: the left paper shows the description and the findings, the right paper the response, all in black; nothing can be typed, no typewriter sound plays, and any key slides the papers away and returns to the desk. Progress is unchanged.
+- The magnifier is on Left Shift again and twice as big; the detective shows a gust when dashing, the magnifier does not.
+
+## Overworld desk look and hints
+- Run Set Up Overworld: it fills Shift Keycap Sprite; the second run says nothing needed changing.
+- Play the overworld: Left Shift and Right Shift show a keycap picture; the magnifier stands on Left Shift.
+- A dashed line runs along the keys from the magnifier to the nearest open case, the dashes slowly flow towards the case; it never covers the magnifier or the guards' sorting.
+- Case files bob and tilt a little, each at its own rhythm (none move in step). Dwelling on a file still works at the same keys.
+- Route Hint Visibility UntilCaseReached: move one key along the line, the line shortens from the magnifier; reach the case, the line disappears. UntilFirstMove: the line disappears at the first move.
+- Come back from a solved case: the line shows again towards the next open case; with no open case there is no line. It is hidden while a briefing is open.
+- Turn off Route Hint Enabled and Case Float Enabled: no line, the files stay still.
+
+## Desk design view
+- Open Assets/Overworld/Sample Desk.prefab: the Scene view shows the desk surface, the key outlines of the preview keyboard, a blue START on Left Shift and the sample case's keys filled in its colour with the client name.
+- Move, rotate and scale the case file: the covered keys follow live.
+- Drag a second case file over the first: the shared keys turn red and the inspector lists them.
+- Move a case file off the keyboard: its label says it covers no key.
+- Move a case file over Left Shift: START turns red and says it is covered.
+- Change the Preview keyboard dropdown: the outlines and covered keys change to that layout.
+- Remove the case from a marker: its label says No case assigned.
+- Free keys (no case on them) are filled light grey with a dark outline everywhere on the keyboard, so you can see where a case file can go. A legend in the bottom-left corner of the Scene view explains the colours. Zoom in: the free keys show their labels.
+- Desk inspector, Cases section: every case in the project is listed with its colour and whether it is on the desk. Press Add to desk on a case that is not on it: a case file appears on the first free keys, selected, and Undo removes it. Add empty marker adds one without a case.
+- Drag a case asset from the Project window onto the Scene view while the desk is open: a case file appears where you drop it. A case that is already on the desk is ignored.
+- Select the desk prefab in the Project window without opening it: the Cases section says to open the desk first and the buttons are disabled.
+
+## Overworld desk designer path
+- Overworld Settings has a Desk field (tooltip: the desk the game starts on). Set Up Overworld fills it only when empty. Shift+F5 with nothing selected plays that desk; F5 with a custom desk open or selected plays that desk instead.
+- Accept a case that has no level: the briefing shows a short grey line "This case has no level yet", the case stays on the desk and nothing starts. Declining such a case is normal.
+- The desk inspector and the marker label in the Scene view say "No level yet" for such a case.
+- Desk inspector Preview as: Open, Locked, Solved and By progress file change how the case files look in the Scene view. Leave Prefab Mode and check the prefab shows no changes (not marked as modified).
+- Desk inspector Case chain: make two cases require each other, require a case that is not on the desk, make every case locked, and give two cases the same id: each is listed.
+- Case inspector: an old case keeps its asset name as the id; a new case gets an id like case-1a2b3c4d; renaming the asset does not change the id; two cases with the same id warn.
+- Case Marker menu: in Prefab Mode with nothing selected the marker lands under the open desk; in a scene with one desk it lands under it; with no desk a dialog explains why nothing happened.
+- Move or scale the desk root: the inspector and the Scene view warn; Reset root transform puts it back at position 0 and scale 1.
+
+## Guards: placing them in the Scene view
+- Levels window with a level selected: Add Guard opens the level in Prefab Mode (if needed), adds "Guard 1" and enters Patrol Edit mode: the Scene view gets an orange wash and the banner "PATROL EDIT: Guard 1: click a key to set START". The Inspector has an Edit Patrol button at the top and no key dropdowns.
+- In the mode: clicks never select anything. First click sets START, the next clicks set END. Start|End in the Scene panel overrides the target. Shift+click sets END. Right-click, Esc or Exit leaves (wash and banner disappear).
+- In the mode, select another guard in the Hierarchy: the banner shows that guard and clicks edit it. Select a non-guard object outside the level: the mode ends. Selecting the level or its children keeps it.
+- Enter Play mode or close Prefab Mode: the mode is off afterwards.
+- Click a key: it turns green with START and the wait time. Shift+click another key: it turns orange with END. A white line with arrows shows the path in between. Nothing else gets selected by the clicks. Undo moves the key back.
+- Change the Keyboard dropdown in the Levels window: the same guard stays on the same physical key, and the labels show that keyboard's letters.
+- Click a wall, gap or gutter key as START or END: a red warning appears in the Scene view, the Inspector and the Levels window checks. Surround the START with gaps: "no way from START to END" and a red dotted line.
+- A key that exists on UK but not on another layout (for example UK's extra keys on JIS): the Levels window checks name the layouts that break the guard.
+- Select something other than a guard: every guard in the level shows a small green dot on its START key.
+- Play This Level: the guard patrols between START and END along the line shown.
+- A guard occupies one key until it reaches the middle of the next key. Step next to the key it is leaving while it walks: it switches to the chase animation at once, finishes the step without a jump, then follows the shortest key path to you. Step next to the key it is walking towards: nothing happens until it arrives, then it chases. Step onto the key it is leaving: you are caught. Step onto the key it is walking towards: you are not caught until it arrives. Step onto a gutter key mid-chase: it finishes its step, then goes back to patrolling from where it stands.
+
+## Level lighting
+- Run Window > Detective Dave > Set Up Lighting (or Set Up Player). Game.unity: the object with LevelLoader has a LevelLightingView, and every Keyboard Grid View there has Cell Material = KeyboardCellLit. Assets/Game/Keyboard/Art/KeyboardCellLit.mat exists.
+- Play Game: the keys are lit by the 2D lights (move or dim a light in the scene: the keys change). A level with the default Lighting looks as before the change.
+- Level prefab > Lighting: set Intensity 0.5 and a tint: play, all lights follow; stop, the lights in the scene are back as authored.
+- Turn Flicker on with no pattern: the checks show an error with Add a Blink pattern. Click the fix: a Blink pattern with a timeline appears.
+- Timeline: click empty space adds a point, drag moves it (snapping to the grid when Snap To Grid is on), right-click a point removes it, select a point and press Delete removes it. Start From replaces the points with a preset and sets the duration.
+- Preview on a pattern: the green playhead runs over the timeline, Final Look dims, and the lights of the open scene dim. Preview Like In Game: random waits, random patterns. Stop, enter Play Mode or save the scene: the lights are back to their own values.
+- Two patterns, one with Weight 0: only the other is ever picked. Weights 3 and 1: the first is picked about three times as often.
+- Wait At Least 9 and Wait At Most 4: the checks show an error with Swap the waits.
+- Play a level with flicker: the lights flicker now and then at random intervals; load the next level: the flicker restarts with that level's settings.
+
+## Reactive music
+- Assets/Staging no longer holds JazzLoop.wav or the Jazz - Piano files; they are in Assets/Audio/Music and Assets/Audio/Music/Piano.
+- Run Window > Detective Dave > Set Up Music. Assets/Audio/Music/Music Settings.config.asset exists with the Loop Clip and 12 Piano Clips. JazzLoop.wav imports as Streaming, PCM. The object with PlayerController in Game.unity and the object with OverworldController in Overworld.unity each have a MusicLink with the settings assigned.
+- Play the Overworld (Shift+F5): the loop fades in after about 2 seconds and plays all the time. Move the magnifying glass: a piano note plays on every move. With Piano Order set to In Order the notes play in name order, skipping the clips that do not fit the chord (without a Chord Chart all 12 play 1, 2, 3 ... 12, then 1 again), also after a blocked move and across levels; with Random they are random and never the same twice in a row. Press a key that is not next to the glass: a quieter note (half volume) plays.
+- Open a case: the loop keeps playing without a restart while the briefing is open. Press keys during the briefing: no piano notes.
+- Start the level from the overworld: the loop does not restart on the scene change, and there is only one Music Director in the Hierarchy (under DontDestroyOnLoad). Walk the player: a note per step. Walk into a wall and press the key you stand on: half volume notes. While the player falls or the spiral plays, key presses make no sound.
+- Play a level directly with F5 (Play This Level): the loop plays and the notes react.
+- Set Min Seconds Between Piano Notes to 0.3 and press keys quickly: notes are skipped to keep 0.3 seconds apart. Set Piano Clips to one clip: it plays every time. Empty Piano Clips: a warning in the Console and no notes, the loop still plays.
+- Run Window > Detective Dave > Set Up Chord Chart. Assets/Audio/Music/Chord Chart.config.asset exists and is linked on Music Settings (Chord Chart), and Piano Order is Chord Aware. Select the chart: a timeline of 8 bars with Am7, Dm7, Bm7b5, E7, Am7, Dm7, Bm7b5, E7, no warnings, and under "In words" every clip with the chords it plays over.
+- Play the Overworld and move the glass for a minute with Piano Order Chord Aware: every note starts at the moment of the key press, not on the beat of the music, and each one sounds right over the chord that is playing. Listen for a clip that sounds wrong over a chord: edit that chord's Scale or the clip's notes on the chart (or move the clip out of the scale) and listen again.
+- Add a chord to the chart whose Scale has no fitting clip (or remove the clip notes) and play over it: a note still plays on every move. With When No Clip Fits on Play Closest To Chord it is the clip with the most notes in the scale, never the same twice in a row; on Play Next Clip it goes through the clips in name order. The Console logs one warning naming the chord.
+- If the chords sound shifted against the music (a note that fits the wrong chord), change Chart Beat At Loop Start on the chart (for example 12 when the clip starts on the E7 bar) and listen again. This only changes which chord the game believes is playing, not when notes sound. If the loop clip changes length, a warning names the difference between the chart and the clip.
+- Set Piano Order to In Order: the clips play in name order but skip those that do not fit the current chord. Set it to Random: any fitting clip, never the same twice in a row.
+- Remove the Chord Chart from Music Settings and play: the loop plays, every move still plays a piano note following Piano Order over all 12 clips, and the Console says to run Set Up Chord Chart. Remove all Piano Clips: moves are silent and the Console says so.
+- Debounce: select Music Settings. Under Debounce you see Chord Debounce Seconds (slider, 0.6), Singles Extend Debounce, the list Single Note Clips, the line "First note after a pause plays a chord; moves within 0.6 s play single notes." and, while the list is empty, a warning that every note is a chord.
+- With no Single Note Clips, play and move several keys quickly: every move plays a chord clip and the Console shows one warning about the missing Single Note Clips.
+- Export the single notes as Piano Single - A3.wav, Piano Single - Gs3.wav and so on into Assets/Staging and run Window > Detective Dave > Set Up Music: the dialog says how many single note clips were found and which files it moved, the files are in Assets/Audio/Music/Piano/Single, Assets/Staging has none of them left, and Music Settings lists them as "Gs3 -> G#3". A file such as Piano Single - Bb3.wav is reported as not used. Run Set Up Music again: nothing changes.
+- Play and press one key, wait a second, press one key: both are chords. Press keys quickly: the first is a chord and the rest are single notes, all on the scale of the chord that plays. Stop for more than 0.6 seconds: the next note is a chord again.
+- Set Chord Debounce Seconds to 0: every move plays a chord. Set it to 3: after a chord, notes stay single for 3 seconds of moving (with Singles Extend Debounce on, until you pause 3 seconds). Turn Singles Extend Debounce off and keep walking: a chord returns every 3 seconds.
+- Walk into a wall right after a move: a quiet single note (half volume).
+
+## Cheat codes
+- Run Window > Detective Dave > Set Up Cheats. Assets/Cheats/Cheat Settings.config.asset exists with Cheats Enabled on and one entry, resetplayer. The object with the Keyboard Key Source in Game.unity and in Overworld.unity has a CheatLink with the settings assigned.
+- Solve a case in the overworld, then type resetplayer in the overworld: "Progress reset" shows for about 2 seconds, the overworld reloads and every case is locked or unsolved again as in a new game. progress.json is gone.
+- Start a case, and while the level is on screen type resetplayer: the overworld loads, the case is not still active, the music keeps playing without a restart, and there is still only one Cheat Director under DontDestroyOnLoad.
+- Type it during the spiral or while the player falls: the overworld still loads. Type it in capitals, and with a typo fixed with Backspace: it still works. Type half of it, wait 4 seconds, type the rest: nothing happens.
+- Type resetplayer while the trumpet is up: it is silent at once and the music is at full volume; the trumpet keeps running muted (die again and it fades up on the beat).
+- Turn Cheats Enabled off: typing resetplayer does nothing.
+
+
+## Overworld start hint
+
+- [ ] On the overworld, before moving, press a key far from the magnifying glass (not Shift, not a neighbour): the start Shift keycap punches and the pressed key lights red and fades. Nothing else happens.
+- [ ] Press a neighbour of the start: the glass moves; pressing wrong keys afterwards no longer punches or lights anything.
+- [ ] Press the start Shift itself: no hint. Turn "Start Hint Enabled" off in Overworld Settings: no hint at all.
+
+## Dogs, skyline, overworld board
+
+- [ ] Run `Set Up Player` (or `Set Up Dogs`, `Set Up Background`, `Set Up Overworld`): no error dialog; Game.unity has a `DogController` with Dog Settings filled.
+- [ ] Every Gap key shows a dog and no hole art. The dog does not move.
+- [ ] Two dogs side by side never show the same frame for long; reload the level and their start frames change.
+- [ ] With a Bass Chart, a dog changes its frame exactly when the upright bass plays a note; an angry dog on every note, a calm dog on every second note.
+- [ ] Set `Dog Step Mode` to Timer: the dogs animate at `Frames Per Second` again (still out of sync).
+- [ ] Remove the Bass Chart link on Music Settings, play: one warning about the bass, dogs use the timer.
+- [ ] Drop the bass `.aif` or `.wav` (or a changed one), run `tools/bass_onsets.py` and `Set Up Bass Chart`: the dialog shows the number of notes; if the file length is not the loop length it asks which tempo to use.
+- [ ] Walk next to a dog: it turns angry and its frames go 1-2-3-2-1 and loop. Walk away: it calms down.
+- [ ] Step onto a dog: the player dies (death sprite) and the dog is calm meanwhile; after the wipe the level restarts and the dog is angry or calm by where the player stands.
+- [ ] Every level shows the skyline behind and around the keys; no dark panel covers it. Untick `Hide Backdrop Over Background` on `KeyTerrainView` and the dark panel is back. A level whose Background renderer holds a `placeholder_*` sprite shows a warning in its checks.
+- [ ] Run `Window > Detective Dave > Set Up Smoking Detective`: Overworld.unity gets a `Smoking Detective` object (the old walk-cycle object is removed) and the dialog says what it did; running it again says nothing needed changing.
+- [ ] Every level shows the skyline behind the keys. Change Offset, Zoom, Flip and Visible under Background Placement on a level: the picture moves, zooms, mirrors or disappears and never shows an edge.
+- [ ] Finish a level with the player on a key at the far edge of the board (top row, bottom row, far left and right): while the camera zooms in on the player, no empty clear colour shows at any edge of the screen, and the same during the zoom out when the next level starts. Resize the window to a very wide and a nearly square shape: still no edge.
+- [ ] Select the object with `LevelBackgroundView` while playing: a dashed yellow outline shows the area the camera can reach. A small background picture logs one `Max Upscale` warning that names the sprite.
+- [ ] Run `Window > Detective Dave > Set Up Overworld Board`: the dialog says Desk Top Sprite is now keyboard_stealth_board (or nothing needed changing); `Check Overworld Sprites` no longer lists Desk Top Sprite. Running it again changes nothing. Put `placeholder_desk_top` back on the field and run `Set Up Overworld`: the board returns. A sprite you chose yourself stays.
+- [ ] Overworld board size: in `Overworld Settings.config.asset`, group `Board (desk top picture)`: with `Fit Inside` the whole board shows inside the Game view with a small free edge, at a wide, a tall and a square window, never cut off or stretched. `Cover` fills the view. `Board Scale Multiplier` 0.8 makes it smaller, 1.2 bigger; `Board Margin Share` 0.1 leaves a wider free edge; `Board Offset Share` moves it. Papers and cases do not move.
+- [ ] Overworld: the stealth board is not stretched; its size follows the Board settings. The smoking detective stands on the right; every few seconds the arm comes up to the mouth with a small tilt, waits, and goes down. Moving the `Arm Pivot` changes where it turns; running `Set Up Overworld` again changes nothing you moved.
+
+## Overworld transitions
+- [ ] Press Play Overworld: the screen starts dark and the Sprite Light 2D fades from 0 to `Light Full Intensity` in `Light Fade In Seconds`. Change the full intensity to 0.5: it ends at 0.5.
+- [ ] Hold the magnifier on an open case until the briefing opens: the detective drops 3 units with a bounce, and stays down while the letter and the typing are open; when the briefing closes he bounces back up to exactly his old place.
+- [ ] Open a message and decline it while the detective is still going down: he comes back up from where he is and ends in his old place. Open and close messages quickly several times: he never ends lower or higher than at the start.
+- [ ] Open a solved case (review) and a case with a report: the detective also drops and returns.
+- [ ] Accept a case: the light fades down to 0 in `Light Fade Out Seconds` with the wipe, and the level loads only after both. Set both fade seconds to 3: the level waits 3 seconds.
+- [ ] Change `Detective Drop Distance`, the two seconds and the two eases (`OutBack`): the movement follows. The smoking arm keeps its puffs while the detective is down and after.
+- [ ] Delete the Sprite Light 2D or the Smoking Detective from Overworld.unity (do not save): the Console shows one error saying what is missing.
+
+## Case music
+- Give Kidnapped a Music Clip. Open its briefing: the music fades in and the jazz gets quieter.
+- Decline the request: the music fades out. Accept: it keeps playing through the level.
+- Finish the level: when the findings start typing the music fades out.
+- Walk over a solved case: no music starts.
+- Type resetplayer while the trumpet is up: it is silent at once and the music is at full volume; the trumpet keeps running muted (die again and it fades up on the beat).
+
+## Wrong key dissonance
+- Play a level. Press a key that is not next to the player: the player stumbles and a harsh, quiet piano note plays (half volume), not a normal one. Over the first chords it rotates between Piano 5, 6, 11, 12 (D G# B), over E7 between Piano 1 and 7 (C E G). Bumping a wall or pressing the own key plays the ordinary quiet note.
+- Overworld: press a wrong key before the start (start hint) and a non-neighbour key with the magnifying glass: the same dissonant note.
+- Music Settings: untick Dissonant Misclick: wrong keys play normal notes. Select the asset: the list "Most dissonant clip per chord" shows the winner and score for every chord. Clear the Chord Chart: the list warns and one warning is logged at the first wrong key.
+
+## Background and zoom
+- Select the Level Background object's owner (LevelBackgroundView), tick Trace Background, play a level to the end key at the far left (Left Shift): no edge of the picture shows during the zoom. Open Temp/background-trace.log (outside Assets, in the project folder): no line ends with OUTSIDE. If one does, send the file.
+- Resize the Game view to very wide and very tall windows and repeat.
+
+## Death hook
+- Run Set Up Music: Music Settings > Death hook > Hook Clip is Muted trumpet hook (in Assets/Audio/Music/Stingers). Staging no longer has the file.
+- Get caught by a guard: the music fades down in a quarter of a second and the trumpet fades in; when the detective can move again the trumpet fades out over a second and the music comes back. Same for a dog bite.
+- Press a wrong key (stumble) and reach the goal: no trumpet.
+- Die twice in a row: the trumpet fades up again each time, from wherever it is, and never restarts; it is the same continuous take.
+- Type resetplayer while the trumpet is up: it is silent at once and the music is at full volume; the trumpet keeps running muted (die again and it fades up on the beat).
+- Die at different moments of the loop (bar 1, bar 5, bar 8): the trumpet is faded up into the music already playing, on the beat, and stays on it for a long wait. If it is early or late, change Hook Sync Offset Seconds.
+- Remove the Hook Clip: the inspector and the Console warn, and a death changes nothing.
+
+## Frame hitches
+- Music Settings > Diagnostics: set Hitch Log Threshold Milliseconds to 50 and play a level, pressing keys quickly for a minute: every frame over 50 ms shows one warning with its time and its audio events. At 0 nothing is logged and no Music Director component named FrameHitchLog exists.
+- Wait for a warning that lists `clip ... was not loaded when it had to play`: untick Preload Clips On Start to see it on the first notes; tick it again and it no longer shows for piano clips (also set Preload Audio Data on the piano clips and the hook).
+- Press a key, and a neighbour of the new key while the player is still walking (within 0.15 s of the step end): the second step starts right after the first. Set Move Buffer Seconds to 0 on the player settings: the second press is lost again.
+- Get caught or reach the goal right after a buffered press: the buffered key does not move the player afterwards.
+- Trace Background on, play to the goal: while zooming no file is written; Temp/background-trace.log appears once the camera is back at its home view.

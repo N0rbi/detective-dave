@@ -1,0 +1,134 @@
+using System;
+using DG.Tweening;
+using UnityEngine;
+
+namespace DetectiveDave.PlayerPlay
+{
+    [RequireComponent(typeof(PlayerView))]
+    public sealed class PlayerAnimations : MonoBehaviour, IPlayerAnimations
+    {
+        const float MinSeconds = 0.01f;
+        const float StunWobbleDegrees = 12f;
+        const int StunWobbleVibrato = 8;
+        const float StunWobbleElasticity = 0.6f;
+
+        PlayerView view;
+        Tween active;
+        Tween breathing;
+        bool missingSettingsLogged;
+
+        void Awake() => view = GetComponent<PlayerView>();
+
+        void OnDisable() => Cancel();
+
+        public void ShowResetAt(Vector2 world)
+        {
+            Cancel();
+            view.ResetVisual(world);
+        }
+
+        public void CancelAllWithoutCallbacks() => Cancel();
+
+        public void MoveTo(Vector2 world, Action done)
+        {
+            if (!HasSettings()) return;
+            Run(transform.DOMove(WithCurrentDepth(world), Seconds(view.Settings.StepSeconds)).SetEase(Ease.InOutSine), done);
+        }
+
+        public void Stun(Action done)
+        {
+            if (!HasSettings()) return;
+            var seconds = Seconds(view.Settings.WrongKeyStunSeconds);
+            Run(transform.DOPunchRotation(new Vector3(0f, 0f, StunWobbleDegrees), seconds, StunWobbleVibrato, StunWobbleElasticity), done);
+        }
+
+        public void BumpWall(Vector2 towards, Vector2 home, Action returning, Action done)
+        {
+            if (!HasSettings()) return;
+            var seconds = view.Settings.WallSquashSeconds;
+            var sequence = DOTween.Sequence();
+            sequence.Append(transform.DOMove(WithCurrentDepth(towards), Seconds(seconds * 0.3f)).SetEase(Ease.OutQuad));
+            sequence.Append(transform.DOScale(SquashedScale(towards - home), Seconds(seconds * 0.2f)).SetEase(Ease.OutQuad));
+            sequence.AppendCallback(() => returning?.Invoke());
+            sequence.Append(transform.DOMove(WithCurrentDepth(home), Seconds(seconds * 0.5f)).SetEase(Ease.InOutSine));
+            sequence.Join(transform.DOScale(view.BaseLocalScale, Seconds(seconds * 0.5f)).SetEase(Ease.OutElastic));
+            Run(sequence, done);
+        }
+
+        public void StartBreathing()
+        {
+            if (!HasSettings()) return;
+            if (breathing != null && breathing.IsActive()) return;
+            transform.localScale = view.BaseLocalScale;
+            var inhaled = view.BaseLocalScale.y * (1f + view.Settings.BreathingAmount);
+            breathing = transform.DOScaleY(inhaled, Seconds(view.Settings.BreathingSeconds * 0.5f))
+                .SetEase(Ease.InOutSine)
+                .SetLoops(-1, LoopType.Yoyo)
+                .SetLink(gameObject);
+        }
+
+        public void StopBreathing() => KillBreathing();
+
+        public void FallFlat(Action done)
+        {
+            if (!HasSettings()) return;
+            var settings = view.Settings;
+            transform.localScale = view.BaseLocalScale * settings.DeathPopScale;
+            var sequence = DOTween.Sequence();
+            sequence.Append(transform.DOScale(view.BaseLocalScale, Seconds(settings.FallForwardSeconds)).SetEase(Ease.OutBounce));
+            sequence.AppendInterval(settings.FallForwardHoldSeconds);
+            Run(sequence, done);
+        }
+
+        Vector3 SquashedScale(Vector2 direction)
+        {
+            var baseScale = view.BaseLocalScale;
+            var squash = view.Settings.SquashScale;
+            var bulge = 1f + (1f - squash) * 0.5f;
+            var horizontal = Mathf.Abs(direction.x) >= Mathf.Abs(direction.y);
+            return horizontal
+                ? new Vector3(baseScale.x * squash, baseScale.y * bulge, baseScale.z)
+                : new Vector3(baseScale.x * bulge, baseScale.y * squash, baseScale.z);
+        }
+
+        static float Seconds(float seconds) => Mathf.Max(MinSeconds, seconds);
+
+        bool HasSettings()
+        {
+            if (view.Settings) return true;
+            Cancel();
+            if (missingSettingsLogged) return false;
+            missingSettingsLogged = true;
+            Debug.LogError("PlayerAnimations: PlayerView has no settings applied.", this);
+            return false;
+        }
+
+        void Run(Tween tween, Action done)
+        {
+            Cancel();
+            active = tween;
+            tween.SetLink(gameObject).SetAutoKill(true).OnComplete(() =>
+            {
+                active = null;
+                done?.Invoke();
+            });
+        }
+
+        void Cancel()
+        {
+            if (active != null && active.IsActive()) active.Kill(false);
+            active = null;
+            KillBreathing();
+        }
+
+        void KillBreathing()
+        {
+            if (breathing == null) return;
+            if (breathing.IsActive()) breathing.Kill(false);
+            breathing = null;
+            transform.localScale = view.BaseLocalScale;
+        }
+
+        Vector3 WithCurrentDepth(Vector2 world) => new Vector3(world.x, world.y, transform.position.z);
+    }
+}

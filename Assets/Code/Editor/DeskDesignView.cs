@@ -1,0 +1,219 @@
+using System.Linq;
+using DetectiveDave.KeyboardInput;
+using DetectiveDave.OverworldPlay;
+using UnityEditor;
+using UnityEditor.SceneManagement;
+using UnityEngine;
+
+namespace DetectiveDave.EditorTools
+{
+    [InitializeOnLoad]
+    static class DeskDesignView
+    {
+        const float SurfaceMargin = 1f;
+        const float SurfaceDepth = 0.5f;
+        const float SolvedPictureLift = 0.05f;
+        const string SpriteShader = "Sprites/Default";
+        const float KeyLabelMaxViewSize = 5f;
+        const float LegendRowHeight = 18f;
+        const float LegendSwatch = 12f;
+
+        static readonly Color ProblemColor = new Color(1f, 0.2f, 0.2f, 1f);
+        static readonly Color NoCaseColor = new Color(0.7f, 0.7f, 0.7f, 1f);
+
+        static Material surfaceMaterial;
+
+        static DeskDesignView() => SceneView.duringSceneGui += OnSceneGui;
+
+        static void OnSceneGui(SceneView sceneView)
+        {
+            if (Event.current.type != EventType.Repaint || Application.isPlaying) return;
+            var desk = CurrentDesk();
+            var layout = KeyboardLayouts.Preview;
+            if (!desk || layout == null) return;
+            var design = DeskDesignInputs.DesignOn(desk, layout);
+            DrawSurface(desk, layout);
+            DrawKeys(desk, layout, design, sceneView);
+            DrawStartKey(desk, layout, design);
+            DrawMarkers(desk, design);
+            DrawLayoutName(layout);
+            DrawRootWarning(desk);
+            DrawLegend(sceneView);
+        }
+
+        internal static DeskLayout CurrentDesk()
+        {
+            var stage = PrefabStageUtility.GetCurrentPrefabStage();
+            if (stage) return stage.prefabContentsRoot.GetComponent<DeskLayout>();
+            var selected = Selection.activeGameObject;
+            if (!selected || EditorUtility.IsPersistent(selected)) return null;
+            return selected.GetComponentInParent<DeskLayout>();
+        }
+
+        static void DrawSurface(DeskLayout desk, KeyboardLayout layout)
+        {
+            var sprite = AssetDatabase.LoadAssetAtPath<OverworldSettings>(OverworldSetupPaths.SettingsPath)?.DeskTopSprite;
+            if (!sprite) return;
+            var material = SurfaceMaterial();
+            if (!material) return;
+            material.mainTexture = sprite.texture;
+            var bounds = BoardBounds(layout);
+            var size = bounds.size + Vector2.one * (SurfaceMargin * 2f);
+            var local = Matrix4x4.TRS(new Vector3(bounds.center.x, bounds.center.y, SurfaceDepth), Quaternion.identity, new Vector3(size.x, size.y, 1f));
+            material.SetPass(0);
+            Graphics.DrawMeshNow(Resources.GetBuiltinResource<Mesh>("Quad.fbx"), desk.transform.localToWorldMatrix * local);
+        }
+
+        static Material SurfaceMaterial()
+        {
+            if (surfaceMaterial) return surfaceMaterial;
+            var shader = Shader.Find(SpriteShader);
+            if (!shader) return null;
+            surfaceMaterial = new Material(shader) { hideFlags = HideFlags.HideAndDontSave };
+            return surfaceMaterial;
+        }
+
+        static Rect BoardBounds(KeyboardLayout layout)
+        {
+            var rects = DeskDesignInputs.Rects(layout).Values.SelectMany(group => group).ToArray();
+            if (rects.Length == 0) return new Rect(Vector2.zero, Vector2.one);
+            var min = new Vector2(rects.Min(rect => rect.xMin), rects.Min(rect => rect.yMin));
+            var max = new Vector2(rects.Max(rect => rect.xMax), rects.Max(rect => rect.yMax));
+            return Rect.MinMaxRect(min.x, min.y, max.x, max.y);
+        }
+
+        static void DrawKeys(DeskLayout desk, KeyboardLayout layout, DeskDesign design, SceneView sceneView)
+        {
+            var filled = design.Fills.ToDictionary(fill => fill.Key);
+            var centres = DeskDesignInputs.Centres(layout);
+            var labels = layout.UniqueKeys().ToDictionary(def => def.InputKey.Value, def => def.Label);
+            bool showLabels = sceneView.size <= KeyLabelMaxViewSize;
+            foreach (var entry in DeskDesignInputs.Rects(layout))
+            {
+                bool covered = filled.TryGetValue(entry.Key, out var found);
+                var fill = !covered ? DeskCaseColors.FreeKeyFill : found.IsShared ? DeskCaseColors.SharedKey : DeskCaseColors.Fill(found.CaseId);
+                foreach (var rect in entry.Value) DrawRect(desk, rect, fill, DeskCaseColors.FreeKeyOutline);
+                if (showLabels && !covered) Label(desk.transform.TransformPoint(centres[entry.Key]), labels[entry.Key] ?? string.Empty, DeskCaseColors.FreeKeyOutline);
+            }
+        }
+
+        static void DrawLegend(SceneView sceneView)
+        {
+            var entries = DeskLegend.Entries();
+            float top = sceneView.position.height - 30f - entries.Count * LegendRowHeight;
+            Handles.BeginGUI();
+            for (int index = 0; index < entries.Count; index++)
+            {
+                float y = top + index * LegendRowHeight;
+                EditorGUI.DrawRect(new Rect(10f, y + 3f, LegendSwatch, LegendSwatch), entries[index].Colour);
+                GUI.Label(new Rect(28f, y, 320f, LegendRowHeight), entries[index].Label, EditorStyles.boldLabel);
+            }
+            Handles.EndGUI();
+        }
+
+        static void DrawStartKey(DeskLayout desk, KeyboardLayout layout, DeskDesign design)
+        {
+            var key = layout.UniqueKeys().FirstOrDefault(def => def.InputKey == DeskDesignInputs.StartKey);
+            if (key == null) return;
+            bool covered = design.Issues.Any(issue => issue.Kind == DeskIssueKind.CoversStartKey);
+            var colour = covered ? ProblemColor : DeskCaseColors.StartKey;
+            foreach (var rect in KeyGeometry.Rects(layout, key)) DrawRect(desk, rect, Color.clear, colour);
+            Label(desk.transform.TransformPoint(KeyGeometry.Center(layout, key)), covered ? "START (covered by a case!)" : "START", colour);
+        }
+
+        static void DrawMarkers(DeskLayout desk, DeskDesign design)
+        {
+            var stateOf = DeskPreview.StateFunction();
+            foreach (var marker in DeskDesignInputs.AllMarkers(desk))
+            {
+                if (!marker.CanBeMapped)
+                {
+                    Label(marker.transform.position, "No case assigned", NoCaseColor);
+                    continue;
+                }
+                var deskMarker = marker.ToDeskMarker(desk.transform);
+                bool coversNoKey = design.Issues.Any(issue => issue.Kind == DeskIssueKind.CoversNoKey && issue.CaseId == deskMarker.CaseId);
+                var colour = DeskCaseColors.Outline(deskMarker.CaseId);
+                DrawStateLook(desk, deskMarker, stateOf(marker.CaseFile));
+                DrawOutline(desk, deskMarker, colour);
+                string name = string.IsNullOrWhiteSpace(marker.CaseFile.ClientName) ? deskMarker.CaseId : marker.CaseFile.ClientName;
+                var warnings = MarkerWarnings(marker, coversNoKey);
+                Label(marker.transform.position, string.Join("\n", new[] { name }.Concat(warnings)), warnings.Length > 0 ? ProblemColor : colour);
+            }
+        }
+
+        static string[] MarkerWarnings(CaseMarker marker, bool coversNoKey) =>
+            new[] { coversNoKey ? "Covers no key on this keyboard!" : null, CaseChainInputs.HasNoLevel(marker) ? "No level yet!" : null }.Where(text => text != null).ToArray();
+
+        static Vector3[] Corners(DeskLayout desk, DeskMarker marker)
+        {
+            var half = marker.Size * 0.5f;
+            var turn = Quaternion.Euler(0f, 0f, marker.RotationDegrees);
+            return new[] { new Vector2(-half.x, -half.y), new Vector2(half.x, -half.y), new Vector2(half.x, half.y), new Vector2(-half.x, half.y) }
+                .Select(corner => desk.transform.TransformPoint(marker.Centre + (Vector2)(turn * corner)))
+                .ToArray();
+        }
+
+        static void DrawOutline(DeskLayout desk, DeskMarker marker, Color colour)
+        {
+            var corners = Corners(desk, marker);
+            Handles.color = colour;
+            Handles.DrawAAPolyLine(3f, corners.Concat(new[] { corners[0] }).ToArray());
+        }
+
+        static void DrawStateLook(DeskLayout desk, DeskMarker marker, CaseState state)
+        {
+            var settings = AssetDatabase.LoadAssetAtPath<OverworldSettings>(OverworldSetupPaths.SettingsPath);
+            if (!settings) return;
+            if (state == CaseState.Locked) DrawLockedShade(desk, marker, settings.LockedShade);
+            if (state == CaseState.Solved) DrawSolvedPicture(desk, marker, settings.SolvedSprite);
+        }
+
+        static void DrawLockedShade(DeskLayout desk, DeskMarker marker, float shade) =>
+            Handles.DrawSolidRectangleWithOutline(Corners(desk, marker), new Color(0f, 0f, 0f, Mathf.Clamp01(shade)), Color.clear);
+
+        static void DrawSolvedPicture(DeskLayout desk, DeskMarker marker, Sprite sprite)
+        {
+            var material = SurfaceMaterial();
+            if (!sprite || !material) return;
+            material.mainTexture = sprite.texture;
+            var local = Matrix4x4.TRS(new Vector3(marker.Centre.x, marker.Centre.y, -SolvedPictureLift), Quaternion.Euler(0f, 0f, marker.RotationDegrees), new Vector3(marker.Size.x, marker.Size.y, 1f));
+            material.SetPass(0);
+            Graphics.DrawMeshNow(Resources.GetBuiltinResource<Mesh>("Quad.fbx"), desk.transform.localToWorldMatrix * local);
+        }
+
+        static void DrawRect(DeskLayout desk, Rect rect, Color fill, Color outline)
+        {
+            var corners = new[]
+            {
+                desk.transform.TransformPoint(new Vector3(rect.xMin, rect.yMin)), desk.transform.TransformPoint(new Vector3(rect.xMax, rect.yMin)),
+                desk.transform.TransformPoint(new Vector3(rect.xMax, rect.yMax)), desk.transform.TransformPoint(new Vector3(rect.xMin, rect.yMax)),
+            };
+            Handles.DrawSolidRectangleWithOutline(corners, fill, outline);
+        }
+
+        static void Label(Vector3 position, string text, Color colour)
+        {
+            var style = new GUIStyle(EditorStyles.boldLabel) { alignment = TextAnchor.MiddleCenter };
+            style.normal.textColor = colour;
+            Handles.Label(position, text, style);
+        }
+
+        static void DrawRootWarning(DeskLayout desk)
+        {
+            if (!DeskRoot.NeedsReset(desk)) return;
+            Handles.BeginGUI();
+            var style = new GUIStyle(EditorStyles.boldLabel) { wordWrap = true };
+            style.normal.textColor = ProblemColor;
+            GUI.Label(new Rect(10f, 44f, 420f, 60f), DeskRootCheck.Warning + " Reset it in the desk inspector.", style);
+            Handles.EndGUI();
+        }
+
+        static void DrawLayoutName(KeyboardLayout layout)
+        {
+            Handles.BeginGUI();
+            GUI.Label(new Rect(10f, 24f, 420f, 20f), "Desk preview on keyboard: " + layout.Name + " (change it in the Levels window or on the desk)", EditorStyles.boldLabel);
+            Handles.EndGUI();
+        }
+    }
+}

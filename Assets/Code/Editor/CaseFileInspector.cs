@@ -1,0 +1,118 @@
+using System.Linq;
+using DetectiveDave.Levels;
+using DetectiveDave.MusicPlay;
+using DetectiveDave.OverworldPlay;
+using UnityEditor;
+using UnityEngine;
+
+namespace DetectiveDave.EditorTools
+{
+    [CustomEditor(typeof(CaseFile))]
+    public sealed class CaseFileInspector : Editor
+    {
+        const float SampleHeight = 24f;
+        const int SampleFontSize = 15;
+        const string SampleText = "The quick brown fox 0123";
+
+        public override void OnInspectorGUI()
+        {
+            var file = (CaseFile)target;
+            if (CaseIds.StampIfEmpty(file)) serializedObject.Update();
+            DrawDefaultInspector();
+            DrawLevelPicker();
+            DrawIdProblems(file);
+            DrawMusicProblem(file);
+            DrawLookPreview(file);
+            EditorGUILayout.Space();
+            EditorGUILayout.LabelField("Letter preview", EditorStyles.boldLabel);
+            DrawLetter("Accept", file.ResolvedAcceptLetter);
+            DrawLetter("Decline", file.ResolvedDeclineLetter);
+            EditorGUILayout.LabelField("After the level", EditorStyles.boldLabel);
+            DrawLetter("Left paper", new PaperReveal(file.ResolvedDescription, file.ResolvedFindings).Full);
+            DrawLetter("Right paper (typed by the player)", file.ResolvedResponse);
+            DrawProblems(file);
+        }
+
+        void DrawLevelPicker()
+        {
+            var levels = LevelTools.FindLevels();
+            var levelProperty = serializedObject.FindProperty("level");
+            var names = new[] { "None" }.Concat(levels.Select(level => level.name)).ToArray();
+            int current = levels.IndexOf(levelProperty.objectReferenceValue as Level) + 1;
+            int picked = EditorGUILayout.Popup("Pick a level", current, names);
+            if (picked == current) return;
+            levelProperty.objectReferenceValue = picked == 0 ? null : levels[picked - 1];
+            serializedObject.ApplyModifiedProperties();
+        }
+
+        static void DrawMusicProblem(CaseFile file)
+        {
+            var settings = AssetDatabase.LoadAssetAtPath<MusicSettings>(MusicSetupPaths.SettingsPath);
+            var loopSeconds = settings && settings.LoopClip ? settings.LoopClip.length : 0.0;
+            var problem = CaseMusicCheck.Problem(file.Music, loopSeconds);
+            if (problem != null) EditorGUILayout.HelpBox(problem, MessageType.Warning);
+        }
+
+        static void DrawLookPreview(CaseFile file)
+        {
+            var settings = AssetDatabase.LoadAssetAtPath<OverworldSettings>(OverworldSetupPaths.SettingsPath);
+            EditorGUILayout.Space();
+            EditorGUILayout.LabelField("Look preview", EditorStyles.boldLabel);
+            if (!settings)
+            {
+                EditorGUILayout.HelpBox("No Overworld Settings found. Run Window > Detective Dave > Set Up Overworld to see the preview.", MessageType.Info);
+                return;
+            }
+            var colors = file.Look.Resolve(settings.TextColors);
+            var requestFont = RequestFontChoice.For(file.DescriptionFontOverride, settings.FontFor(FontSlot.Request));
+            DrawSample(settings, "Description", colors.Description, requestFont);
+            DrawSample(settings, "Findings", colors.Findings, settings.FontFor(FontSlot.Findings));
+            DrawSample(settings, "Typed", colors.Typed, settings.FontFor(FontSlot.Typed));
+            DrawSample(settings, "Placeholder", colors.Placeholder, settings.FontFor(FontSlot.Placeholder));
+            DrawSample(settings, "Accept answer", colors.AcceptPending, settings.FontFor(FontSlot.Placeholder));
+            DrawSample(settings, "Decline answer", colors.DeclinePending, settings.FontFor(FontSlot.Placeholder));
+        }
+
+        static void DrawSample(OverworldSettings settings, string label, Color color, Font font)
+        {
+            var rect = EditorGUILayout.GetControlRect(false, SampleHeight);
+            EditorGUI.DrawRect(rect, settings.PaperReferenceColor);
+            var style = new GUIStyle(EditorStyles.label) { font = font, fontSize = SampleFontSize, alignment = TextAnchor.MiddleLeft };
+            style.normal.textColor = color;
+            EditorGUI.LabelField(rect, label + ": " + SampleText, style);
+            float ratio = ContrastRatio.Of(color, settings.PaperReferenceColor);
+            if (ratio >= settings.MinimumTextContrast) return;
+            EditorGUILayout.HelpBox(label + " is hard to read on the paper: contrast " + ratio.ToString("0.0") + ", at least " + settings.MinimumTextContrast.ToString("0.0") + " is needed. Pick a darker or lighter colour.", MessageType.Warning);
+        }
+
+        static void DrawIdProblems(CaseFile file)
+        {
+            var others = CaseIds.OtherPathsSharing(file);
+            if (others.Count == 0) return;
+            EditorGUILayout.HelpBox("Another case already uses the id " + file.Id + ": " + string.Join(", ", others) + ". Give one of them another id before players have progress.", MessageType.Warning);
+        }
+
+        static void DrawLetter(string title, string letter)
+        {
+            EditorGUILayout.LabelField(title, EditorStyles.miniBoldLabel);
+            EditorGUILayout.HelpBox(letter, MessageType.None);
+        }
+
+        static void DrawProblems(CaseFile file)
+        {
+            if (DivergingTyper.OneStartsWithTheOther(file.ResolvedAcceptMessage, file.ResolvedDeclineMessage))
+                EditorGUILayout.HelpBox("One answer is the start of the other. The player chooses the shorter one by pressing Enter or Space after it, and the longer one by typing on.", MessageType.Warning);
+            else if (!DivergingTyper.Diverge(file.ResolvedAcceptLetter, file.ResolvedDeclineLetter))
+                EditorGUILayout.HelpBox("The accept and decline messages must differ.", MessageType.Warning);
+            var unresolved = TextTemplate.UnresolvedPlaceholders(file.ResolvedDescription + file.ResolvedFindings + file.ResolvedResponse + file.ResolvedAcceptLetter + file.ResolvedDeclineLetter);
+            if (unresolved.Count > 0)
+                EditorGUILayout.HelpBox("No value for " + string.Join(", ", unresolved) + ". Add a suspect with that key or fix the text.", MessageType.Warning);
+            if (string.IsNullOrWhiteSpace(file.ResolvedFindings))
+                EditorGUILayout.HelpBox("The findings are empty: nothing appears under the description after the level.", MessageType.Warning);
+            if (string.IsNullOrWhiteSpace(file.ResolvedResponse))
+                EditorGUILayout.HelpBox("The response is empty: the player has nothing to type to solve the case.", MessageType.Warning);
+            if (!file.Level)
+                EditorGUILayout.HelpBox("No level to play when the case is accepted.", MessageType.Warning);
+        }
+    }
+}
