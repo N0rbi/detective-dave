@@ -42,7 +42,15 @@ namespace DetectiveDave.MusicPlay
         [Header("Death hook")]
         [SerializeField] [Tooltip("The muted trumpet stem. It runs silently all the time in step with the jazz loop; being caught or bitten fades it up and the music down until the player can move again. The wrong-key stumble and reaching the goal do not touch it.")] DeathHookSettings deathHook = new DeathHookSettings();
 
+        [Header("Diagnostics")]
+        [SerializeField, Min(0f)] [Tooltip("Hitch Log Threshold Milliseconds. 0 turns the hitch log off. Above 0, every frame that takes longer than this many milliseconds is logged to the Console as a warning with the audio events of that frame (piano note, clip loaded while playing, seek, stem start) and the garbage collections since the frame before. Change it, then enter Play Mode again. 50 is a good first value.")] float hitchLogThresholdMilliseconds;
+        [SerializeField] [Tooltip("Loads the audio data of every piano clip, single note clip and the death hook clip when the game starts, so the first note of a clip does not decode it on the main thread in the middle of a move. Costs a short wait once at the start.")] bool preloadClipsOnStart = true;
+
         public DeathHookSettings DeathHook => deathHook ?? (deathHook = new DeathHookSettings());
+
+        public float HitchLogThresholdMilliseconds => hitchLogThresholdMilliseconds;
+
+        public bool PreloadClipsOnStart => preloadClipsOnStart;
 
         public AudioClip LoopClip => loopClip;
 

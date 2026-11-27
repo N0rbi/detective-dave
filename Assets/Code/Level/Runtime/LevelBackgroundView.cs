@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.IO;
 using DetectiveDave.KeyboardGrid;
 using DetectiveDave.Levels;
@@ -27,13 +28,13 @@ namespace DetectiveDave.LevelPlay
         [Tooltip("A warning is logged when the picture has to be drawn larger than this many times its imported size to cover the camera. A larger texture avoids a blurry background.")]
         [SerializeField, Min(1f)] float maxUpscale = 3f;
 
-        [Tooltip("Writes Temp/background-trace.log every frame while the camera is zoomed or zooming: the camera, the view, the planned coverage, the picture's rectangle and whether the keyboard panel shows. A line ends with OUTSIDE when the view shows beyond the picture.")]
+        [Tooltip("Collects a line every frame while the camera is zoomed or zooming and writes Temp/background-trace.log once, when the camera is back at its home view: the camera, the view, the planned coverage, the picture's rectangle and whether the keyboard panel shows. A line ends with OUTSIDE when the view shows beyond the picture.")]
         [SerializeField] bool traceBackground;
 
         const string TracePath = "Temp/background-trace.log";
 
         LevelLoader loader;
-        bool traceStarted;
+        readonly List<string> traceLines = new List<string>();
         KeyboardGridView grid;
         SpriteRenderer background;
         ScreenRect fittedCoverage;
@@ -50,7 +51,11 @@ namespace DetectiveDave.LevelPlay
 
         void OnEnable() => loader.LevelChanged += Refresh;
 
-        void OnDisable() => loader.LevelChanged -= Refresh;
+        void OnDisable()
+        {
+            loader.LevelChanged -= Refresh;
+            WriteTrace();
+        }
 
         void Start() => Refresh();
 
@@ -133,16 +138,23 @@ namespace DetectiveDave.LevelPlay
             if (!zoom || !zoom.TryGetHome(out var home, out var homeSize)) return;
             var live = LiveView(camera);
             var atHome = (Vector2)camera.transform.position == home && Mathf.Approximately(camera.orthographicSize, homeSize);
-            if (atHome) return;
-            if (!traceStarted)
+            if (atHome)
             {
-                File.WriteAllText(TracePath, BackgroundTraceLine.Header + "\n");
-                traceStarted = true;
+                WriteTrace();
+                return;
             }
             var bounds = background.bounds;
             var sprite = new ScreenRect(bounds.min, bounds.max);
             var line = BackgroundTraceLine.Format(Time.time, camera.transform.position, camera.orthographicSize, camera.aspect, live, fittedCoverage, sprite, grid.BackdropVisible);
-            File.AppendAllText(TracePath, line + (BackgroundTraceLine.ViewIsInside(live, sprite) ? "" : ";OUTSIDE") + "\n");
+            traceLines.Add(line + (BackgroundTraceLine.ViewIsInside(live, sprite) ? "" : ";OUTSIDE"));
+        }
+
+        void WriteTrace()
+        {
+            if (traceLines.Count == 0) return;
+            traceLines.Insert(0, BackgroundTraceLine.Header);
+            File.WriteAllLines(TracePath, traceLines);
+            traceLines.Clear();
         }
 
         ScreenRect BoardBounds()

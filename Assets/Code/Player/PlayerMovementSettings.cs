@@ -18,6 +18,7 @@ namespace DetectiveDave.PlayerPlay
 
         [Header("Timing")]
         [SerializeField, Min(0.01f)] [Tooltip("Seconds to walk onto a neighbouring key.")] float stepSeconds = 0.2f;
+        [SerializeField, Min(0f)] [Tooltip("A key pressed while the player is still walking onto a key is kept for this many seconds and played the moment the step ends. Without it that press is lost, which feels like the player ignoring the key, most of all right after a frame hitch. 0 loses the press.")] float moveBufferSeconds = 0.15f;
         [SerializeField, Min(0f)] [Tooltip("Seconds the player is stunned in the death pose after pressing a key that is not a neighbour. 0 turns the stun off. Keys cannot be pressed while stunned.")] float wrongKeyStunSeconds = 0.8f;
         [SerializeField, Min(0.01f)] [Tooltip("Seconds of the whole bump when walking into a wall: lean in, squash, return.")] float wallSquashSeconds = 0.5f;
         [SerializeField, Min(0.01f)] [Tooltip("Seconds the death pose takes to settle when a guard catches the player.")] float fallForwardSeconds = 0.45f;
@@ -81,6 +82,7 @@ namespace DetectiveDave.PlayerPlay
         public bool FlipsWithFacing => flipsWithFacing;
         public bool ForgivingMoves => forgivingMoves;
         public float StepSeconds => stepSeconds;
+        public float MoveBufferSeconds => moveBufferSeconds;
         public float WrongKeyStunSeconds => wrongKeyStunSeconds;
         public float WallSquashSeconds => wallSquashSeconds;
         public float FallForwardSeconds => fallForwardSeconds;

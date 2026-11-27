@@ -16,6 +16,7 @@ namespace DetectiveDave.PlayerPlay
         readonly PlayerStateMachine state = new PlayerStateMachine();
         readonly PlayerFacing facing = new PlayerFacing();
         readonly PlayerMoveRule rule = new PlayerMoveRule();
+        readonly PendingMove pending;
         readonly WalkCycle walk;
         readonly WalkCycle climb;
         Key startKey;
@@ -24,8 +25,13 @@ namespace DetectiveDave.PlayerPlay
         int generation;
         bool climbPoseShown;
 
-        public PlayerGame(IKeyboardBoard board, IPlayerLevel level, IPlayerAnimations animations, IPlayerPresentation presentation, IDashGust gust, PlayerGameSettings settings)
+        public PlayerGame(IKeyboardBoard board, IPlayerLevel level, IPlayerAnimations animations, IPlayerPresentation presentation, IDashGust gust, PlayerGameSettings settings) : this(board, level, animations, presentation, gust, settings, PendingMove.Never)
         {
+        }
+
+        public PlayerGame(IKeyboardBoard board, IPlayerLevel level, IPlayerAnimations animations, IPlayerPresentation presentation, IDashGust gust, PlayerGameSettings settings, PendingMove pending)
+        {
+            this.pending = pending;
             this.board = board;
             this.level = level;
             this.animations = animations;
@@ -56,6 +62,7 @@ namespace DetectiveDave.PlayerPlay
         public void Restart()
         {
             generation++;
+            pending.Clear();
             animations.CancelAllWithoutCallbacks();
             gust.Clear();
             state.Reset();
@@ -82,6 +89,7 @@ namespace DetectiveDave.PlayerPlay
         public void Stop()
         {
             generation++;
+            pending.Clear();
             animations.CancelAllWithoutCallbacks();
             gust.Clear();
             IsActive = false;
@@ -93,6 +101,11 @@ namespace DetectiveDave.PlayerPlay
             if (state.State == PlayerState.NotStarted)
             {
                 if (pressed == startKey) state.Begin();
+                return;
+            }
+            if (state.State == PlayerState.Moving)
+            {
+                pending.Hold(pressed);
                 return;
             }
             if (state.AcceptsMoves) PerformOutcome(rule.Decide(board, level, goalKey, currentKey, pressed), pressed);
@@ -184,6 +197,7 @@ namespace DetectiveDave.PlayerPlay
             ShowWalkPose();
             Arrive(target);
             state.Enter(PlayerState.Idle);
+            PerformPendingMove();
         }
 
         void HangOn(Key target)
@@ -191,10 +205,17 @@ namespace DetectiveDave.PlayerPlay
             ShowClimbPose();
             Arrive(target);
             state.Enter(PlayerState.Idle);
+            PerformPendingMove();
+        }
+
+        void PerformPendingMove()
+        {
+            if (pending.TryTake(out var key)) OnKeyPressed(key);
         }
 
         void FinishGoalWalk(Key target)
         {
+            pending.Clear();
             ShowWalkPose();
             Arrive(target);
             state.Enter(PlayerState.Goal);
@@ -203,6 +224,7 @@ namespace DetectiveDave.PlayerPlay
 
         void LandOnDog(Key target)
         {
+            pending.Clear();
             ShowWalkPose();
             Arrive(target);
             Die();
@@ -259,6 +281,7 @@ namespace DetectiveDave.PlayerPlay
         {
             if (!IsActive || !IsVulnerable) return;
             generation++;
+            pending.Clear();
             animations.CancelAllWithoutCallbacks();
             gust.Clear();
             Die();

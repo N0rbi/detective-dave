@@ -29,7 +29,7 @@ namespace DetectiveDave.KeyboardGrid
 
         [SerializeField] bool showLabels = true;
         [SerializeField, Min(0)] int targetFrameRate = 60;      // 0 leaves the frame rate alone. The trace showed ~450 fps in the editor, which may be what makes keys look unlit
-        [SerializeField] bool writeTrace = true;      // write Temp/key-trace.log in the project: every change of a key's state, to find lighting bugs
+        [SerializeField] bool writeTrace;      // write Temp/key-trace.log in the project: every change of a key's state, to find lighting bugs. Each line is flushed at once, so keep it off outside a lighting hunt
 
         readonly List<string> history = new List<string>();      // newest first
         readonly HashSet<Key> sourceDown = new HashSet<Key>();     // between the source's pressed and released events

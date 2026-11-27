@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using DG.Tweening;
+using DetectiveDave.Diagnostics;
 using DetectiveDave.OverworldPlay;
 using UnityEngine;
 
@@ -11,6 +12,7 @@ namespace DetectiveDave.MusicPlay
     {
         const string LogPrefix = "[Music]";
         const double DriftToleranceSeconds = 0.04;
+        const int AudioEventCapacity = 256;
 
         static MusicDirector instance;
 
@@ -31,6 +33,8 @@ namespace DetectiveDave.MusicPlay
         Tween duckTween;
         AudioSource[] voices;
         int nextVoice;
+        IAudioEvents audioEvents = new NoAudioEvents();
+        bool recordsAudioEvents;
 
         public IMusicReaction Reaction { get; private set; }
 
@@ -47,6 +51,7 @@ namespace DetectiveDave.MusicPlay
             hookSource.volume = 0f;
             hookSource.mute = true;
             hookSource.time = (float)LoopFollower.WantedClipTime(LoopSeconds(), loop.clip.length, clip.length, settings.DeathHook.HookSyncOffsetSeconds);
+            audioEvents.Record(AudioEventKind.StemStart, clip.name, hookSource.time);
             hookSource.Play();
         }
 
@@ -57,6 +62,7 @@ namespace DetectiveDave.MusicPlay
             var wanted = LoopFollower.WantedClipTime(LoopSeconds(), loop.clip.length, hookSource.clip.length, settings.DeathHook.HookSyncOffsetSeconds);
             if (!LoopFollower.NeedsCorrection(hookSource.time, wanted, cycle, DriftToleranceSeconds)) return;
             hookSource.time = (float)wanted;
+            audioEvents.Record(AudioEventKind.LoopSeek, hookSource.clip.name, hookSource.time);
         }
 
         public void Apply(DeathHookMix mix)
@@ -84,6 +90,7 @@ namespace DetectiveDave.MusicPlay
             caseSource.clip = music.Clip;
             caseSource.loop = true;
             caseSource.time = StartTime(music);
+            audioEvents.Record(AudioEventKind.StemStart, music.Clip.name, caseSource.time);
             caseVolume = 0f;
             caseSource.volume = 0f;
             caseSource.Play();
@@ -143,6 +150,7 @@ namespace DetectiveDave.MusicPlay
             var wanted = LoopFollower.WantedClipTime(LoopSeconds(), loop.clip.length, caseSource.clip.length);
             if (!LoopFollower.NeedsCorrection(caseSource.time, wanted, cycle, DriftToleranceSeconds)) return;
             caseSource.time = (float)wanted;
+            audioEvents.Record(AudioEventKind.LoopSeek, caseSource.clip.name, caseSource.time);
         }
 
         void TweenDuck(float target, float seconds)
@@ -165,10 +173,13 @@ namespace DetectiveDave.MusicPlay
         {
             var voice = voices[nextVoice];
             nextVoice = (nextVoice + 1) % voices.Length;
+            var clip = kind == NoteKind.Single ? singleClips[clipIndex].Clip : pianoClips[clipIndex];
+            if (recordsAudioEvents && clip.loadState != AudioDataLoadState.Loaded) audioEvents.Record(AudioEventKind.ClipLoadedOnPlay, clip.name, 0f);
             voice.Stop();
-            voice.clip = kind == NoteKind.Single ? singleClips[clipIndex].Clip : pianoClips[clipIndex];
+            voice.clip = clip;
             voice.volume = Mathf.Clamp01(volume);
             voice.Play();
+            if (recordsAudioEvents) audioEvents.Record(AudioEventKind.PianoNote, clip.name, voice.volume);
         }
 
         void Configure(MusicSettings musicSettings)
@@ -177,12 +188,36 @@ namespace DetectiveDave.MusicPlay
             pianoClips = NaturalNameOrder.Sorted(settings.PianoClips.Where(clip => clip), clip => clip.name).ToArray();
             singleClips = SingleNoteOrder.Sorted(settings.SingleNoteClips);
             voices = Enumerable.Range(0, settings.PianoPoolSize).Select(_ => NewVoice()).ToArray();
+            StartHitchLog();
+            if (settings.PreloadClipsOnStart) PreloadClips();
             DeathHook = new DeathHookController(settings.DeathHook, this, () => Time.unscaledTime);
             Reaction = new HookGatedReaction(BuildReaction(), () => DeathHook.PianoAllowed);
             BassPulse = BuildBassPulse();
             StartLoop();
             WarnIfSilent();
             WarnAboutChart();
+        }
+
+        void StartHitchLog()
+        {
+            if (!HitchDetector.IsEnabled(settings.HitchLogThresholdMilliseconds)) return;
+            var log = new AudioEventLog(AudioEventCapacity, () => Time.frameCount);
+            audioEvents = log;
+            recordsAudioEvents = true;
+            gameObject.AddComponent<FrameHitchLog>().Configure(settings.HitchLogThresholdMilliseconds, log);
+        }
+
+        void PreloadClips()
+        {
+            foreach (var clip in pianoClips) Preload(clip);
+            foreach (var single in singleClips) Preload(single.Clip);
+            Preload(settings.DeathHook.HookClip);
+        }
+
+        void Preload(AudioClip clip)
+        {
+            if (!clip || clip.loadState == AudioDataLoadState.Loaded) return;
+            if (!clip.LoadAudioData()) Debug.LogWarning($"{LogPrefix} Could not load the audio data of '{clip.name}' at the start: its first note will load it on the main thread.", clip);
         }
 
         PianoReaction BuildReaction()
@@ -247,6 +282,7 @@ namespace DetectiveDave.MusicPlay
             caseSource = NewVoice();
             hookSource = NewVoice();
             if (!loop.clip) return;
+            audioEvents.Record(AudioEventKind.StemStart, loop.clip.name, 0f);
             loop.Play();
             StartHookStem();
             if (settings.FadeInSeconds > 0f) FadeLoopIn();

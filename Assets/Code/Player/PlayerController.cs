@@ -170,7 +170,7 @@ namespace DetectiveDave.PlayerPlay
 
         void BuildGame()
         {
-            game = new PlayerGame(board, level, animations, view, gustView, new PlayerGameSettings(settings.WalkFrames.Length, settings.ClimbFrames.Length, settings.BumpDistanceInKeys, settings.ForgivingMoves, settings.WrongKeyStunSeconds > 0f));
+            game = new PlayerGame(board, level, animations, view, gustView, new PlayerGameSettings(settings.WalkFrames.Length, settings.ClimbFrames.Length, settings.BumpDistanceInKeys, settings.ForgivingMoves, settings.WrongKeyStunSeconds > 0f), new PendingMove(settings.MoveBufferSeconds, () => Time.unscaledTime));
             game.GoalReached += ForwardGoalReached;
             game.Failed += BeginRestart;
             game.Died += () => Died?.Invoke();

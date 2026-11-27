@@ -239,3 +239,10 @@ Play with F5 on a level with a Gap and a WallGutter key between the two Shifts. 
 - Type resetplayer while the trumpet is up: it is silent at once and the music is at full volume; the trumpet keeps running muted (die again and it fades up on the beat).
 - Die at different moments of the loop (bar 1, bar 5, bar 8): the trumpet is faded up into the music already playing, on the beat, and stays on it for a long wait. If it is early or late, change Hook Sync Offset Seconds.
 - Remove the Hook Clip: the inspector and the Console warn, and a death changes nothing.
+
+## Frame hitches
+- Music Settings > Diagnostics: set Hitch Log Threshold Milliseconds to 50 and play a level, pressing keys quickly for a minute: every frame over 50 ms shows one warning with its time and its audio events. At 0 nothing is logged and no Music Director component named FrameHitchLog exists.
+- Wait for a warning that lists `clip ... was not loaded when it had to play`: untick Preload Clips On Start to see it on the first notes; tick it again and it no longer shows for piano clips (also set Preload Audio Data on the piano clips and the hook).
+- Press a key, and a neighbour of the new key while the player is still walking (within 0.15 s of the step end): the second step starts right after the first. Set Move Buffer Seconds to 0 on the player settings: the second press is lost again.
+- Get caught or reach the goal right after a buffered press: the buffered key does not move the player afterwards.
+- Trace Background on, play to the goal: while zooming no file is written; Temp/background-trace.log appears once the camera is back at its home view.
